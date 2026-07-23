@@ -4,76 +4,168 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import { createServer } from "node:http";
-import httpStatus from "http-status";
 
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import httpStatus from "http-status";
 
-import { connectToSocket } from "./controllers/socketManager.js";
+import { initializeSocket } from "./socket/socketManager.js";
 
-//  Import Routes
+// Routes
 import authRoutes from "./routes/authRoute.js";
-import meetingRoutes from "./routes/meetingRoutes.js";
-
 import userRoutes from "./routes/userRoutes.js";
+import meetingRoutes from "./routes/meetingRoutes.js";
 
 const app = express();
 
+// ==========================================
 // Middleware
-app.use(cors());
+// ==========================================
 
-app.use(express.json({
-    limit: "50mb",
-}));
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL,
+        credentials: true,
+    })
+);
 
-app.use(express.urlencoded({
-    limit: "50mb",
-    extended: true,
-}));
+app.use(
+    express.json({
+        limit: "50mb",
+    })
+);
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: "50mb",
+    })
+);
 
 app.use(cookieParser());
 
-//  Routes
+// ==========================================
+// Routes
+// ==========================================
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/meeting", meetingRoutes);
 
-// HTTP Server
-const server = createServer(app);
+// ==========================================
+// Home Route
+// ==========================================
 
-// Socket.IO
-connectToSocket(server);
-
-// Test Route
 app.get("/", (req, res) => {
-    return res.json({
-        message: "Hello from Sayan",
+
+    return res.status(httpStatus.OK).json({
+
+        success: true,
+
+        message: "Meeting Room Backend Running 🚀",
+
     });
+
 });
 
-// MongoDB URL
-const dburl = process.env.ATLASDB_URL;
+// ==========================================
+// 404 Route
+// ==========================================
 
-// Start Server
-async function startServer() {
+app.use((req, res) => {
+
+    return res.status(httpStatus.NOT_FOUND).json({
+
+        success: false,
+
+        message: "Route Not Found",
+
+    });
+
+});
+
+// ==========================================
+// Global Error Handler
+// ==========================================
+
+app.use((err, req, res, next) => {
+
+    console.error(err);
+
+    return res.status(
+
+        err.statusCode || httpStatus.INTERNAL_SERVER_ERROR
+
+    ).json({
+
+        success: false,
+
+        message: err.message || "Internal Server Error",
+
+    });
+
+});
+
+// ==========================================
+// HTTP Server
+// ==========================================
+
+const server = createServer(app);
+
+// ==========================================
+// Socket.IO
+// ==========================================
+
+initializeSocket(server);
+
+// ==========================================
+// Database Connection
+// ==========================================
+
+const connectDB = async() => {
+
     try {
 
-        await mongoose.connect(dburl, {
-            serverSelectionTimeoutMS: 30000,
-        });
+        await mongoose.connect(process.env.ATLASDB_URL);
 
-        console.log("✅ Connected to MongoDB Atlas");
+        console.log("✅ MongoDB Connected Successfully");
 
-        server.listen(8000, () => {
-            console.log("🚀 Server running on http://localhost:8000");
-        });
+    } catch (error) {
 
-    } catch (err) {
+        console.error(error);
 
-        console.error("❌ DATABASE CONNECTION FAILED");
-        console.error(err);
+        process.exit(1);
 
     }
-}
+
+};
+
+// ==========================================
+// Start Server
+// ==========================================
+
+const PORT = process.env.PORT || 8000;
+
+const startServer = async() => {
+
+    try {
+
+        await connectDB();
+
+        server.listen(PORT, () => {
+
+            console.log(
+                `🚀 Server Running On http://localhost:${PORT}`
+            );
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+};
 
 startServer();
