@@ -1,7 +1,11 @@
+import mongoose from "mongoose";
 import Message from "../models/messageModel.js";
 import Meeting from "../models/meetingModel.js";
 
 import { encryptMessage } from "./encryptionService.js";
+
+
+import { decryptMessage } from "./encryptionService.js";
 
 export const createMessage = async({
     meetingId,
@@ -113,4 +117,104 @@ export const createMessage = async({
     ]);
 
     return newMessage;
+};
+
+
+
+
+
+export const getMessageHistory = async({
+    meetingId,
+    userId,
+    cursor,
+    limit = 20,
+}) => {
+
+    const meeting = await Meeting.findById(meetingId);
+
+    if (!meeting) {
+        throw new Error("Meeting not found");
+    }
+
+    const isParticipant = meeting.participants.some(
+        participant => participant.equals(userId)
+    );
+
+    if (!isParticipant) {
+        throw new Error("You are not a participant");
+    }
+
+    const query = {
+        meeting: meetingId,
+    };
+
+    if (cursor) {
+
+        query._id = {
+            $lt: new mongoose.Types.ObjectId(cursor),
+        };
+
+    }
+
+    const messages = await Message.find(query)
+
+    .populate("sender", "username profilePicture")
+
+    .populate({
+        path: "replyTo",
+        populate: {
+            path: "sender",
+            select: "username profilePicture",
+        },
+    })
+
+    .sort({
+        _id: -1,
+    })
+
+    .limit(limit + 1)
+
+    .lean();
+
+    const hasNextPage = messages.length > limit;
+
+    if (hasNextPage) {
+        messages.pop();
+    }
+
+    const decryptedMessages = messages.map(message => {
+
+        if (message.messageType === "text") {
+
+            message.message = decryptMessage({
+
+                encryptedMessage: message.encryptedMessage,
+
+                iv: message.iv,
+
+                authTag: message.authTag,
+
+            });
+
+        }
+
+        delete message.encryptedMessage;
+        delete message.iv;
+        delete message.authTag;
+
+        return message;
+
+    });
+
+    return {
+
+        messages: decryptedMessages,
+
+        nextCursor: hasNextPage ?
+            decryptedMessages[decryptedMessages.length - 1]._id : null,
+
+        hasNextPage,
+
+    };
+
 };

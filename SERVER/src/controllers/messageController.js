@@ -5,6 +5,10 @@ import Meeting from "../models/meetingModel.js";
 
 import { encryptMessage } from "../services/encryptionService.js";
 
+
+
+import { getMessageHistory } from "../services/messageService.js";
+
 export const sendMessage = async(req, res) => {
     try {
         const {
@@ -115,4 +119,47 @@ export const sendMessage = async(req, res) => {
             message: error.message,
         });
     }
+};
+export const getMessages = async(req, res) => {
+
+    try {
+
+        const { meetingId } = req.params;
+
+        const { cursor } = req.query;
+
+        const limit = Number(req.query.limit) || 20;
+
+        const result = await getMessageHistory({
+
+            meetingId,
+
+            userId: req.user._id,
+
+            cursor,
+
+            limit,
+
+        });
+
+        return res.status(200).json({
+
+            success: true,
+
+            ...result,
+
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: error.message,
+
+        });
+
+    }
+
 };
