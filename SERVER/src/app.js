@@ -23,6 +23,7 @@ import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import fileRoutes from "./routes/fileRoutes.js";
 
 // ==============================
 // App
@@ -63,6 +64,13 @@ app.use("/api/user", userRoutes);
 app.use("/api/meeting", meetingRoutes);
 
 app.use("/api/messages", messageRoutes);
+app.use(
+
+    "/api/files",
+
+    fileRoutes
+
+);
 
 // ==============================
 // Home Route

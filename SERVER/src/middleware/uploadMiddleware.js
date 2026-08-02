@@ -6,7 +6,15 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params: {
         folder: "meeting-room/profile-pictures",
-        allowed_formats: ["jpg", "jpeg", "png", "webp"],
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif",
+            "pdf",
+            "mp4",
+            "mp3",
+            "wav",
+            "docx",
+            "xlsx",
+            "pptx",
+        ],
     },
 });
 

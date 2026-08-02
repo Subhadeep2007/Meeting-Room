@@ -1,4 +1,9 @@
-import { createMessage } from "../services/messageService.js";
+import {
+    createMessage,
+    markDelivered,
+
+    markRead
+} from "../services/messageService.js";
 
 const registerChatEvents = (io, socket) => {
 
@@ -150,6 +155,53 @@ const registerChatEvents = (io, socket) => {
         console.log(`${socket.user.username} disconnected`);
 
     });
+
+
+    socket.on(
+
+        "message-delivered",
+
+        async(
+
+            {
+
+                messageId
+
+            }
+
+        ) => {
+
+            try {
+
+                await markDelivered(
+
+                    messageId,
+
+                    socket.user._id
+
+                );
+
+                io.emit(
+
+                    "message-delivered",
+
+                    {
+
+                        messageId,
+
+                        userId: socket.user._id
+
+                    }
+
+                );
+
+            } catch (err) {
+
+                console.log(err);
+
+            }
+
+        });
 
 };
 

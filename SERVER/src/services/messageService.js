@@ -218,3 +218,91 @@ export const getMessageHistory = async({
     };
 
 };
+export const markDelivered = async(
+
+    messageId,
+
+    userId
+
+) => {
+
+    const message =
+
+        await Message.findById(messageId);
+
+    if (!message) {
+
+        throw new Error(
+
+            "Message not found"
+
+        );
+
+    }
+
+    const alreadyDelivered =
+
+        message.deliveredTo.some(
+
+            id => id.equals(userId)
+
+        );
+
+    if (!alreadyDelivered) {
+
+        message.deliveredTo.push(
+
+            userId
+
+        );
+
+        await message.save();
+
+    }
+
+    return message;
+
+};
+
+
+export const markRead = async(
+
+    messageId,
+
+    userId
+
+) => {
+
+    const message =
+
+        await Message.findById(messageId);
+
+    if (!message) {
+
+        throw new Error(
+
+            "Message not found"
+
+        );
+
+    }
+
+    const alreadyRead =
+
+        message.readBy.some(
+
+            id => id.equals(userId)
+
+        );
+
+    if (!alreadyRead) {
+
+        message.readBy.push(userId);
+
+        await message.save();
+
+    }
+
+    return message;
+
+};
