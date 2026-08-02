@@ -1,51 +1,158 @@
+import { SOCKET_EVENTS } from "../constants/socketEvents.js";
+
 const registerSignalingEvents = (io, socket) => {
 
-    // =============================
-    // WebRTC Offer
-    // =============================
-    socket.on("offer", ({ meetingCode, offer }) => {
+    // =====================================
+    // JOIN CALL
+    // =====================================
 
-        socket.to(meetingCode).emit("offer", {
+    socket.on(
 
-            sender: socket.user._id,
+        SOCKET_EVENTS.JOIN_CALL,
 
-            username: socket.user.username,
+        ({ meetingId }) => {
 
-            offer,
+            socket.join(meetingId);
 
-        });
+            socket.to(meetingId).emit(
 
-    });
+                SOCKET_EVENTS.USER_JOINED,
 
-    // =============================
-    // WebRTC Answer
-    // =============================
-    socket.on("answer", ({ meetingCode, answer }) => {
+                {
 
-        socket.to(meetingCode).emit("answer", {
+                    userId: socket.user._id,
 
-            sender: socket.user._id,
+                    username: socket.user.username,
 
-            answer,
+                    profilePicture: socket.user.profilePicture,
 
-        });
+                }
 
-    });
+            );
 
-    // =============================
+        }
+
+    );
+
+    // =====================================
+    // LEAVE CALL
+    // =====================================
+
+    socket.on(
+
+        SOCKET_EVENTS.LEAVE_CALL,
+
+        ({ meetingId }) => {
+
+            socket.leave(meetingId);
+
+            socket.to(meetingId).emit(
+
+                SOCKET_EVENTS.USER_LEFT,
+
+                {
+
+                    userId: socket.user._id,
+
+                }
+
+            );
+
+        }
+
+    );
+
+    // =====================================
+    // OFFER
+    // =====================================
+
+    socket.on(
+
+        SOCKET_EVENTS.OFFER,
+
+        ({ targetSocketId, offer }) => {
+
+            io.to(targetSocketId).emit(
+
+                SOCKET_EVENTS.OFFER,
+
+                {
+
+                    offer,
+
+                    from: socket.id,
+
+                    user: {
+
+                        id: socket.user._id,
+
+                        username: socket.user.username,
+
+                    },
+
+                }
+
+            );
+
+        }
+
+    );
+
+    // =====================================
+    // ANSWER
+    // =====================================
+
+    socket.on(
+
+        SOCKET_EVENTS.ANSWER,
+
+        ({ targetSocketId, answer }) => {
+
+            io.to(targetSocketId).emit(
+
+                SOCKET_EVENTS.ANSWER,
+
+                {
+
+                    answer,
+
+                    from: socket.id,
+
+                }
+
+            );
+
+        }
+
+    );
+
+    // =====================================
     // ICE Candidate
-    // =============================
-    socket.on("ice-candidate", ({ meetingCode, candidate }) => {
+    // =====================================
 
-        socket.to(meetingCode).emit("ice-candidate", {
+    socket.on(
 
-            sender: socket.user._id,
+        SOCKET_EVENTS.ICE_CANDIDATE,
 
-            candidate,
+        ({ targetSocketId, candidate }) => {
 
-        });
+            io.to(targetSocketId).emit(
 
-    });
+                SOCKET_EVENTS.ICE_CANDIDATE,
+
+                {
+
+                    candidate,
+
+                    from: socket.id,
+
+                }
+
+            );
+
+        }
+
+    );
 
 };
 
