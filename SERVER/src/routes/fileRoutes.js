@@ -9,6 +9,8 @@ import {
     getFile,
     deleteFile,
     renameFile,
+    downloadFile,
+    fileHistory,
 
 } from "../controllers/fileController.js";
 
@@ -55,5 +57,15 @@ router.get(
 
     getFile
 
+);
+router.get(
+    "/download/:fileId",
+    authMiddleware,
+    downloadFile
+);
+router.get(
+    "/history/:fileId",
+    authMiddleware,
+    fileHistory
 );
 export default router;

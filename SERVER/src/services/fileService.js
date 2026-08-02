@@ -1,6 +1,7 @@
 import cloudinary from "../config/cloudinary.js";
 import File from "../models/fileModel.js";
 import Meeting from "../models/meetingModel.js";
+import FileActivity from "../models/fileActivityModel.js";
 
 export const uploadFileService = async({
     meetingId,
@@ -333,5 +334,65 @@ export const getRecentFiles = async(meetingId) => {
     );
 
     return files;
+
+};
+
+
+export const logFileActivity = async({
+
+    fileId,
+
+    userId,
+
+    action,
+
+    ipAddress,
+
+    userAgent,
+
+}) => {
+
+    await FileActivity.create({
+
+        file: fileId,
+
+        user: userId,
+
+        action,
+
+        ipAddress,
+
+        userAgent,
+
+    });
+
+};
+
+
+// ======================================
+// File History
+// ======================================
+
+export const getFileHistory = async(fileId) => {
+
+    return await FileActivity.find({
+
+        file: fileId,
+
+    })
+
+    .populate(
+
+        "user",
+
+        "name username profilePicture"
+
+    )
+
+    .sort({
+
+        createdAt: -1,
+
+    });
 
 };
