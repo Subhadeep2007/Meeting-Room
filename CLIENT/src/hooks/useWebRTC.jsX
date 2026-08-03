@@ -35,6 +35,10 @@ const useWebRTC = (meetingCode) => {
     const [connectionState, setConnectionState] =
         useState("new");
 
+
+
+        const [participants, setParticipants] = useState({});
+
     // ========================================
     // Refs
     // ========================================
@@ -120,9 +124,21 @@ const useWebRTC = (meetingCode) => {
 
 const createPeer = (targetSocketId) => {
 
+
+    if (!localStream) {
+
+    console.log("Local stream not ready");
+
+    return;
+
+}
+
     const peer = createPeerConnection({
 
         localStream,
+
+
+        
 
         onIceCandidate: (candidate) => {
 
@@ -552,4 +568,445 @@ useEffect(() => {
     };
 
 }, []);
+
+
+useEffect(() => {
+
+    socket.on(
+
+        "camera-status-changed",
+
+        ({
+
+            socketId,
+
+            enabled,
+
+        }) => {
+
+            setParticipants((prev) => ({
+
+                ...prev,
+
+                [socketId]: {
+
+                    ...prev[socketId],
+
+                    cameraEnabled: enabled,
+
+                },
+
+            }));
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off("camera-status-changed");
+
+    };
+
+}, []);
+
+
+useEffect(() => {
+
+    socket.on(
+
+        "microphone-status-changed",
+
+        ({
+
+            socketId,
+
+            enabled,
+
+        }) => {
+
+            setParticipants((prev) => ({
+
+                ...prev,
+
+                [socketId]: {
+
+                    ...prev[socketId],
+
+                    microphoneEnabled: enabled,
+
+                },
+
+            }));
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "microphone-status-changed"
+
+        );
+
+    };
+
+}, []);
+useEffect(() => {
+
+    socket.on(
+
+        "raise-hand-changed",
+
+        ({
+
+            socketId,
+
+            raised,
+
+        }) => {
+
+            setParticipants((prev) => ({
+
+                ...prev,
+
+                [socketId]: {
+
+                    ...prev[socketId],
+
+                    handRaised: raised,
+
+                },
+
+            }));
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "raise-hand-changed"
+
+        );
+
+    };
+
+}, []);
+
+
+// ========================================
+// Toggle Camera
+// ========================================
+
+const handleToggleCamera = () => {
+
+    const enabled = toggleCamera();
+
+    setCameraEnabled(enabled);
+
+
+    socket.emit(
+    "camera-status",
+    {
+        meetingCode,
+        enabled,
+    }
+);
+
+    Object.values(
+
+        peersRef.current
+
+    ).forEach((peer) => {
+
+        const sender = peer
+
+            .getSenders()
+
+            .find(
+
+                (sender) =>
+
+                    sender.track?.kind === "video"
+
+            );
+
+        if (sender) {
+
+            sender.replaceTrack(
+
+                localStream
+
+                    .getVideoTracks()[0]
+
+            );
+
+        }
+
+    });
+
+};
+
+
+// ========================================
+// Toggle Microphone
+// ========================================
+
+const handleToggleMicrophone = () => {
+
+    const enabled = toggleMicrophone();
+
+    setMicrophoneEnabled(enabled);
+
+    socket.emit(
+
+    "microphone-status",
+
+    {
+
+        meetingCode,
+
+        enabled,
+
+    }
+
+);
+
+    Object.values(
+
+        peersRef.current
+
+    ).forEach((peer) => {
+
+        const sender = peer
+
+            .getSenders()
+
+            .find(
+
+                (sender) =>
+
+                    sender.track?.kind === "audio"
+
+            );
+
+        if (sender) {
+
+            sender.replaceTrack(
+
+                localStream
+
+                    .getAudioTracks()[0]
+
+            );
+
+        }
+
+    });
+
+};
+
+
+const startScreenShare = async () => {
+
+    try {
+
+        const screenStream =
+
+            await navigator
+
+                .mediaDevices
+
+                .getDisplayMedia({
+
+                    video: true,
+
+                });
+
+        const screenTrack =
+
+            screenStream
+
+                .getVideoTracks()[0];
+
+        Object.values(
+
+            peersRef.current
+
+        ).forEach((peer) => {
+
+            const sender = peer
+
+                .getSenders()
+
+                .find(
+
+                    (sender) =>
+
+                        sender.track?.kind === "video"
+
+                );
+
+            if (sender) {
+
+                sender.replaceTrack(
+
+                    screenTrack
+
+                );
+
+            }
+
+        });
+
+        setLocalStream(
+
+            screenStream
+
+        );
+
+        screenTrack.onended = () => {
+
+            stopScreenShare();
+
+        };
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+};
+
+
+// ======================================
+// Raise Hand
+// ======================================
+
+const handleRaiseHand = () => {
+
+    const current =
+
+        participants[socket.id]?.handRaised ?? false;
+
+    socket.emit(
+
+        "raise-hand",
+
+        {
+
+            meetingCode,
+
+            raised: !current,
+
+        }
+
+    );
+
+    setParticipants((prev) => ({
+
+        ...prev,
+
+        [socket.id]: {
+
+            ...prev[socket.id],
+
+            handRaised: !current,
+
+        },
+
+    }));
+
+};
+
+
+const stopScreenShare = async () => {
+
+    const cameraStream =
+
+        await getLocalStream();
+
+    const cameraTrack =
+
+        cameraStream
+
+            .getVideoTracks()[0];
+
+    Object.values(
+
+        peersRef.current
+
+    ).forEach((peer) => {
+
+        const sender = peer
+
+            .getSenders()
+
+            .find(
+
+                (sender) =>
+
+                    sender.track?.kind === "video"
+
+            );
+
+        if (sender) {
+
+            sender.replaceTrack(
+
+                cameraTrack
+
+            );
+
+        }
+
+    });
+
+    setLocalStream(
+
+        cameraStream
+
+    );
+
+};
+return {
+
+    localStream,
+
+    remoteStreams,
+
+
+    participants,
+
+    connectionState,
+
+    cameraEnabled,
+
+    microphoneEnabled,
+
+    handleToggleCamera,
+
+    handleToggleMicrophone,
+
+    startScreenShare,
+
+    handleRaiseHand,
+
+    stopScreenShare,
+
+};
+
+
+
 }
+
+
+export default useWebRTC;

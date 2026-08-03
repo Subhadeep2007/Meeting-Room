@@ -154,6 +154,103 @@ const registerSignalingEvents = (io, socket) => {
 
     );
 
+
+    // ======================================
+    // Camera Status
+    // ======================================
+
+    socket.on(
+
+        "camera-status",
+
+        ({ meetingCode, enabled }) => {
+
+            socket.to(meetingCode).emit(
+
+                "camera-status-changed",
+
+                {
+
+                    userId: socket.user._id,
+
+                    socketId: socket.id,
+
+                    enabled,
+
+                }
+
+            );
+
+        }
+
+    );
+
+
+
+    // ======================================
+    // Microphone Status
+    // ======================================
+
+    socket.on(
+
+        "microphone-status",
+
+        ({ meetingCode, enabled }) => {
+
+            socket.to(meetingCode).emit(
+
+                "microphone-status-changed",
+
+                {
+
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    enabled,
+
+                }
+
+            );
+
+        }
+
+    );
+
+
+
+    // ======================================
+    // Raise Hand
+    // ======================================
+
+    socket.on(
+
+        "raise-hand",
+
+        ({ meetingCode, raised }) => {
+
+            socket.to(meetingCode).emit(
+
+                "raise-hand-changed",
+
+                {
+
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    username: socket.user.username,
+
+                    raised,
+
+                }
+
+            );
+
+        }
+
+    );
+
 };
 
 export default registerSignalingEvents;
