@@ -8,6 +8,8 @@ const VideoGrid = ({
 
     participants,
 
+    mySocketId,
+
     username,
 
     cameraEnabled,
@@ -25,12 +27,6 @@ const VideoGrid = ({
     if (totalUsers === 1) {
 
         gridClass = "grid-cols-1";
-
-    }
-
-    else if (totalUsers === 2) {
-
-        gridClass = "grid-cols-2";
 
     }
 
@@ -55,10 +51,7 @@ const VideoGrid = ({
     return (
 
         <div
-
-            className={
-
-                `
+            className={`
 
                 grid
 
@@ -72,13 +65,12 @@ const VideoGrid = ({
 
                 p-4
 
-                `
-
-            }
-
+            `}
         >
 
-            {/* Local */}
+            {/* =========================
+                Local User
+            ========================= */}
 
             <VideoPlayer
 
@@ -92,11 +84,21 @@ const VideoGrid = ({
 
                 microphoneEnabled={microphoneEnabled}
 
+                handRaised={
+                    participants[mySocketId]?.handRaised ?? false
+                }
+
+                isSpeaking={
+                    participants[mySocketId]?.isSpeaking ?? false
+                }
+
                 connectionState={connectionState}
 
             />
 
-            {/* Remote */}
+            {/* =========================
+                Remote Users
+            ========================= */}
 
             {
 
@@ -113,20 +115,24 @@ const VideoGrid = ({
                         isLocal={false}
 
                         cameraEnabled={
-    participants[user.socketId]
-        ?.cameraEnabled ?? true
-}
+                            participants[user.socketId]
+                                ?.cameraEnabled ?? true
+                        }
 
-                      microphoneEnabled={
-    participants[user.socketId]
-        ?.microphoneEnabled ?? true
-}  
+                        microphoneEnabled={
+                            participants[user.socketId]
+                                ?.microphoneEnabled ?? true
+                        }
 
+                        handRaised={
+                            participants[user.socketId]
+                                ?.handRaised ?? false
+                        }
 
-handRaised={
-    participants[socket.id]
-        ?.handRaised ?? false
-}
+                        isSpeaking={
+                            participants[user.socketId]
+                                ?.isSpeaking ?? false
+                        }
 
                         connectionState="connected"
 

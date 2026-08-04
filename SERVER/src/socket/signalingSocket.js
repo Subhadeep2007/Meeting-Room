@@ -251,6 +251,72 @@ const registerSignalingEvents = (io, socket) => {
 
     );
 
+
+    // ======================================
+    // Emoji Reaction
+    // ======================================
+
+    socket.on(
+
+        "send-reaction",
+
+        ({ meetingCode, emoji }) => {
+
+            io.to(meetingCode).emit(
+
+                "reaction-received",
+
+                {
+
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    username: socket.user.username,
+
+                    emoji,
+
+                    createdAt: Date.now(),
+
+                }
+
+            );
+
+        }
+
+    );
+
+
+    // ======================================
+    // Speaking Status
+    // ======================================
+
+    socket.on(
+
+        "speaking-status",
+
+        ({ meetingCode, speaking }) => {
+
+            socket.to(meetingCode).emit(
+
+                "speaking-status-changed",
+
+                {
+
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    speaking,
+
+                }
+
+            );
+
+        }
+
+    );
+
 };
 
 export default registerSignalingEvents;

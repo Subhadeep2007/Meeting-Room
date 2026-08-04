@@ -5,15 +5,17 @@ import useWebRTC from "../hooks/useWebRTC";
 
 import VideoGrid from "../components/VideoGrid";
 import Controls from "../components/Controls";
+import EmojiReaction from "../components/EmojiReaction";
+import FloatingReaction from "../components/FloatingReaction";
+import ParticipantSidebar from "../components/ParticipantSidebar";
 
 const MeetingRoom = () => {
 
     const navigate = useNavigate();
-
     const { meetingCode } = useParams();
 
     // =========================================
-    // Dummy Logged In User
+    // Dummy User
     // Later JWT API se ayega
     // =========================================
 
@@ -32,25 +34,22 @@ const MeetingRoom = () => {
     const {
 
         localStream,
-
         remoteStreams,
         participants,
+        mySocketId,
+
+        reactions,
+        sendReaction,
 
         cameraEnabled,
-
         microphoneEnabled,
-
         connectionState,
 
         handleToggleCamera,
-
         handleToggleMicrophone,
-
         startScreenShare,
-
-        handleRaiseHand,
-
         stopScreenShare,
+        handleRaiseHand,
 
     } = useWebRTC(meetingCode);
 
@@ -74,24 +73,14 @@ const MeetingRoom = () => {
 
     const leaveMeeting = () => {
 
+        stopScreenShare();
+
         navigate("/dashboard");
 
     };
 
-    
-
     // =========================================
-    // Emoji
-    // =========================================
-
-    const sendReaction = () => {
-
-        console.log("😊 Emoji");
-
-    };
-
-    // =========================================
-    // Loading
+    // Loading Screen
     // =========================================
 
     if (loading) {
@@ -110,19 +99,17 @@ const MeetingRoom = () => {
 
     return (
 
-        <div className="bg-black h-screen flex flex-col">
+        <div className="relative bg-black h-screen flex flex-col">
 
             {/* ===========================
-                Meeting Header
+                Header
             =========================== */}
 
             <div className="flex justify-between items-center px-6 py-4 bg-gray-900 text-white">
 
                 <h2 className="text-xl font-bold">
 
-                    Meeting Code :
-
-                    {meetingCode}
+                    Meeting Code : {meetingCode}
 
                 </h2>
 
@@ -130,7 +117,7 @@ const MeetingRoom = () => {
 
                     Status :
 
-                    <span className="text-green-400">
+                    <span className="text-green-400 ml-2">
 
                         {connectionState}
 
@@ -140,31 +127,79 @@ const MeetingRoom = () => {
 
             </div>
 
+           <div className="flex flex-1">
+
+    {/* ===========================
+        Video Grid
+    =========================== */}
+
+    <div className="flex-1 overflow-hidden">
+
+        <VideoGrid
+
+            username={username}
+
+            localStream={localStream}
+
+            remoteStreams={remoteStreams}
+
+            participants={participants}
+
+            cameraEnabled={cameraEnabled}
+
+            microphoneEnabled={microphoneEnabled}
+
+            connectionState={connectionState}
+
+        />
+
+    </div>
+
+    {/* ===========================
+        Participant Sidebar
+    =========================== */}
+
+    <ParticipantSidebar
+
+        participants={participants}
+
+    />
+
+</div>
+
             {/* ===========================
-                Video Grid
+                Emoji Picker
             =========================== */}
 
-            <div className="flex-1 overflow-hidden">
+            <div className="absolute top-20 right-5 z-50">
 
-                <VideoGrid
+                <EmojiReaction
 
-                    username={username}
-
-                    localStream={localStream}
-
-                    remoteStreams={remoteStreams}
-
-                    participants={participants}
-
-                    cameraEnabled={cameraEnabled}
-
-                    microphoneEnabled={microphoneEnabled}
-
-                    connectionState={connectionState}
+                    onSelect={sendReaction}
 
                 />
 
             </div>
+
+            {/* ===========================
+                Floating Reactions
+            =========================== */}
+
+            {
+
+                reactions.map((reaction) => (
+
+                    <FloatingReaction
+
+                        key={reaction.createdAt}
+
+                        reaction={reaction}
+
+                    />
+
+                ))
+
+            }
 
             {/* ===========================
                 Controls
@@ -186,7 +221,7 @@ const MeetingRoom = () => {
 
                 onRaiseHand={handleRaiseHand}
 
-                onReaction={sendReaction}
+                onReaction={() => {}}
 
             />
 

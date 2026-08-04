@@ -38,6 +38,7 @@ const useWebRTC = (meetingCode) => {
 
 
         const [participants, setParticipants] = useState({});
+        const [reactions, setReactions] = useState([]);
 
     // ========================================
     // Refs
@@ -47,72 +48,64 @@ const useWebRTC = (meetingCode) => {
 
     const socketRef = useRef(socket);
 
+    const analyserRef = useRef(null);
+
+const audioContextRef = useRef(null);
+
+const speakingIntervalRef = useRef(null);
+
     // ========================================
     // Initialize
     // ========================================
 
     useEffect(() => {
 
-        const initialize = async () => {
+    const initialize = async () => {
 
-            try {
+        connectSocket();
 
-                // Connect Socket
-                connectSocket();
+        const stream = await getLocalStream();
 
-                // Get Camera + Mic
-                const stream = await getLocalStream();
+        setLocalStream(stream);
 
-                setLocalStream(stream);
+        startSpeakingDetection();
 
-                // Join Meeting Room
-                socket.emit("join-room", {
+        socket.emit("join-room", {
+            meetingCode,
+        });
 
-                    meetingCode,
+    };
 
-                });
+    initialize();
 
-            }
+    return () => {
 
-            catch (error) {
+        socket.emit("leave-room", {
+            meetingCode,
+        });
 
-                console.log(error);
+        // ✅ Stop Speaking Detection
+        clearInterval(speakingIntervalRef.current);
 
-            }
+        // ✅ Close AudioContext
+        audioContextRef.current?.close();
 
-        };
-
-        initialize();
-
-        return () => {
-
-            socket.emit("leave-room", {
-
-                meetingCode,
-
-            });
-
-           Object.values(peersRef.current).forEach(
-
-        (peer) => {
-
+        // ✅ Close All Peer Connections
+        Object.values(peersRef.current).forEach((peer) => {
             peer.close();
+        });
 
-        }
+        peersRef.current = {};
 
-    );
+        setRemoteStreams([]);
 
-    peersRef.current = {};
+        stopLocalStream();
 
-    setRemoteStreams([]);
+        disconnectSocket();
 
-    stopLocalStream();
+    };
 
-    disconnectSocket();
-
-        };
-
-    }, [meetingCode]);
+}, [meetingCode]);
 
 
 
@@ -217,6 +210,47 @@ useEffect(() => {
         "existing-users",
 
         async (users) => {
+
+
+            setParticipants((prev) => {
+
+                const updated = { ...prev };
+
+                users.forEach((user) => {
+
+                    updated[user.socketId] = {
+
+                        socketId: user.socketId,
+
+                        userId: user.userId,
+
+                        username: user.username,
+
+                        profilePicture: user.profilePicture,
+
+                        cameraEnabled: true,
+
+                        microphoneEnabled: true,
+
+                        handRaised: false,
+
+                        isSpeaking: false,
+
+                        isHost: user.isHost || false,
+
+                        isCoHost: false,
+
+                        isOnline: true,
+
+                        joinedAt: new Date(),
+
+                    };
+
+                });
+
+                return updated;
+
+            });
 
             for (const user of users) {
 
@@ -434,6 +468,40 @@ useEffect(() => {
 
         async (user) => {
 
+            setParticipants((prev)=>({
+
+...prev,
+
+[user.socketId]:{
+
+socketId:user.socketId,
+
+userId:user.userId,
+
+username:user.username,
+
+profilePicture:user.profilePicture,
+
+cameraEnabled:true,
+
+microphoneEnabled:true,
+
+handRaised:false,
+
+isSpeaking:false,
+
+isHost:false,
+
+isCoHost:false,
+
+isOnline:true,
+
+joinedAt:new Date(),
+
+}
+
+}));
+
             console.log(
 
                 `${user.username} joined`
@@ -509,6 +577,7 @@ useEffect(() => {
 // User Left
 // ========================================
 
+
 useEffect(() => {
 
     socket.on(
@@ -517,19 +586,13 @@ useEffect(() => {
 
         ({ socketId }) => {
 
-            console.log(
+            console.log(socketId, "Left");
 
-                socketId,
-
-                "Left"
-
-            );
-
+            // ==========================
             // Close Peer
+            // ==========================
 
-            const peer =
-
-                peersRef.current[socketId];
+            const peer = peersRef.current[socketId];
 
             if (peer) {
 
@@ -539,19 +602,30 @@ useEffect(() => {
 
             }
 
+            // ==========================
             // Remove Video
+            // ==========================
 
             setRemoteStreams((prev) =>
-
                 prev.filter(
-
                     (user) =>
-
                         user.socketId !== socketId
-
                 )
-
             );
+
+            // ==========================
+            // Remove Participant
+            // ==========================
+
+            setParticipants((prev) => {
+
+                const updated = { ...prev };
+
+                delete updated[socketId];
+
+                return updated;
+
+            });
 
         }
 
@@ -559,16 +633,11 @@ useEffect(() => {
 
     return () => {
 
-        socket.off(
-
-            "user-left"
-
-        );
+        socket.off("user-left");
 
     };
 
 }, []);
-
 
 useEffect(() => {
 
@@ -609,6 +678,51 @@ useEffect(() => {
     };
 
 }, []);
+
+
+useEffect(() => {
+
+    socket.on(
+
+        "speaking-status-changed",
+
+        ({
+
+            socketId,
+
+            speaking,
+
+        }) => {
+
+            setParticipants((prev)=>({
+
+                ...prev,
+
+                [socketId]:{
+
+                    ...prev[socketId],
+
+                    isSpeaking:speaking,
+
+                }
+
+            }));
+
+        }
+
+    );
+
+    return()=>{
+
+        socket.off(
+
+            "speaking-status-changed"
+
+        );
+
+    };
+
+},[]);
 
 
 useEffect(() => {
@@ -691,6 +805,61 @@ useEffect(() => {
         socket.off(
 
             "raise-hand-changed"
+
+        );
+
+    };
+
+}, []);
+
+
+useEffect(() => {
+
+    socket.on(
+
+        "reaction-received",
+
+        (reaction) => {
+
+            setReactions(
+
+                (prev) => [
+
+                    ...prev,
+
+                    reaction,
+
+                ]
+
+            );
+
+            setTimeout(() => {
+
+                setReactions(
+
+                    (prev) =>
+
+                        prev.filter(
+
+                            (item) =>
+
+                                item.createdAt !== reaction.createdAt
+
+                        )
+
+                );
+
+            }, 3000);
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "reaction-received"
 
         );
 
@@ -808,6 +977,108 @@ const handleToggleMicrophone = () => {
         }
 
     });
+
+};
+
+
+
+// ======================================
+// Start Speaking Detection
+// ======================================
+
+const startSpeakingDetection = () => {
+
+    if (!localStream) return;
+
+    const AudioContext =
+
+        window.AudioContext ||
+
+        window.webkitAudioContext;
+
+    const audioContext =
+
+        new AudioContext();
+
+    audioContextRef.current = audioContext;
+
+    const analyser =
+
+        audioContext.createAnalyser();
+
+    analyser.fftSize = 512;
+
+    analyserRef.current = analyser;
+
+    const microphone =
+
+        audioContext.createMediaStreamSource(
+
+            localStream
+
+        );
+
+    microphone.connect(analyser);
+
+    const dataArray =
+
+        new Uint8Array(
+
+            analyser.frequencyBinCount
+
+        );
+
+    speakingIntervalRef.current =
+
+        setInterval(() => {
+
+            analyser.getByteFrequencyData(
+
+                dataArray
+
+            );
+
+            let sum = 0;
+
+            for (
+
+                let i = 0;
+
+                i < dataArray.length;
+
+                i++
+
+            ) {
+
+                sum += dataArray[i];
+
+            }
+
+            const average =
+
+                sum /
+
+                dataArray.length;
+
+            const speaking =
+
+                average > 18;
+
+            socket.emit(
+
+                "speaking-status",
+
+                {
+
+                    meetingCode,
+
+                    speaking,
+
+                }
+
+            );
+
+        }, 250);
 
 };
 
@@ -968,6 +1239,24 @@ const stopScreenShare = async () => {
 
         }
 
+        const sendReaction = (emoji) => {
+
+    socket.emit(
+
+        "send-reaction",
+
+        {
+
+            meetingCode,
+
+            emoji,
+
+        }
+
+    );
+
+};
+
     });
 
     setLocalStream(
@@ -985,6 +1274,7 @@ return {
 
 
     participants,
+mySocketId: socket.id,
 
     connectionState,
 
@@ -1001,6 +1291,12 @@ return {
     handleRaiseHand,
 
     stopScreenShare,
+
+
+    reactions,
+
+sendReaction,
+
 
 };
 

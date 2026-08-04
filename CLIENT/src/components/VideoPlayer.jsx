@@ -13,6 +13,7 @@ const VideoPlayer = ({
     microphoneEnabled = true,
 
      handRaised = false,
+     isSpeaking=false,
 
     connectionState = "connected",
 
@@ -36,8 +37,41 @@ const VideoPlayer = ({
 
     return (
 
-        <div className="relative w-full h-72 bg-gray-900 rounded-xl overflow-hidden shadow-lg">
+<div
 
+className={`
+
+relative
+
+w-full
+
+h-72
+
+rounded-xl
+
+overflow-hidden
+
+shadow-lg
+
+${
+
+isSpeaking
+
+?
+
+"border-4 border-green-500"
+
+:
+
+"border border-gray-700"
+
+}
+
+bg-gray-900
+
+`}
+
+>
             {/* ===========================
                 Video
             =========================== */}
