@@ -20,6 +20,22 @@ const meetingSchema = new mongoose.Schema({
         required: true,
     },
 
+    coHosts: [{
+
+        type: mongoose.Schema.Types.ObjectId,
+
+        ref: "User",
+
+    }],
+
+    locked: {
+
+        type: Boolean,
+
+        default: false,
+
+    },
+
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

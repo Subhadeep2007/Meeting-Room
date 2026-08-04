@@ -317,6 +317,29 @@ const registerSignalingEvents = (io, socket) => {
 
     );
 
+
+    // ==============================
+    // Kick User
+    // ==============================
+
+    socket.on(
+
+        "kick-user",
+
+        ({
+
+            targetSocketId
+
+        }) => {
+
+            io.to(targetSocketId).emit(
+
+                "kicked"
+
+            );
+
+        });
+
 };
 
 export default registerSignalingEvents;
