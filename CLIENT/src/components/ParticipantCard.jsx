@@ -1,159 +1,162 @@
 import {
-
-Mic,
-
-MicOff,
-
-Video,
-
-VideoOff,
-
-Hand,
-
-Crown
-
+    Mic,
+    MicOff,
+    Video,
+    VideoOff,
+    Hand,
+    Crown,
 } from "lucide-react";
 
-const ParticipantCard=({
+import HostControls from "./HostControls";
 
-participant,
+const ParticipantCard = ({
+    participant,
 
-})=>{
+    // Host Controls
+    isHost,
+    kickUser,
+    muteUser,
+    disableCamera,
+    transferHost,
+    makeCoHost,
+    lockMeeting,
+    meetingLocked,
+}) => {
 
-return(
+    return (
 
-<div
-    className={`
-        flex
-        items-center
-        justify-between
-        p-3
-        rounded-lg
-        transition
-        ${
-            participant.isSpeaking
-                ? "border-2 border-green-500 bg-green-900"
-                : "hover:bg-gray-700"
-        }
-    `}
->
-<div className="flex items-center gap-3">
+        <div
+            className={`
+                flex
+                items-center
+                justify-between
+                p-3
+                rounded-lg
+                transition
+                ${
+                    participant.isSpeaking
+                        ? "border-2 border-green-500 bg-green-900"
+                        : "hover:bg-gray-700"
+                }
+            `}
+        >
 
-<img
+            {/* ===========================
+                Left Section
+            =========================== */}
 
-src={participant.profilePicture?.url}
+            <div className="flex items-center gap-3">
 
-alt=""
+                <img
+                    src={participant.profilePicture?.url || "/default-avatar.png"}
+                    alt={participant.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                />
 
-className="w-10 h-10 rounded-full"
+                <div>
 
-/>
+                    <div className="font-semibold text-white">
 
-<div>
+                        {participant.username}
 
-<div className="font-semibold text-white">
+                    </div>
 
-{participant.username}
+                    <div className="text-xs text-gray-400">
 
-</div>
+                        {
+                            participant.isHost
+                                ? "Host 👑"
+                                : participant.isCoHost
+                                    ? "Co-Host ⭐"
+                                    : "Participant"
+                        }
 
-<div className="text-xs text-gray-400">
+                    </div>
 
-{
+                </div>
 
-participant.isHost
+            </div>
 
-?
+            {/* ===========================
+                Right Section
+            =========================== */}
 
-"Host"
+            <div className="flex items-center gap-2">
 
-:
+                {/* Camera */}
 
-participant.isCoHost
+                {
+                    participant.cameraEnabled
+                        ? <Video size={18} className="text-green-400" />
+                        : <VideoOff size={18} className="text-red-500" />
+                }
 
-?
+                {/* Mic */}
 
-"Co Host"
+                {
+                    participant.microphoneEnabled
+                        ? <Mic size={18} className="text-green-400" />
+                        : <MicOff size={18} className="text-red-500" />
+                }
 
-:
+                {/* Hand Raised */}
 
-"Participant"
+                {
+                    participant.handRaised && (
+                        <Hand
+                            size={18}
+                            className="text-yellow-400"
+                        />
+                    )
+                }
 
-}
+                {/* Host Badge */}
 
-</div>
+                {
+                    participant.isHost && (
+                        <Crown
+                            size={18}
+                            className="text-yellow-400"
+                        />
+                    )
+                }
 
-</div>
+                {/* ===========================
+                    Host Controls
+                =========================== */}
 
-</div>
+                {
+                    isHost &&
+                    !participant.isHost && (
 
-<div className="flex gap-2">
+                        <HostControls
 
-{
+                            participant={participant}
 
-participant.cameraEnabled
+                            onKick={kickUser}
 
-?
+                            onMute={muteUser}
 
-<Video size={18}/>
+                            onDisableCamera={disableCamera}
 
-:
+                            onTransferHost={transferHost}
 
-<VideoOff size={18}/>
+                            onMakeCoHost={makeCoHost}
 
-}
+                            onLockMeeting={lockMeeting}
 
-{
+                            meetingLocked={meetingLocked}
 
-participant.microphoneEnabled
+                        />
 
-?
+                    )
+                }
 
-<Mic size={18}/>
+            </div>
 
-:
+        </div>
 
-<MicOff size={18}/>
-
-}
-
-{
-
-participant.handRaised
-
-&&
-
-<Hand
-
-size={18}
-
-className="text-yellow-400"
-
-/>
-
-}
-
-{
-
-participant.isHost
-
-&&
-
-<Crown
-
-size={18}
-
-className="text-yellow-400"
-
-/>
-
-}
-
-</div>
-
-</div>
-
-);
+    );
 
 };
 

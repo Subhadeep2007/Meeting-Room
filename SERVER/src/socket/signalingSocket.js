@@ -1,4 +1,22 @@
 import { SOCKET_EVENTS } from "../constants/socketEvents.js";
+import Meeting from "../models/meetingModel.js";
+import User from "../models/userModel.js";
+
+
+import {
+
+    getMeeting,
+
+    verifyHostPermission,
+
+    participantExists,
+
+    cannotKickHost,
+
+    isLocked,
+    isBanned,
+
+} from "../middleware/hostMiddleware.js";
 
 const registerSignalingEvents = (io, socket) => {
 
@@ -318,27 +336,612 @@ const registerSignalingEvents = (io, socket) => {
     );
 
 
-    // ==============================
+    // =======================================
     // Kick User
-    // ==============================
+    // =======================================
 
     socket.on(
-
         "kick-user",
+        async({
+                meetingId,
+                targetSocketId,
+                targetUserId,
+            },
+            callback
+        ) => {
 
-        ({
+            try {
 
-            targetSocketId
+                const meeting = await getMeeting(meetingId);
 
-        }) => {
+                // Host Permission
+                if (!verifyHostPermission(meeting, socket.user._id)) {
 
-            io.to(targetSocketId).emit(
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Only Host or CoHost can kick.",
+                        });
+                    }
 
-                "kicked"
+                    return;
+                }
 
-            );
+                // Participant Exists
+                if (!participantExists(meeting, targetUserId)) {
 
-        });
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Participant not found.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Cannot Kick Host
+                if (!cannotKickHost(meeting, targetUserId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Host cannot be kicked.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Kick User
+                io.to(targetSocketId).emit("kicked", {
+                    success: true,
+                    message: "You were removed by Host.",
+                });
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: "User kicked successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Kick User Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
+
+
+
+    // =======================================
+    // Mute User
+    // =======================================
+
+    socket.on(
+        "mute-user",
+        async({
+                meetingId,
+                targetSocketId,
+                targetUserId,
+            },
+            callback
+        ) => {
+
+            try {
+
+                const meeting = await getMeeting(meetingId);
+
+                // Host Permission
+                if (!verifyHostPermission(meeting, socket.user._id)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Unauthorized",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Participant Exists
+                if (!participantExists(meeting, targetUserId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Participant not found.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Cannot Mute Host
+                if (!cannotKickHost(meeting, targetUserId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Host cannot be muted.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Force Mute
+                io.to(targetSocketId).emit("force-mute", {
+                    success: true,
+                    message: "Host muted your microphone.",
+                });
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: "Participant muted successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Mute User Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
+
+    // =======================================
+    // Disable Camera
+    // =======================================
+
+    socket.on(
+        "disable-camera",
+        async({
+                meetingId,
+                targetSocketId,
+                targetUserId,
+            },
+            callback
+        ) => {
+
+            try {
+
+                const meeting = await getMeeting(meetingId);
+
+                // Host Permission
+                if (!verifyHostPermission(meeting, socket.user._id)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Unauthorized",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Participant Exists
+                if (!participantExists(meeting, targetUserId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Participant not found.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Cannot Disable Host Camera
+                if (!cannotKickHost(meeting, targetUserId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Host camera cannot be disabled.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // Disable Camera
+                io.to(targetSocketId).emit("force-camera-off", {
+                    success: true,
+                    message: "Host disabled your camera.",
+                });
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: "Participant camera disabled successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Disable Camera Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
+
+
+    // =======================================
+    // Lock / Unlock Meeting
+    // =======================================
+
+    socket.on(
+        "lock-meeting",
+        async({
+                meetingId,
+                locked,
+            },
+            callback
+        ) => {
+
+            try {
+
+                const meeting = await getMeeting(meetingId);
+
+                // ===================================
+                // Verify Host Permission
+                // ===================================
+
+                if (!verifyHostPermission(meeting, socket.user._id)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Only Host or Co-Host can lock/unlock the meeting.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Update Meeting Status
+                // ===================================
+
+                meeting.locked = locked;
+
+                await meeting.save();
+
+                // ===================================
+                // Notify All Participants
+                // ===================================
+
+                io.to(meeting.meetingCode).emit(
+                    "meeting-lock-status", {
+                        locked,
+                        message: locked ?
+                            "Meeting has been locked by the Host." : "Meeting has been unlocked by the Host.",
+                    }
+                );
+
+                // ===================================
+                // Acknowledge Host
+                // ===================================
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: locked ?
+                            "Meeting locked successfully." : "Meeting unlocked successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Lock Meeting Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
+
+
+
+
+    // =======================================
+    // Transfer Host
+    // =======================================
+
+    socket.on(
+        "transfer-host",
+        async({
+                meetingId,
+                newHostId,
+            },
+            callback
+        ) => {
+
+            try {
+
+                const meeting = await getMeeting(meetingId);
+
+                // ===================================
+                // Verify Host Permission
+                // ===================================
+
+                if (!verifyHostPermission(meeting, socket.user._id)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Only Host or Co-Host can transfer host.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Check Participant Exists
+                // ===================================
+
+                if (!participantExists(meeting, newHostId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Selected user is not a participant.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Cannot Transfer to Same Host
+                // ===================================
+
+                if (meeting.host.toString() === newHostId.toString()) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "This user is already the Host.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Old Host -> CoHost
+                // ===================================
+
+                if (!meeting.coHosts.some(
+                        (id) => id.toString() === meeting.host.toString()
+                    )) {
+                    meeting.coHosts.push(meeting.host);
+                }
+
+                // ===================================
+                // Remove New Host From CoHosts
+                // ===================================
+
+                meeting.coHosts = meeting.coHosts.filter(
+                    (id) => id.toString() !== newHostId.toString()
+                );
+
+                // ===================================
+                // Transfer Host
+                // ===================================
+
+                meeting.host = newHostId;
+
+                await meeting.save();
+
+                // ===================================
+                // Notify Everyone
+                // ===================================
+
+                io.to(meeting.meetingCode).emit(
+                    "host-transferred", {
+                        hostId: newHostId,
+                        message: "Meeting host has been changed.",
+                    }
+                );
+
+                // ===================================
+                // Ack
+                // ===================================
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: "Host transferred successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Transfer Host Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
+
+
+
+    // =======================================
+    // Make Co-Host
+    // =======================================
+
+    socket.on(
+        "make-cohost",
+        async({
+                meetingId,
+                userId,
+            },
+            callback
+        ) => {
+
+            try {
+
+                const meeting = await getMeeting(meetingId);
+
+                // ===================================
+                // Verify Host Permission
+                // ===================================
+
+                if (!verifyHostPermission(meeting, socket.user._id)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Only Host or Co-Host can assign a Co-Host.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Check Participant Exists
+                // ===================================
+
+                if (!participantExists(meeting, userId)) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Participant not found.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Host Cannot Become Co-Host
+                // ===================================
+
+                if (meeting.host.toString() === userId.toString()) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "Host is already the highest role.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Already Co-Host
+                // ===================================
+
+                const alreadyCoHost = meeting.coHosts.some(
+                    (id) => id.toString() === userId.toString()
+                );
+
+                if (alreadyCoHost) {
+
+                    if (callback) {
+                        return callback({
+                            success: false,
+                            message: "User is already a Co-Host.",
+                        });
+                    }
+
+                    return;
+                }
+
+                // ===================================
+                // Add Co-Host
+                // ===================================
+
+                meeting.coHosts.push(userId);
+
+                await meeting.save();
+
+                // ===================================
+                // Notify Everyone
+                // ===================================
+
+                io.to(meeting.meetingCode).emit(
+                    "cohost-added", {
+                        userId,
+                        message: "A new Co-Host has been assigned.",
+                    }
+                );
+
+                // ===================================
+                // Acknowledge
+                // ===================================
+
+                if (callback) {
+                    return callback({
+                        success: true,
+                        message: "Co-Host assigned successfully.",
+                    });
+                }
+
+            } catch (error) {
+
+                console.error("Make Co-Host Error:", error);
+
+                if (callback) {
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+                }
+
+            }
+
+        }
+    );
 
 };
 

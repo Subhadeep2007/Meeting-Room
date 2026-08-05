@@ -2,87 +2,131 @@ import { useState } from "react";
 
 import ParticipantCard from "./ParticipantCard";
 
-const ParticipantSidebar=({
+const ParticipantSidebar = ({
 
-participants,
+    participants,
 
-})=>{
+    // Host Controls
+    isHost,
 
-const [search,setSearch]=useState("");
+    kickUser,
 
-const users=Object.values(participants).filter(
+    muteUser,
 
-(user)=>
+    disableCamera,
 
-user.username
+    transferHost,
 
-.toLowerCase()
+    makeCoHost,
 
-.includes(
+    lockMeeting,
 
-search.toLowerCase()
+    meetingLocked,
 
-)
+}) => {
 
-);
+    const [search, setSearch] = useState("");
 
-return(
+    const users = Object.values(participants).filter((user) =>
 
-<div
+        user.username
+            ?.toLowerCase()
+            .includes(search.toLowerCase())
 
-className="w-80 bg-gray-900 h-full p-4"
+    );
 
->
+    return (
 
-<input
+        <div className="w-80 bg-gray-900 h-full p-4 border-l border-gray-700">
 
-type="text"
+            {/* ===========================
+                Header
+            =========================== */}
 
-placeholder="Search"
+            <h2 className="text-white text-xl font-bold mb-4">
 
-value={search}
+                Participants ({users.length})
 
-onChange={(e)=>
+            </h2>
 
-setSearch(
+            {/* ===========================
+                Search
+            =========================== */}
 
-e.target.value
+            <input
 
-)
+                type="text"
 
-}
+                placeholder="Search Participant..."
 
-className="w-full p-2 rounded mb-4"
+                value={search}
 
-/>
+                onChange={(e) =>
 
-<div className="space-y-2">
+                    setSearch(e.target.value)
 
-{
+                }
 
-users.map(
+                className="w-full p-2 rounded-lg mb-4 bg-gray-800 text-white outline-none"
 
-(user)=>(
+            />
 
-<ParticipantCard
+            {/* ===========================
+                Participant List
+            =========================== */}
 
-key={user.socketId}
+            <div className="space-y-2 overflow-y-auto h-[80vh]">
 
-participant={user}
+                {
 
-/>
+                    users.length > 0 ? (
 
-)
+                        users.map((user) => (
 
-)
+                            <ParticipantCard
 
-}
+                                key={user.socketId}
 
-</div>
+                                participant={user}
 
-</div>
+                                // Host Controls
+                                isHost={isHost}
 
-);
+                                kickUser={kickUser}
+
+                                muteUser={muteUser}
+
+                                disableCamera={disableCamera}
+
+                                transferHost={transferHost}
+
+                                makeCoHost={makeCoHost}
+
+                                lockMeeting={lockMeeting}
+
+                                meetingLocked={meetingLocked}
+
+                            />
+
+                        ))
+
+                    ) : (
+
+                        <div className="text-center text-gray-400 mt-10">
+
+                            No Participants Found
+
+                        </div>
+
+                    )
+
+                }
+
+            </div>
+
+        </div>
+
+    );
 
 };
 

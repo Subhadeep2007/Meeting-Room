@@ -1,65 +1,253 @@
 import mongoose from "mongoose";
 
-const meetingSchema = new mongoose.Schema({
+const meetingSchema = new mongoose.Schema(
 
-    title: {
-        type: String,
-        required: true,
-        trim: true,
+    {
+
+        title: {
+
+            type: String,
+
+            required: true,
+
+        },
+
+        meetingCode: {
+
+            type: String,
+
+            required: true,
+
+            unique: true,
+
+        },
+
+        description: {
+
+            type: String,
+
+            default: "",
+
+        },
+
+        // =============================
+        // Host
+        // =============================
+
+        host: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+            required: true,
+
+        },
+
+        // =============================
+        // Co Hosts
+        // =============================
+
+        coHosts: [
+
+            {
+
+                type: mongoose.Schema.Types.ObjectId,
+
+                ref: "User",
+
+            },
+
+        ],
+
+        // =============================
+        // Participants
+        // =============================
+
+        participants: [
+
+            {
+
+                type: mongoose.Schema.Types.ObjectId,
+
+                ref: "User",
+
+            },
+
+        ],
+
+        // =============================
+        // Waiting Room
+        // =============================
+
+        waitingUsers: [
+
+            {
+
+                type: mongoose.Schema.Types.ObjectId,
+
+                ref: "User",
+
+            },
+
+        ],
+
+        // =============================
+        // Banned Users
+        // =============================
+
+        bannedUsers: [
+
+            {
+
+                type: mongoose.Schema.Types.ObjectId,
+
+                ref: "User",
+
+            },
+
+        ],
+
+        // =============================
+        // Meeting Lock
+        // =============================
+
+        locked: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
+        // =============================
+        // Meeting Status
+        // =============================
+
+        status: {
+
+            type: String,
+
+            enum: [
+
+                "scheduled",
+
+                "live",
+
+                "ended",
+
+            ],
+
+            default: "live",
+
+        },
+
+        // =============================
+        // Recording
+        // =============================
+
+        recording: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
+        // =============================
+        // Screen Share
+        // =============================
+
+        screenSharingBy: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+            default: null,
+
+        },
+
+        // =============================
+        // Chat Enabled
+        // =============================
+
+        chatEnabled: {
+
+            type: Boolean,
+
+            default: true,
+
+        },
+
+        // =============================
+        // File Sharing
+        // =============================
+
+        fileSharingEnabled: {
+
+            type: Boolean,
+
+            default: true,
+
+        },
+
+        // =============================
+        // Mute Everyone
+        // =============================
+
+        muteEveryone: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
+        // =============================
+        // Camera Disabled
+        // =============================
+
+        disableCameraForEveryone: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
     },
 
-    meetingCode: {
-        type: String,
-        required: true,
-        unique: true,
-    },
+    {
 
-    host: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
+        timestamps: true,
 
-    coHosts: [{
+    }
 
-        type: mongoose.Schema.Types.ObjectId,
+);
 
-        ref: "User",
+meetingSchema.index({
 
-    }],
+    meetingCode: 1,
 
-    locked: {
-
-        type: Boolean,
-
-        default: false,
-
-    },
-
-    participants: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    }],
-
-    isActive: {
-        type: Boolean,
-        default: true,
-    },
-
-    startTime: {
-        type: Date,
-        default: Date.now,
-    },
-
-    endTime: {
-        type: Date,
-        default: null,
-    },
-
-}, {
-    timestamps: true,
 });
 
-const Meeting = mongoose.model("Meeting", meetingSchema);
+meetingSchema.index({
 
-export default Meeting;
+    host: 1,
+
+});
+
+meetingSchema.index({
+
+    participants: 1,
+
+});
+
+export default mongoose.model(
+
+    "Meeting",
+
+    meetingSchema
+
+);

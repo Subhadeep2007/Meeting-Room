@@ -50,6 +50,17 @@ const MeetingRoom = () => {
         startScreenShare,
         stopScreenShare,
         handleRaiseHand,
+        kickUser,
+
+muteUser,
+
+disableCamera,
+
+transferHost,
+
+makeCoHost,
+
+lockMeeting,
 
     } = useWebRTC(meetingCode);
 
@@ -162,6 +173,21 @@ const MeetingRoom = () => {
     <ParticipantSidebar
 
         participants={participants}
+        kickUser={kickUser}
+
+muteUser={muteUser}
+
+disableCamera={disableCamera}
+
+transferHost={transferHost}
+
+makeCoHost={makeCoHost}
+
+lockMeeting={lockMeeting}
+
+meetingLocked={false}
+
+isHost={true}
 
     />
 

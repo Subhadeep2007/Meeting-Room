@@ -895,6 +895,53 @@ socket.off(
 };
 
 },[]);
+useEffect(() => {
+
+    socket.on("force-mute", () => {
+
+        handleToggleMicrophone(false);
+
+    });
+
+    socket.on("force-camera-off", () => {
+
+        handleToggleCamera(false);
+
+    });
+
+    socket.on("meeting-lock-status", (data) => {
+
+        console.log(data);
+
+    });
+
+    socket.on("host-transferred", (data) => {
+
+        console.log(data);
+
+    });
+
+    socket.on("cohost-added", (data) => {
+
+        console.log(data);
+
+    });
+
+    return () => {
+
+        socket.off("force-mute");
+
+        socket.off("force-camera-off");
+
+        socket.off("meeting-lock-status");
+
+        socket.off("host-transferred");
+
+        socket.off("cohost-added");
+
+    };
+
+}, []);
 
 
 // ========================================
@@ -1295,22 +1342,94 @@ const stopScreenShare = async () => {
     );
 
 
-    const kickUser=(socketId)=>{
+const kickUser = (participant) => {
 
-socket.emit(
+    socket.emit(
+        "kick-user",
+        {
+            meetingId,
+            targetSocketId: participant.socketId,
+            targetUserId: participant.userId,
+        },
+        (response) => {
 
-"kick-user",
+            console.log(response);
 
-{
-
-targetSocketId:socketId,
-
-}
-
-);
+        }
+    );
 
 };
 
+
+const muteUser = (participant) => {
+
+    socket.emit(
+        "mute-user",
+        {
+            meetingId,
+            targetSocketId: participant.socketId,
+            targetUserId: participant.userId,
+        },
+        (response) => {
+
+            console.log(response);
+
+        }
+    );
+
+};
+const disableCamera = (participant) => {
+
+    socket.emit(
+        "disable-camera",
+        {
+            meetingId,
+            targetSocketId: participant.socketId,
+            targetUserId: participant.userId,
+        },
+        (response) => {
+
+            console.log(response);
+
+        }
+    );
+
+};
+
+
+const lockMeeting = (locked) => {
+
+    socket.emit(
+        "lock-meeting",
+        {
+            meetingId,
+            locked,
+        },
+        (response) => {
+
+            console.log(response);
+
+        }
+    );
+
+};
+
+const makeCoHost = (participant) => {
+
+    socket.emit(
+        "make-cohost",
+        {
+            meetingId,
+            userId: participant.userId,
+        },
+        (response) => {
+
+            console.log(response);
+
+        }
+    );
+
+};
 };
 return {
 
@@ -1343,6 +1462,11 @@ mySocketId: socket.id,
 
 sendReaction,
 kickUser,
+muteUser,
+disableCamera,
+transferHost,
+lockMeeting,
+makeCoHost,
 
 
 };
