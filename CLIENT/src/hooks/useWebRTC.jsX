@@ -866,6 +866,35 @@ useEffect(() => {
     };
 
 }, []);
+useEffect(()=>{
+
+socket.on(
+
+"kicked",
+
+()=>{
+
+alert(
+
+"You have been removed by Host."
+
+);
+
+window.location.href="/dashboard";
+
+});
+
+return()=>{
+
+socket.off(
+
+"kicked"
+
+);
+
+};
+
+},[]);
 
 
 // ========================================
@@ -1265,6 +1294,23 @@ const stopScreenShare = async () => {
 
     );
 
+
+    const kickUser=(socketId)=>{
+
+socket.emit(
+
+"kick-user",
+
+{
+
+targetSocketId:socketId,
+
+}
+
+);
+
+};
+
 };
 return {
 
@@ -1296,6 +1342,7 @@ mySocketId: socket.id,
     reactions,
 
 sendReaction,
+kickUser,
 
 
 };
