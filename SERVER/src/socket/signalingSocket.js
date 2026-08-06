@@ -17,6 +17,7 @@ import {
     isBanned,
 
 } from "../middleware/hostMiddleware.js";
+import { getUserSockets } from "./socketManager.js";
 
 const registerSignalingEvents = (io, socket) => {
 
@@ -1025,6 +1026,9 @@ const registerSignalingEvents = (io, socket) => {
             }
 
         });
+
+
+
     socket.on(
 
         "approve-user",
@@ -1099,18 +1103,35 @@ const registerSignalingEvents = (io, socket) => {
 
                 await meeting.save();
 
-                io.emit(
+                // ======================================
+                // Notify Only Approved User
+                // ======================================
 
-                    "user-approved",
+                const sockets = getUserSockets(userId);
 
-                    {
+                for (const socketId of sockets) {
 
-                        userId,
+                    io.to(socketId).emit("user-approved", {
 
-                    }
+                        success: true,
 
-                );
+                        meetingId,
 
+                        message: "Your request has been approved by the Host.",
+
+                    });
+
+                }
+
+                // ======================================
+                // Notify Host Room
+                // ======================================
+
+                io.to(meeting.meetingCode).emit("waiting-user-removed", {
+
+                    userId,
+
+                });
                 if (callback) {
 
                     return callback({
@@ -1138,6 +1159,9 @@ const registerSignalingEvents = (io, socket) => {
             }
 
         });
+
+
+
     socket.on(
 
         "reject-user",
@@ -1208,17 +1232,35 @@ const registerSignalingEvents = (io, socket) => {
 
                 await meeting.save();
 
-                io.emit(
+                // ======================================
+                // Notify Only Rejected User
+                // ======================================
 
-                    "user-rejected",
+                const sockets = getUserSockets(userId);
 
-                    {
+                for (const socketId of sockets) {
 
-                        userId,
+                    io.to(socketId).emit("user-rejected", {
 
-                    }
+                        success: true,
 
-                );
+                        meetingId,
+
+                        message: "Your request has been rejected by the Host.",
+
+                    });
+
+                }
+
+                // ======================================
+                // Remove From Host Waiting List
+                // ======================================
+
+                io.to(meeting.meetingCode).emit("waiting-user-removed", {
+
+                    userId,
+
+                });
 
                 if (callback) {
 

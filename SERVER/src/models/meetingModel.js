@@ -225,13 +225,6 @@ const meetingSchema = new mongoose.Schema(
     }
 
 );
-
-meetingSchema.index({
-
-    meetingCode: 1,
-
-});
-
 meetingSchema.index({
 
     host: 1,

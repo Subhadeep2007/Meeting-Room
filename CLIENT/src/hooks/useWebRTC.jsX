@@ -931,6 +931,27 @@ useEffect(() => {
     };
 
 }, []);
+// ======================================
+// Remove Waiting User
+// ======================================
+
+useEffect(() => {
+
+    socket.on("waiting-user-removed", ({ userId }) => {
+
+        setWaitingUsers((prev) =>
+            prev.filter((user) => user.userId !== userId)
+        );
+
+    });
+
+    return () => {
+
+        socket.off("waiting-user-removed");
+
+    };
+
+}, []);
 
 
 useEffect(() => {
