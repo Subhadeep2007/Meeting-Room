@@ -8,6 +8,7 @@ import Controls from "../components/Controls";
 import EmojiReaction from "../components/EmojiReaction";
 import FloatingReaction from "../components/FloatingReaction";
 import ParticipantSidebar from "../components/ParticipantSidebar";
+import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
 
 const MeetingRoom = () => {
 
@@ -40,6 +41,9 @@ const MeetingRoom = () => {
 
         reactions,
         sendReaction,
+         waitingUsers,
+    approveUser,
+    rejectUser,
 
         cameraEnabled,
         microphoneEnabled,
@@ -190,6 +194,16 @@ meetingLocked={false}
 isHost={true}
 
     />
+
+    <WaitingRoomSidebar
+
+    waitingUsers={waitingUsers}
+
+    approveUser={approveUser}
+
+    rejectUser={rejectUser}
+
+/>
 
 </div>
 

@@ -1,3 +1,6 @@
+
+
+import { io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 
 import socket, {
@@ -23,7 +26,7 @@ const useWebRTC = (meetingCode) => {
     // ========================================
     // State
     // ========================================
-
+    const [mySocketId, setMySocketId] = useState("");
     const [localStream, setLocalStream] = useState(null);
 
     const [remoteStreams, setRemoteStreams] = useState([]);
@@ -39,6 +42,7 @@ const useWebRTC = (meetingCode) => {
 
         const [participants, setParticipants] = useState({});
         const [reactions, setReactions] = useState([]);
+        const [waitingUsers, setWaitingUsers] = useState([]);
 
     // ========================================
     // Refs
@@ -64,14 +68,22 @@ const speakingIntervalRef = useRef(null);
 
         connectSocket();
 
-        const stream = await getLocalStream();
+        socket.on("connect", async () => {
 
-        setLocalStream(stream);
+            console.log("Socket Connected:", socket.id);
 
-        startSpeakingDetection();
+            setMySocketId(socket.id);
 
-        socket.emit("join-room", {
-            meetingCode,
+            const stream = await getLocalStream();
+
+            setLocalStream(stream);
+
+            startSpeakingDetection(stream);
+
+            socket.emit("join-room", {
+                meetingCode,
+            });
+
         });
 
     };
@@ -84,13 +96,12 @@ const speakingIntervalRef = useRef(null);
             meetingCode,
         });
 
-        // ✅ Stop Speaking Detection
+        socket.off("connect");
+
         clearInterval(speakingIntervalRef.current);
 
-        // ✅ Close AudioContext
         audioContextRef.current?.close();
 
-        // ✅ Close All Peer Connections
         Object.values(peersRef.current).forEach((peer) => {
             peer.close();
         });
@@ -811,6 +822,115 @@ useEffect(() => {
     };
 
 }, []);
+useEffect(() => {
+
+    socket.on(
+
+        "waiting-user",
+
+        (user) => {
+
+            setWaitingUsers(
+
+                (prev) => [
+
+                    ...prev,
+
+                    user,
+
+                ]
+
+            );
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "waiting-user"
+
+        );
+
+    };
+
+}, []);
+useEffect(() => {
+
+    socket.on(
+
+        "user-approved",
+
+        ({ userId }) => {
+
+            setWaitingUsers(
+
+                (prev) =>
+
+                    prev.filter(
+
+                        (user) =>
+
+                            user.userId !== userId
+
+                    )
+
+            );
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "user-approved"
+
+        );
+
+    };
+
+}, []);
+useEffect(() => {
+
+    socket.on(
+
+        "user-rejected",
+
+        ({ userId }) => {
+
+            setWaitingUsers(
+
+                (prev) =>
+
+                    prev.filter(
+
+                        (user) =>
+
+                            user.userId !== userId
+
+                    )
+
+            );
+
+        }
+
+    );
+
+    return () => {
+
+        socket.off(
+
+            "user-rejected"
+
+        );
+
+    };
+
+}, []);
 
 
 useEffect(() => {
@@ -1057,106 +1177,69 @@ const handleToggleMicrophone = () => {
 };
 
 
-
 // ======================================
 // Start Speaking Detection
 // ======================================
 
-const startSpeakingDetection = () => {
+const startSpeakingDetection = (stream) => {
 
-    if (!localStream) return;
+    if (!stream) return;
 
     const AudioContext =
-
         window.AudioContext ||
-
         window.webkitAudioContext;
 
-    const audioContext =
-
-        new AudioContext();
+    const audioContext = new AudioContext();
 
     audioContextRef.current = audioContext;
 
-    const analyser =
-
-        audioContext.createAnalyser();
+    const analyser = audioContext.createAnalyser();
 
     analyser.fftSize = 512;
 
     analyserRef.current = analyser;
 
+    // ===============================
+    // Use Passed Stream
+    // ===============================
+
     const microphone =
-
-        audioContext.createMediaStreamSource(
-
-            localStream
-
-        );
+        audioContext.createMediaStreamSource(stream);
 
     microphone.connect(analyser);
 
-    const dataArray =
+    const dataArray = new Uint8Array(
+        analyser.frequencyBinCount
+    );
 
-        new Uint8Array(
+    speakingIntervalRef.current = setInterval(() => {
 
-            analyser.frequencyBinCount
+        analyser.getByteFrequencyData(dataArray);
 
+        let sum = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+
+            sum += dataArray[i];
+
+        }
+
+        const average = sum / dataArray.length;
+
+        const speaking = average > 18;
+
+        socket.emit(
+            "speaking-status",
+            {
+                meetingCode,
+                speaking,
+            }
         );
 
-    speakingIntervalRef.current =
-
-        setInterval(() => {
-
-            analyser.getByteFrequencyData(
-
-                dataArray
-
-            );
-
-            let sum = 0;
-
-            for (
-
-                let i = 0;
-
-                i < dataArray.length;
-
-                i++
-
-            ) {
-
-                sum += dataArray[i];
-
-            }
-
-            const average =
-
-                sum /
-
-                dataArray.length;
-
-            const speaking =
-
-                average > 18;
-
-            socket.emit(
-
-                "speaking-status",
-
-                {
-
-                    meetingCode,
-
-                    speaking,
-
-                }
-
-            );
-
-        }, 250);
+    }, 250);
 
 };
+
 
 
 const startScreenShare = async () => {
@@ -1232,7 +1315,73 @@ const startScreenShare = async () => {
     }
 
 };
+const joinWaitingRoom = () => {
 
+    socket.emit(
+
+        "waiting-room-join",
+
+        {
+
+            meetingId,
+
+        },
+
+        (response) => {
+
+            console.log(response);
+
+        }
+
+    );
+
+};
+const approveUser = (userId) => {
+
+    socket.emit(
+
+        "approve-user",
+
+        {
+
+            meetingId,
+
+            userId,
+
+        },
+
+        (response) => {
+
+            console.log(response);
+
+        }
+
+    );
+
+};
+const rejectUser = (userId) => {
+
+    socket.emit(
+
+        "reject-user",
+
+        {
+
+            meetingId,
+
+            userId,
+
+        },
+
+        (response) => {
+
+            console.log(response);
+
+        }
+
+    );
+
+};
 
 // ======================================
 // Raise Hand
@@ -1439,7 +1588,7 @@ return {
 
 
     participants,
-mySocketId: socket.id,
+mySocketId,
 
     connectionState,
 
@@ -1452,6 +1601,15 @@ mySocketId: socket.id,
     handleToggleMicrophone,
 
     startScreenShare,
+
+
+    waitingUsers,
+
+joinWaitingRoom,
+
+approveUser,
+
+rejectUser,
 
     handleRaiseHand,
 
