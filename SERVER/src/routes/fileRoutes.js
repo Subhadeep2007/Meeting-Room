@@ -11,6 +11,7 @@ import {
     renameFile,
     downloadFile,
     fileHistory,
+    recentFiles,
 
 } from "../controllers/fileController.js";
 
@@ -67,5 +68,15 @@ router.get(
     "/history/:fileId",
     authMiddleware,
     fileHistory
+);
+
+router.get(
+
+    "/recent/:meetingId",
+
+    authMiddleware,
+
+    recentFiles
+
 );
 export default router;

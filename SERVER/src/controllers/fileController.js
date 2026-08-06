@@ -3,6 +3,12 @@ import { uploadFileService, getFileService, deleteFileService, renameFileService
 import { getIO } from "../socket/socketManager.js";
 import { logFileActivity } from "../services/fileService.js";
 import { getFileHistory } from "../services/fileService.js";
+import Meeting from "../models/meetingModel.js";
+
+import {
+    createNotification,
+    NotificationType,
+} from "../services/notificationService.js";
 
 
 export const uploadFile = async(req, res) => {
@@ -23,12 +29,66 @@ export const uploadFile = async(req, res) => {
 
         });
 
+        // ======================================
+        // Get Meeting
+        // ======================================
+
+        const meeting = await Meeting.findById(meetingId);
+
+        if (!meeting) {
+
+            return res.status(httpStatus.NOT_FOUND).json({
+
+                success: false,
+
+                message: "Meeting not found",
+
+            });
+
+        }
+
+        // ======================================
         // Socket Broadcast
+        // ======================================
+
         const io = getIO();
 
-        io.to(meetingId).emit(
+        io.to(meeting.meetingCode).emit(
+
             "file-uploaded",
+
             savedFile
+
+        );
+
+        // ======================================
+        // Notification
+        // ======================================
+
+        const notification = createNotification(
+
+            NotificationType.FILE_UPLOADED,
+
+            "File Uploaded",
+
+            `${req.user.username} uploaded "${savedFile.originalName}".`,
+
+            {
+
+                meetingId,
+
+                fileId: savedFile._id,
+
+            }
+
+        );
+
+        io.to(meeting.meetingCode).emit(
+
+            "notification",
+
+            notification
+
         );
 
         return res.status(httpStatus.CREATED).json({
@@ -91,8 +151,6 @@ export const getFile = async(req, res) => {
 
 };
 
-
-
 export const deleteFile = async(req, res) => {
 
     try {
@@ -107,19 +165,73 @@ export const deleteFile = async(req, res) => {
 
         });
 
-        // ===========================
-        // Socket Broadcast
-        // ===========================
+        // =====================================
+        // Get Meeting
+        // =====================================
+
+        const meeting = await Meeting.findById(file.meeting);
+
+        if (!meeting) {
+
+            return res.status(httpStatus.NOT_FOUND).json({
+
+                success: false,
+
+                message: "Meeting not found",
+
+            });
+
+        }
 
         const io = getIO();
 
-        io.to(file.meeting.toString()).emit(
-            "file-deleted", {
+        // =====================================
+        // Socket Broadcast
+        // =====================================
+
+        io.to(meeting.meetingCode).emit(
+
+            "file-deleted",
+
+            {
+
                 fileId: file._id,
+
             }
+
         );
 
-        return res.status(200).json({
+        // =====================================
+        // Notification
+        // =====================================
+
+        const notification = createNotification(
+
+            NotificationType.FILE_UPLOADED,
+
+            "File Deleted",
+
+            `${req.user.username} deleted "${file.originalName}".`,
+
+            {
+
+                meetingId: meeting._id,
+
+                fileId: file._id,
+
+            }
+
+        );
+
+        io.to(meeting.meetingCode).emit(
+
+            "notification",
+
+            notification
+
+        );
+
+        return res.status(httpStatus.OK).json({
 
             success: true,
 
@@ -129,7 +241,9 @@ export const deleteFile = async(req, res) => {
 
     } catch (error) {
 
-        return res.status(400).json({
+        console.error(error);
+
+        return res.status(httpStatus.BAD_REQUEST).json({
 
             success: false,
 
@@ -140,41 +254,51 @@ export const deleteFile = async(req, res) => {
     }
 
 };
+
+
 export const renameFile = async(req, res) => {
 
     try {
 
-        const {
+        const { fileId } = req.params;
 
-            fileId
+        const { newName } = req.body;
 
-        } = req.params;
+        const file = await renameFileService({
 
-        const {
+            fileId,
 
-            newName
+            userId: req.user._id,
 
-        } = req.body;
+            newName,
 
-        const file =
+        });
 
-            await renameFileService({
+        // =====================================
+        // Get Meeting
+        // =====================================
 
-                fileId,
+        const meeting = await Meeting.findById(file.meeting);
 
-                userId: req.user._id,
+        if (!meeting) {
 
-                newName,
+            return res.status(httpStatus.NOT_FOUND).json({
+
+                success: false,
+
+                message: "Meeting not found",
 
             });
 
+        }
+
         const io = getIO();
 
-        io.to(
+        // =====================================
+        // Socket Broadcast
+        // =====================================
 
-            file.meeting.toString()
-
-        ).emit(
+        io.to(meeting.meetingCode).emit(
 
             "file-renamed",
 
@@ -182,26 +306,59 @@ export const renameFile = async(req, res) => {
 
         );
 
-        return res.status(200).json({
+        // =====================================
+        // Notification
+        // =====================================
+
+        const notification = createNotification(
+
+            NotificationType.FILE_UPLOADED,
+
+            "File Renamed",
+
+            `${req.user.username} renamed file to "${file.originalName}".`,
+
+            {
+
+                meetingId: meeting._id,
+
+                fileId: file._id,
+
+            }
+
+        );
+
+        io.to(meeting.meetingCode).emit(
+
+            "notification",
+
+            notification
+
+        );
+
+        return res.status(httpStatus.OK).json({
 
             success: true,
 
-            data: file
+            message: "File renamed successfully",
+
+            data: file,
 
         });
 
     } catch (error) {
 
-        return res.status(400).json({
+        console.error(error);
+
+        return res.status(httpStatus.BAD_REQUEST).json({
 
             success: false,
 
-            message: error.message
+            message: error.message,
 
         });
 
     }
-
 
 };
 
@@ -273,6 +430,37 @@ export const fileHistory = async(req, res) => {
     } catch (error) {
 
         return res.status(400).json({
+
+            success: false,
+
+            message: error.message,
+
+        });
+
+    }
+
+};
+export const recentFiles = async(req, res) => {
+
+    try {
+
+        const { meetingId } = req.params;
+
+        const files = await getRecentFiles(meetingId);
+
+        return res.status(httpStatus.OK).json({
+
+            success: true,
+
+            data: files,
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(httpStatus.BAD_REQUEST).json({
 
             success: false,
 

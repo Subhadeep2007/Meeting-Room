@@ -71,7 +71,27 @@ const registerChatEvents = (io, socket) => {
                 "receive-message",
                 savedMessage
             );
+            // ==========================
+            // Notification
+            // ==========================
 
+            const notification = createNotification(
+
+                NotificationType.NEW_MESSAGE,
+
+                "New Message",
+
+                `${socket.user.username} sent a message.`
+
+            );
+
+            io.to(meetingId).emit(
+
+                "notification",
+
+                notification
+
+            );
             // ACK
 
             if (callback) {

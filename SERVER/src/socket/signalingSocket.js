@@ -49,6 +49,24 @@ const registerSignalingEvents = (io, socket) => {
 
             );
 
+            const notification = createNotification(
+
+                NotificationType.USER_JOINED,
+
+                "Participant Joined",
+
+                `${socket.user.username} joined meeting.`
+
+            );
+
+            io.to(meetingCode).emit(
+
+                "notification",
+
+                notification
+
+            );
+
         }
 
     );
@@ -74,6 +92,24 @@ const registerSignalingEvents = (io, socket) => {
                     userId: socket.user._id,
 
                 }
+
+            );
+
+            const notification = createNotification(
+
+                NotificationType.USER_LEFT,
+
+                "Participant Left",
+
+                `${socket.user.username} left meeting.`
+
+            );
+
+            io.to(meetingCode).emit(
+
+                "notification",
+
+                notification
 
             );
 
@@ -263,6 +299,27 @@ const registerSignalingEvents = (io, socket) => {
                     raised,
 
                 }
+
+            );
+            // ======================================
+            // Notification
+            // ======================================
+
+            const notification = createNotification(
+
+                NotificationType.RAISE_HAND,
+
+                "Raise Hand",
+
+                `${socket.user.username} raised hand.`
+
+            );
+
+            io.to(meetingCode).emit(
+
+                "notification",
+
+                notification
 
             );
 

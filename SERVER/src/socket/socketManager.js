@@ -5,6 +5,7 @@ import socketAuth from "./socketAuth.js";
 import registerMeetingEvents from "./meetingSocket.js";
 import registerChatEvents from "./chatSocket.js";
 import registerSignalingEvents from "./signalingSocket.js";
+import registerNotificationEvents from "./notificationSocket.js";
 
 let io;
 
@@ -71,6 +72,7 @@ export const initializeSocket = (server) => {
             registerMeetingEvents(io, socket);
             registerChatEvents(io, socket);
             registerSignalingEvents(io, socket);
+            registerNotificationEvents(io, socket);
 
             // ===========================
             // Disconnect
