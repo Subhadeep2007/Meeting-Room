@@ -13,7 +13,7 @@ function App() {
       <main className="flex items-center justify-center h-[calc(100vh-64px)]">
         <div className="bg-white shadow-lg rounded-xl p-10 text-center">
           <h2 className="text-3xl font-bold text-gray-800">
-            🚀 Client Running Successfully
+             Client Running Successfully
           </h2>
 
           <p className="text-gray-600 mt-4">
