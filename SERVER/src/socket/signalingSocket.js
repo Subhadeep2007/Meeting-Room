@@ -942,6 +942,311 @@ const registerSignalingEvents = (io, socket) => {
 
         }
     );
+    // =======================================
+    // Join Waiting Room
+    // =======================================
+
+    socket.on(
+
+        "waiting-room-join",
+
+        async(
+
+            {
+
+                meetingId,
+
+            },
+
+            callback
+
+        ) => {
+
+            try {
+
+                const meeting =
+
+                    await getMeeting(meetingId);
+
+                meeting.waitingUsers.push(
+
+                    socket.user._id
+
+                );
+
+                await meeting.save();
+
+                io.to(
+
+                    meeting.meetingCode
+
+                ).emit(
+
+                    "waiting-user",
+
+                    {
+
+                        userId: socket.user._id,
+
+                        username: socket.user.username,
+
+                        profilePicture: socket.user.profilePicture,
+
+                    }
+
+                );
+
+                if (callback) {
+
+                    return callback({
+
+                        success: true,
+
+                        message: "Waiting Request Sent",
+
+                    });
+
+                }
+
+            } catch (error) {
+
+                if (callback) {
+
+                    return callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        });
+    socket.on(
+
+        "approve-user",
+
+        async(
+
+            {
+
+                meetingId,
+
+                userId,
+
+            },
+
+            callback
+
+        ) => {
+
+            try {
+
+                const meeting =
+
+                    await getMeeting(meetingId);
+
+                if (
+
+                    !verifyHostPermission(
+
+                        meeting,
+
+                        socket.user._id
+
+                    )
+
+                ) {
+
+                    if (callback) {
+
+                        return callback({
+
+                            success: false,
+
+                            message: "Unauthorized",
+
+                        });
+
+                    }
+
+                    return;
+
+                }
+
+                meeting.waitingUsers =
+
+                    meeting.waitingUsers.filter(
+
+                        (id) =>
+
+                        id.toString()
+
+                        !==
+
+                        userId.toString()
+
+                    );
+
+                meeting.participants.push(
+
+                    userId
+
+                );
+
+                await meeting.save();
+
+                io.emit(
+
+                    "user-approved",
+
+                    {
+
+                        userId,
+
+                    }
+
+                );
+
+                if (callback) {
+
+                    return callback({
+
+                        success: true,
+
+                    });
+
+                }
+
+            } catch (error) {
+
+                if (callback) {
+
+                    return callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        });
+    socket.on(
+
+        "reject-user",
+
+        async(
+
+            {
+
+                meetingId,
+
+                userId,
+
+            },
+
+            callback
+
+        ) => {
+
+            try {
+
+                const meeting =
+
+                    await getMeeting(
+
+                        meetingId
+
+                    );
+
+                if (
+
+                    !verifyHostPermission(
+
+                        meeting,
+
+                        socket.user._id
+
+                    )
+
+                ) {
+
+                    if (callback) {
+
+                        return callback({
+
+                            success: false,
+
+                        });
+
+                    }
+
+                    return;
+
+                }
+
+                meeting.waitingUsers =
+
+                    meeting.waitingUsers.filter(
+
+                        (id) =>
+
+                        id.toString()
+
+                        !==
+
+                        userId.toString()
+
+                    );
+
+                await meeting.save();
+
+                io.emit(
+
+                    "user-rejected",
+
+                    {
+
+                        userId,
+
+                    }
+
+                );
+
+                if (callback) {
+
+                    return callback({
+
+                        success: true,
+
+                    });
+
+                }
+
+            } catch (error) {
+
+                if (callback) {
+
+                    return callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        });
 
 };
 

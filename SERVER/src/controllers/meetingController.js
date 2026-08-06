@@ -101,6 +101,9 @@ export const joinMeeting = async(req, res) => {
 
         }
 
+
+
+
         // Find Meeting
         const meeting = await Meeting.findOne({
 
@@ -123,6 +126,39 @@ export const joinMeeting = async(req, res) => {
 
         }
 
+
+
+        // ======================================
+        // Waiting Room
+        // ======================================
+
+        if (meeting.locked) {
+
+            // Already Waiting?
+            const alreadyWaiting = meeting.waitingUsers.some(
+                (user) => user.toString() === req.user._id.toString()
+            );
+
+            if (!alreadyWaiting) {
+
+                meeting.waitingUsers.push(req.user._id);
+
+                await meeting.save();
+
+            }
+
+            return res.status(httpStatus.OK).json({
+
+                success: true,
+
+                waiting: true,
+
+                message: "Waiting for Host Approval",
+
+            });
+
+        }
+
         // Check Active
         if (!meeting.isActive) {
 
@@ -138,11 +174,7 @@ export const joinMeeting = async(req, res) => {
 
         // Already Joined?
         const alreadyJoined = meeting.participants.some(
-
-            (participant) =>
-
-            participant.toString() === req.user._id.toString()
-
+            (participant) => participant.equals(req.user._id)
         );
 
         if (alreadyJoined) {
