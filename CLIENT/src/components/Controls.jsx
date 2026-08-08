@@ -25,6 +25,8 @@ const Controls = ({
     onScreenShare,
 
     onLeave,
+     onEndMeeting,
+    isHost,
 
     onRaiseHand,
 
@@ -171,6 +173,28 @@ const Controls = ({
                 <PhoneOff color="white"/>
 
             </button>
+
+
+
+            {
+    isHost && (
+
+        <button
+
+            onClick={onEndMeeting}
+
+            className="p-3 rounded-full bg-red-800 hover:bg-red-900"
+
+            title="End Meeting"
+
+        >
+
+            <PhoneOff color="white" />
+
+        </button>
+
+    )
+}
 
         </div>
 

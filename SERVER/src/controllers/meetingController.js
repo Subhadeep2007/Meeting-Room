@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import { nanoid } from "nanoid";
 import Meeting from "../models/meetingModel.js";
-
+import mongoose from "mongoose";
 // ===================================
 // Create Meeting
 // ===================================
@@ -328,7 +328,19 @@ export const endMeeting = async(req, res) => {
 
         const { id } = req.params;
 
-        const meeting = await Meeting.findById(id);
+        let meeting;
+
+        if (mongoose.Types.ObjectId.isValid(id)) {
+
+            meeting = await Meeting.findById(id);
+
+        } else {
+
+            meeting = await Meeting.findOne({
+                meetingCode: id,
+            });
+
+        }
 
         if (!meeting) {
 

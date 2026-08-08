@@ -2,7 +2,7 @@
 
 import { io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-
+import api from "../services/api";
 import socket, {
     connectSocket,
     disconnectSocket,
@@ -58,6 +58,54 @@ const useWebRTC = (meetingCode) => {
 const audioContextRef = useRef(null);
 
 const speakingIntervalRef = useRef(null);
+
+// ========================================
+// Current Meeting User Info
+// ========================================
+
+useEffect(() => {
+
+    const handleMeetingUserInfo = ({
+        socketId,
+        userId,
+        isHost,
+    }) => {
+
+        setParticipants((prev) => ({
+
+            ...prev,
+
+            [socketId]: {
+
+                ...(prev[socketId] || {}),
+
+                socketId,
+
+                userId,
+
+                isHost,
+
+            },
+
+        }));
+
+    };
+
+    socket.on(
+        "meeting-user-info",
+        handleMeetingUserInfo
+    );
+
+    return () => {
+
+        socket.off(
+            "meeting-user-info",
+            handleMeetingUserInfo
+        );
+
+    };
+
+}, []);
 
     // ========================================
     // Initialize
@@ -1637,6 +1685,38 @@ const lockMeeting = (locked) => {
     );
 
 };
+
+// ======================================
+// End Meeting
+// ======================================
+
+const endMeeting = async () => {
+
+    try {
+
+        const response = await api.put(
+            `/meeting/end/${meetingId}`
+        );
+
+        console.log(
+            "Meeting Ended:",
+            response.data
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "End Meeting Error:",
+            error.response?.data || error.message
+        );
+
+        throw error;
+
+    }
+
+};
 // ======================================
 // Transfer Host
 // ======================================
@@ -1726,7 +1806,7 @@ disableCamera,
 transferHost,
 lockMeeting,
 makeCoHost,
-
+endMeeting,
 
 };
 

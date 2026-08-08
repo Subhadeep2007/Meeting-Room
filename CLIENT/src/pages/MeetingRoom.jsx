@@ -88,6 +88,7 @@ const MeetingRoom = () => {
         transferHost,
         makeCoHost,
         lockMeeting,
+        endMeeting,
 
     } = useWebRTC(meetingCode);
 
@@ -179,7 +180,36 @@ const MeetingRoom = () => {
         navigate("/dashboard");
 
     };
+// =====================================
+// End Meeting
+// =====================================
+// =====================================
+// Current User Host Check
+// =====================================
 
+const isHost =
+    participants[mySocketId]?.isHost ?? false;
+
+const handleEndMeeting = async () => {
+
+    try {
+
+        await endMeeting();
+
+        stopScreenShare();
+
+        navigate("/dashboard");
+
+    } catch (error) {
+
+        console.error(
+            "Failed to end meeting:",
+            error
+        );
+
+    }
+
+};
     // =====================================
     // Loading Screen
     // =====================================
@@ -430,7 +460,9 @@ const MeetingRoom = () => {
                 onScreenShare={startScreenShare}
 
                 onLeave={leaveMeeting}
+                onEndMeeting={handleEndMeeting}
 
+                isHost={isHost}
                 onRaiseHand={handleRaiseHand}
 
                 onReaction={sendReaction}

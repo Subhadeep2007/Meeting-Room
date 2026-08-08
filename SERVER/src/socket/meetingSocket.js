@@ -1,4 +1,5 @@
 const meetingUsers = new Map();
+import Meeting from "../models/meetingModel.js";
 
 const registerMeetingEvents = (io, socket) => {
 
@@ -6,11 +7,23 @@ const registerMeetingEvents = (io, socket) => {
     // JOIN ROOM
     // =========================================
 
-    socket.on("join-room", ({ meetingCode }) => {
+    socket.on("join-room", async({ meetingCode }) => {
 
         if (!meetingCode) return;
 
         socket.join(meetingCode);
+
+        const meeting = await Meeting.findOne({
+            meetingCode: meetingCode.toUpperCase(),
+        });
+
+        if (!meeting) {
+            return;
+        }
+
+        const isHost =
+            meeting.host.toString() ===
+            socket.user._id.toString();
 
         // Create room if not exists
         if (!meetingUsers.has(meetingCode)) {
@@ -35,6 +48,7 @@ const registerMeetingEvents = (io, socket) => {
                 username: socket.user.username,
 
                 profilePicture: socket.user.profilePicture,
+                isHost,
 
             });
 
@@ -48,10 +62,17 @@ const registerMeetingEvents = (io, socket) => {
         const existingUsers = users.filter(
             (user) => user.socketId !== socket.id
         );
-
+        console.log("MEETING USER INFO SENDING:", {
+            socketId: socket.id,
+            userId: socket.user._id.toString(),
+            isHost,
+        });
         socket.emit(
-            "existing-users",
-            existingUsers
+            "meeting-user-info", {
+                socketId: socket.id,
+                userId: socket.user._id,
+                isHost,
+            }
         );
 
         // Notify others
@@ -65,7 +86,7 @@ const registerMeetingEvents = (io, socket) => {
                 username: socket.user.username,
 
                 profilePicture: socket.user.profilePicture,
-
+                isHost,
             }
         );
 
