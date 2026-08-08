@@ -1,14 +1,8 @@
 import { io } from "socket.io-client";
 
-// ===============================
-// Socket URL
-// ===============================
-
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL;
 
-// ===============================
-// Create Socket
-// ===============================
+const token = localStorage.getItem("token");
 
 export const socket = io(SOCKET_URL, {
 
@@ -18,13 +12,21 @@ export const socket = io(SOCKET_URL, {
 
     transports: ["websocket"],
 
+    auth: {
+
+        token,
+
+    },
+
 });
 
-// ===============================
-// Connect
-// ===============================
-
 export const connectSocket = () => {
+
+    socket.auth = {
+
+        token: localStorage.getItem("token"),
+
+    };
 
     if (!socket.connected) {
 
@@ -33,10 +35,6 @@ export const connectSocket = () => {
     }
 
 };
-
-// ===============================
-// Disconnect
-// ===============================
 
 export const disconnectSocket = () => {
 
@@ -47,9 +45,5 @@ export const disconnectSocket = () => {
     }
 
 };
-
-// ===============================
-// Export
-// ===============================
 
 export default socket;

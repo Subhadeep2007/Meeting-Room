@@ -90,7 +90,11 @@ export const stopLocalStream = () => {
 // Toggle Camera
 // =========================================
 
-export const toggleCamera = () => {
+// =========================================
+// Toggle Camera
+// =========================================
+
+export const toggleCamera = (forceState) => {
 
     if (!localStream) return false;
 
@@ -98,12 +102,19 @@ export const toggleCamera = () => {
 
     if (!videoTrack) return false;
 
-    videoTrack.enabled = !videoTrack.enabled;
+    if (typeof forceState === "boolean") {
+
+        videoTrack.enabled = forceState;
+
+    } else {
+
+        videoTrack.enabled = !videoTrack.enabled;
+
+    }
 
     return videoTrack.enabled;
 
 };
-
 // =========================================
 // Toggle Microphone
 // =========================================

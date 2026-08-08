@@ -43,6 +43,7 @@ const useWebRTC = (meetingCode) => {
         const [participants, setParticipants] = useState({});
         const [reactions, setReactions] = useState([]);
         const [waitingUsers, setWaitingUsers] = useState([]);
+        const meetingId = meetingCode;
 
     // ========================================
     // Refs
@@ -64,19 +65,19 @@ const speakingIntervalRef = useRef(null);
 
     useEffect(() => {
 
-    const initialize = async () => {
+    const initializeMedia = async () => {
 
-        connectSocket();
+        try {
 
-        socket.on("connect", async () => {
-
-            console.log("Socket Connected:", socket.id);
-
-            setMySocketId(socket.id);
+            console.log("Getting Camera...");
 
             const stream = await getLocalStream();
 
+            console.log("Camera Success:", stream);
+
             setLocalStream(stream);
+
+            console.log("Local Stream Stored");
 
             startSpeakingDetection(stream);
 
@@ -84,11 +85,53 @@ const speakingIntervalRef = useRef(null);
                 meetingCode,
             });
 
-        });
+        }
+
+        catch (error) {
+
+            console.error("Initialization Error:", error);
+
+        }
 
     };
 
-    initialize();
+    // ===========================
+    // Socket Connected
+    // ===========================
+
+    socket.on("connect", async () => {
+
+        console.log("Socket Connected:", socket.id);
+
+        setMySocketId(socket.id);
+
+        await initializeMedia();
+
+    });
+
+    // ===========================
+    // Connect Socket
+    // ===========================
+
+    if (socket.connected) {
+
+        console.log("Socket Already Connected");
+
+        setMySocketId(socket.id);
+
+        initializeMedia();
+
+    }
+
+    else {
+
+        connectSocket();
+
+    }
+
+    // ===========================
+    // Cleanup
+    // ===========================
 
     return () => {
 
@@ -103,7 +146,9 @@ const speakingIntervalRef = useRef(null);
         audioContextRef.current?.close();
 
         Object.values(peersRef.current).forEach((peer) => {
+
             peer.close();
+
         });
 
         peersRef.current = {};
@@ -1089,52 +1134,35 @@ useEffect(() => {
 // Toggle Camera
 // ========================================
 
-const handleToggleCamera = () => {
+// ========================================
+// Toggle Camera
+// ========================================
 
-    const enabled = toggleCamera();
+const handleToggleCamera = (forceState) => {
+
+    if (!localStream) {
+
+        console.log("Local stream not available");
+
+        return;
+
+    }
+
+    const enabled = toggleCamera(forceState);
 
     setCameraEnabled(enabled);
 
+    // =====================================
+    // Tell Other Participants
+    // =====================================
 
     socket.emit(
-    "camera-status",
-    {
-        meetingCode,
-        enabled,
-    }
-);
-
-    Object.values(
-
-        peersRef.current
-
-    ).forEach((peer) => {
-
-        const sender = peer
-
-            .getSenders()
-
-            .find(
-
-                (sender) =>
-
-                    sender.track?.kind === "video"
-
-            );
-
-        if (sender) {
-
-            sender.replaceTrack(
-
-                localStream
-
-                    .getVideoTracks()[0]
-
-            );
-
+        "camera-status",
+        {
+            meetingCode,
+            enabled,
         }
-
-    });
+    );
 
 };
 
@@ -1443,7 +1471,23 @@ const handleRaiseHand = () => {
     }));
 
 };
+const sendReaction = (emoji) => {
 
+    socket.emit(
+
+        "send-reaction",
+
+        {
+
+            meetingCode,
+
+            emoji,
+
+        }
+
+    );
+
+};
 
 const stopScreenShare = async () => {
 
@@ -1485,23 +1529,7 @@ const stopScreenShare = async () => {
 
         }
 
-        const sendReaction = (emoji) => {
-
-    socket.emit(
-
-        "send-reaction",
-
-        {
-
-            meetingCode,
-
-            emoji,
-
-        }
-
-    );
-
-};
+        
 
     });
 
@@ -1510,7 +1538,7 @@ const stopScreenShare = async () => {
         cameraStream
 
     );
-
+};
 
 const kickUser = (participant) => {
 
@@ -1583,7 +1611,33 @@ const lockMeeting = (locked) => {
     );
 
 };
+// ======================================
+// Transfer Host
+// ======================================
 
+const transferHost = (participant) => {
+
+    socket.emit(
+
+        "transfer-host",
+
+        {
+
+            meetingId,
+
+            newHostId: participant.userId,
+
+        },
+
+        (response) => {
+
+            console.log(response);
+
+        }
+
+    );
+
+};
 const makeCoHost = (participant) => {
 
     socket.emit(
@@ -1600,7 +1654,7 @@ const makeCoHost = (participant) => {
     );
 
 };
-};
+
 return {
 
     localStream,
@@ -1650,9 +1704,9 @@ makeCoHost,
 
 };
 
+};
 
 
-}
 
 
 export default useWebRTC;

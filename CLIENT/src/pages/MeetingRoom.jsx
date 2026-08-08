@@ -1,3 +1,7 @@
+import api from "../services/api";
+
+
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -9,6 +13,7 @@ import EmojiReaction from "../components/EmojiReaction";
 import FloatingReaction from "../components/FloatingReaction";
 import ParticipantSidebar from "../components/ParticipantSidebar";
 import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
+import Navbar from "../layout/Navbar.jsx";
 
 const MeetingRoom = () => {
 
@@ -16,7 +21,6 @@ const MeetingRoom = () => {
     const { meetingCode } = useParams();
 
     const username = "Subha";
-
     const [loading, setLoading] = useState(true);
 
     const {
@@ -53,13 +57,21 @@ const MeetingRoom = () => {
 
     } = useWebRTC(meetingCode);
 
+   
+
     useEffect(() => {
 
-        if (localStream) {
-            setLoading(false);
-        }
+    console.log(localStream);
 
-    }, [localStream]);
+    if(localStream){
+
+        console.log("Meeting Ready");
+
+        setLoading(false);
+
+    }
+
+},[localStream]);
 
     const leaveMeeting = () => {
 
@@ -81,106 +93,137 @@ const MeetingRoom = () => {
 
     return (
 
-        <div className="relative bg-black h-screen flex flex-col">
+<div className="h-screen flex flex-col bg-gray-100">
 
-            {/* Header */}
+    {/* Navbar */}
 
-            <div className="flex justify-between items-center px-6 py-4 bg-gray-900 text-white">
+    <Navbar/>
 
-                <h2 className="text-xl font-bold">
-                    Meeting Code : {meetingCode}
-                </h2>
+    {/* Main */}
 
-                <div>
-                    Status :
-                    <span className="text-green-400 ml-2">
-                        {connectionState}
-                    </span>
-                </div>
+    <div className="flex flex-1 overflow-hidden">
 
-            </div>
+        {/* Left Sidebar */}
 
-            <div className="flex flex-1">
+        <div className="hidden lg:block w-72 border-r bg-white overflow-y-auto">
 
-                {/* Video Grid */}
+            <ParticipantSidebar
 
-                <div className="flex-1 overflow-hidden">
+                participants={participants}
 
-                    <VideoGrid
-                        username={username}
-                        localStream={localStream}
-                        remoteStreams={remoteStreams}
-                        participants={participants}
-                        cameraEnabled={cameraEnabled}
-                        microphoneEnabled={microphoneEnabled}
-                        connectionState={connectionState}
-                    />
+                kickUser={kickUser}
 
-                </div>
+                muteUser={muteUser}
 
-                {/* Participant Sidebar */}
+                disableCamera={disableCamera}
 
-                <ParticipantSidebar
-                    participants={participants}
-                    kickUser={kickUser}
-                    muteUser={muteUser}
-                    disableCamera={disableCamera}
-                    transferHost={transferHost}
-                    makeCoHost={makeCoHost}
-                    lockMeeting={lockMeeting}
-                    meetingLocked={false} // Later API se aayega
-                    isHost={true} // Later JWT se aayega
-                />
+                transferHost={transferHost}
 
-                {/* Waiting Room */}
+                makeCoHost={makeCoHost}
 
-                <WaitingRoomSidebar
-                    waitingUsers={waitingUsers}
-                    approveUser={approveUser}
-                    rejectUser={rejectUser}
-                />
+                lockMeeting={lockMeeting}
 
-            </div>
+                meetingLocked={false}
 
-            {/* Emoji */}
+                isHost={true}
 
-            <div className="absolute top-20 right-5 z-50">
-
-                <EmojiReaction
-                    onSelect={sendReaction}
-                />
-
-            </div>
-
-            {/* Floating Reactions */}
-
-            {
-                reactions.map((reaction) => (
-
-                    <FloatingReaction
-                        key={reaction.createdAt}
-                        reaction={reaction}
-                    />
-
-                ))
-            }
-
-            {/* Controls */}
-
-            <Controls
-                cameraEnabled={cameraEnabled}
-                microphoneEnabled={microphoneEnabled}
-                onToggleCamera={handleToggleCamera}
-                onToggleMicrophone={handleToggleMicrophone}
-                onScreenShare={startScreenShare}
-                onLeave={leaveMeeting}
-                onRaiseHand={handleRaiseHand}
-                onReaction={sendReaction}
             />
 
         </div>
 
-    );
+        {/* Video */}
+
+        <div className="flex-1 relative bg-black">
+
+            <VideoGrid
+
+                username={username}
+
+                localStream={localStream}
+
+                remoteStreams={remoteStreams}
+
+                participants={participants}
+
+                cameraEnabled={cameraEnabled}
+
+                microphoneEnabled={microphoneEnabled}
+
+                connectionState={connectionState}
+
+            />
+
+            <div className="absolute top-5 right-5">
+
+                <EmojiReaction
+
+                    onSelect={sendReaction}
+
+                />
+
+            </div>
+
+            {
+
+                reactions.map((reaction)=>(
+
+                    <FloatingReaction
+
+                        key={reaction.createdAt}
+
+                        reaction={reaction}
+
+                    />
+
+                ))
+
+            }
+
+        </div>
+
+        {/* Waiting Room */}
+
+        <div className="hidden xl:block w-80 border-l bg-white overflow-y-auto">
+
+            <WaitingRoomSidebar
+
+                waitingUsers={waitingUsers}
+
+                approveUser={approveUser}
+
+                rejectUser={rejectUser}
+
+            />
+
+        </div>
+
+    </div>
+
+    {/* Controls */}
+
+    <Controls
+
+        cameraEnabled={cameraEnabled}
+
+        microphoneEnabled={microphoneEnabled}
+
+        onToggleCamera={handleToggleCamera}
+
+        onToggleMicrophone={handleToggleMicrophone}
+
+        onScreenShare={startScreenShare}
+
+        onLeave={leaveMeeting}
+
+        onRaiseHand={handleRaiseHand}
+
+        onReaction={sendReaction}
+
+    />
+
+</div>
+
+);
 
 };
 
