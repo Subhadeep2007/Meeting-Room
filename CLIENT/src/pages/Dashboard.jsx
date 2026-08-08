@@ -248,7 +248,7 @@ const filteredMeetings = meetings.filter((meeting) =>
 const totalMeetings = meetings.length;
 
 const activeMeetings = meetings.filter(
-    (meeting) => meeting.isActive
+    (meeting) => meeting.status === "live"
 ).length;
 
 const totalParticipants = meetings.reduce(
@@ -600,24 +600,18 @@ const totalParticipants = meetings.reduce(
                                     Status :
 
                                     {
+    meeting.status === "live" ?
 
-                                        meeting.isActive ?
+    <span className="text-green-600 font-semibold ml-2">
+        Live
+    </span>
 
-                                        <span className="text-green-600 font-semibold ml-2">
+    :
 
-                                            Active
-
-                                        </span>
-
-                                        :
-
-                                        <span className="text-red-600 font-semibold ml-2">
-
-                                            Ended
-
-                                        </span>
-
-                                    }
+    <span className="text-red-600 font-semibold ml-2">
+        Ended
+    </span>
+}
 
                                 </p>
 

@@ -141,7 +141,17 @@ const meetingSchema = new mongoose.Schema(
             default: "live",
 
         },
+        // =============================
+        // Meeting End Time
+        // =============================
 
+        endTime: {
+
+            type: Date,
+
+            default: null,
+
+        },
         // =============================
         // Recording
         // =============================

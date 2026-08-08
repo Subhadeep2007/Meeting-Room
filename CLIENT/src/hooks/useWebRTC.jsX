@@ -1439,22 +1439,25 @@ const rejectUser = (userId) => {
 const handleRaiseHand = () => {
 
     const current =
-
         participants[socket.id]?.handRaised ?? false;
 
+    const newRaisedState = !current;
+
+    // =====================================
+    // Tell Server
+    // =====================================
+
     socket.emit(
-
         "raise-hand",
-
         {
-
             meetingCode,
-
-            raised: !current,
-
+            raised: newRaisedState,
         }
-
     );
+
+    // =====================================
+    // Update Local Participant
+    // =====================================
 
     setParticipants((prev) => ({
 
@@ -1464,11 +1467,34 @@ const handleRaiseHand = () => {
 
             ...prev[socket.id],
 
-            handRaised: !current,
+            handRaised: newRaisedState,
 
         },
 
     }));
+
+    // =====================================
+    // Remove Notification When Hand Down
+    // =====================================
+
+    if (!newRaisedState) {
+
+        window.dispatchEvent(
+
+            new CustomEvent(
+                "remove-raise-hand-notification",
+                {
+                    detail: {
+                        socketId: socket.id,
+                        userId:
+                            participants[socket.id]?.userId,
+                    },
+                }
+            )
+
+        );
+
+    }
 
 };
 const sendReaction = (emoji) => {

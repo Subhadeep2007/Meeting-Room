@@ -14,6 +14,7 @@ const ParticipantCard = ({
 
     // Host Controls
     isHost,
+    onPin,
     kickUser,
     muteUser,
     disableCamera,
@@ -120,6 +121,45 @@ const ParticipantCard = ({
                         />
                     )
                 }
+
+
+{/* ===========================
+                    Pin Participant
+                =========================== */}
+
+                {
+                    onPin && (
+
+                        <button
+
+                            type="button"
+
+                            onClick={() =>
+                                onPin(
+                                    participant._id
+                                )
+                            }
+
+                            className="
+                                p-1.5
+                                rounded-lg
+                                text-blue-400
+                                hover:bg-blue-500/20
+                                hover:text-blue-300
+                                transition
+                            "
+
+                            title="Pin Participant"
+
+                        >
+
+                            <Pin size={18} />
+
+                        </button>
+
+                    )
+                }
+
 
                 {/* ===========================
                     Host Controls

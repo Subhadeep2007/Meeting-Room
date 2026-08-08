@@ -18,6 +18,10 @@ import {
 
 } from "../middleware/hostMiddleware.js";
 import { getUserSockets } from "./socketManager.js";
+import {
+    createNotification,
+    NotificationType,
+} from "../services/notificationService.js";
 
 const registerSignalingEvents = (io, socket) => {
 
@@ -59,7 +63,7 @@ const registerSignalingEvents = (io, socket) => {
 
             );
 
-            io.to(meetingCode).emit(
+            io.to(meetingId).emit(
 
                 "notification",
 
@@ -105,7 +109,7 @@ const registerSignalingEvents = (io, socket) => {
 
             );
 
-            io.to(meetingCode).emit(
+            io.to(meetingId).emit(
 
                 "notification",
 
@@ -272,59 +276,79 @@ const registerSignalingEvents = (io, socket) => {
 
     );
 
-
-
     // ======================================
     // Raise Hand
     // ======================================
 
     socket.on(
-
         "raise-hand",
-
         ({ meetingCode, raised }) => {
 
+            // ======================================
+            // Update Participant Hand Status
+            // ======================================
+
             socket.to(meetingCode).emit(
-
-                "raise-hand-changed",
-
-                {
-
+                "raise-hand-changed", {
                     socketId: socket.id,
-
                     userId: socket.user._id,
-
                     username: socket.user.username,
-
                     raised,
-
                 }
-
             );
+
+
             // ======================================
-            // Notification
+            // Hand Raised
             // ======================================
 
-            const notification = createNotification(
+            if (raised) {
 
-                NotificationType.RAISE_HAND,
+                const notification = createNotification(
 
-                "Raise Hand",
+                    NotificationType.RAISE_HAND,
 
-                `${socket.user.username} raised hand.`
+                    "Raise Hand",
 
-            );
+                    `${socket.user.username} raised hand.`
 
-            io.to(meetingCode).emit(
+                );
 
-                "notification",
+                // Add participant identity
+                // so frontend can identify notification
 
-                notification
+                notification.socketId = socket.id;
 
-            );
+                notification.userId = socket.user._id;
+
+                notification.username =
+                    socket.user.username;
+
+
+                io.to(meetingCode).emit(
+                    "notification",
+                    notification
+                );
+
+            }
+
+
+            // ======================================
+            // Hand Lowered
+            // ======================================
+            else {
+
+                io.to(meetingCode).emit(
+                    "raise-hand-notification-removed", {
+                        socketId: socket.id,
+                        userId: socket.user._id,
+                        username: socket.user.username,
+                    }
+                );
+
+            }
 
         }
-
     );
 
 

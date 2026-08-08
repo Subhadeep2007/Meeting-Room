@@ -46,7 +46,7 @@ export const createMeeting = async(req, res) => {
 
             participants: [req.user._id],
 
-            isActive: true,
+            status: "live",
 
         });
 
@@ -159,8 +159,7 @@ export const joinMeeting = async(req, res) => {
 
         }
 
-        // Check Active
-        if (!meeting.isActive) {
+        if (meeting.status === "ended") {
 
             return res.status(httpStatus.BAD_REQUEST).json({
 
@@ -358,7 +357,7 @@ export const endMeeting = async(req, res) => {
 
         }
 
-        meeting.isActive = false;
+        meeting.status = "ended";
 
         meeting.endTime = new Date();
 

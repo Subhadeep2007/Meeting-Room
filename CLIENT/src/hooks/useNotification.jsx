@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
 
 import socket from "../services/socket";
+
 import {
-
-successToast,
-
-errorToast,
-
-warningToast,
-
-infoToast,
-
+    successToast,
+    errorToast,
+    warningToast,
+    infoToast,
 } from "../utils/toast";
 
 const MAX_NOTIFICATIONS = 50;
 
 const useNotification = () => {
 
+    // =====================================
+    // State
+    // =====================================
+
     const [notifications, setNotifications] = useState([]);
 
     const [unreadCount, setUnreadCount] = useState(0);
+
 
     // =====================================
     // Listen Notifications
@@ -29,83 +30,260 @@ const useNotification = () => {
 
         const handleNotification = (notification) => {
 
-    setNotifications((prev) => {
+            setNotifications((prev) => {
 
-        const updated = [
+                const updated = [
 
-            notification,
+                    notification,
 
-            ...prev,
+                    ...prev,
 
-        ];
+                ];
 
-        return updated.slice(0, MAX_NOTIFICATIONS);
+                return updated.slice(
+                    0,
+                    MAX_NOTIFICATIONS
+                );
 
-    });
+            });
 
-    setUnreadCount((prev) => prev + 1);
 
-    switch (notification.type) {
+            setUnreadCount((prev) => prev + 1);
 
-        case "USER_JOINED":
 
-            infoToast(notification.message);
+            // =====================================
+            // Notification Toast
+            // =====================================
 
-            break;
+            switch (notification.type) {
 
-        case "USER_LEFT":
+                case "USER_JOINED":
 
-            warningToast(notification.message);
+                    infoToast(
+                        notification.message
+                    );
 
-            break;
+                    break;
 
-        case "NEW_MESSAGE":
 
-            successToast(notification.message);
+                case "USER_LEFT":
 
-            break;
+                    warningToast(
+                        notification.message
+                    );
 
-        case "FILE_UPLOADED":
+                    break;
 
-            successToast(notification.message);
 
-            break;
+                case "NEW_MESSAGE":
 
-        case "RAISE_HAND":
+                    successToast(
+                        notification.message
+                    );
 
-            infoToast(notification.message);
+                    break;
 
-            break;
 
-        case "HOST_ACTION":
+                case "FILE_UPLOADED":
 
-            warningToast(notification.message);
+                    successToast(
+                        notification.message
+                    );
 
-            break;
+                    break;
 
-        case "WAITING_ROOM":
 
-            infoToast(notification.message);
+                case "RAISE_HAND":
 
-            break;
+                    infoToast(
+                        notification.message
+                    );
 
-        default:
+                    break;
 
-            infoToast(notification.message);
 
-    }
+                case "HOST_ACTION":
 
-};
+                    warningToast(
+                        notification.message
+                    );
 
-        socket.on("notification", handleNotification);
+                    break;
+
+
+                case "WAITING_ROOM":
+
+                    infoToast(
+                        notification.message
+                    );
+
+                    break;
+
+
+                default:
+
+                    infoToast(
+                        notification.message
+                    );
+
+            }
+
+        };
+
+
+        socket.on(
+            "notification",
+            handleNotification
+        );
+
 
         return () => {
 
-            socket.off("notification", handleNotification);
+            socket.off(
+                "notification",
+                handleNotification
+            );
 
         };
 
     }, []);
+
+
+    // =====================================
+    // Remove Raise Hand Notification
+    // =====================================
+
+    useEffect(() => {
+
+        const handleRemoveRaiseHandNotification = ({
+            socketId,
+            userId,
+        }) => {
+
+            setNotifications((prev) => {
+
+                // =====================================
+                // Find notifications to remove
+                // =====================================
+
+                const notificationsToRemove =
+                    prev.filter((notification) => {
+
+                        if (
+                            notification.type !==
+                            "RAISE_HAND"
+                        ) {
+
+                            return false;
+
+                        }
+
+
+                        const sameSocket =
+                            socketId &&
+                            notification.socketId ===
+                            socketId;
+
+
+                        const sameUser =
+                            userId &&
+                            notification.userId ===
+                            userId;
+
+
+                        return (
+                            sameSocket ||
+                            sameUser
+                        );
+
+                    });
+
+
+                // =====================================
+                // Nothing Found
+                // =====================================
+
+                if (
+                    notificationsToRemove.length === 0
+                ) {
+
+                    return prev;
+
+                }
+
+
+                // =====================================
+                // Update Unread Count
+                // =====================================
+
+                setUnreadCount((prevCount) => {
+
+                    return Math.max(
+                        0,
+                        prevCount -
+                        notificationsToRemove.length
+                    );
+
+                });
+
+
+                // =====================================
+                // Remove Notification
+                // =====================================
+
+                return prev.filter((notification) => {
+
+                    if (
+                        notification.type !==
+                        "RAISE_HAND"
+                    ) {
+
+                        return true;
+
+                    }
+
+
+                    const sameSocket =
+                        socketId &&
+                        notification.socketId ===
+                        socketId;
+
+
+                    const sameUser =
+                        userId &&
+                        notification.userId ===
+                        userId;
+
+
+                    return !(
+                        sameSocket ||
+                        sameUser
+                    );
+
+                });
+
+            });
+
+        };
+
+
+        socket.on(
+            "raise-hand-notification-removed",
+            handleRemoveRaiseHandNotification
+        );
+
+
+        return () => {
+
+            socket.off(
+                "raise-hand-notification-removed",
+                handleRemoveRaiseHandNotification
+            );
+
+        };
+
+    }, []);
+
 
     // =====================================
     // Mark All Read
@@ -116,6 +294,7 @@ const useNotification = () => {
         setUnreadCount(0);
 
     };
+
 
     // =====================================
     // Clear Notifications
@@ -128,6 +307,11 @@ const useNotification = () => {
         setUnreadCount(0);
 
     };
+
+
+    // =====================================
+    // Return
+    // =====================================
 
     return {
 

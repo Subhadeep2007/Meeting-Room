@@ -1,8 +1,11 @@
 import api from "../services/api";
 
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+    Grid2X2,
+    Maximize,
+    Minimize,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import useWebRTC from "../hooks/useWebRTC";
@@ -13,15 +16,46 @@ import EmojiReaction from "../components/EmojiReaction";
 import FloatingReaction from "../components/FloatingReaction";
 import ParticipantSidebar from "../components/ParticipantSidebar";
 import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
+
 import Navbar from "../layout/Navbar.jsx";
 
 const MeetingRoom = () => {
 
     const navigate = useNavigate();
+
     const { meetingCode } = useParams();
 
+    // =====================================
+    // User
+    // =====================================
+
     const username = "Subha";
+
+    // =====================================
+    // Loading
+    // =====================================
+
     const [loading, setLoading] = useState(true);
+
+    // =====================================
+    // Meeting UI States
+    // =====================================
+
+    const [speakerView, setSpeakerView] = useState(false);
+
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const [pinnedUser, setPinnedUser] = useState(null);
+
+    // =====================================
+    // Fullscreen Reference
+    // =====================================
+
+    const meetingContainerRef = useRef(null);
+
+    // =====================================
+    // WebRTC
+    // =====================================
 
     const {
         localStream,
@@ -57,21 +91,86 @@ const MeetingRoom = () => {
 
     } = useWebRTC(meetingCode);
 
-   
+    // =====================================
+    // Loading Check
+    // =====================================
 
     useEffect(() => {
 
-    console.log(localStream);
+        console.log("Local Stream:", localStream);
 
-    if(localStream){
+        if (localStream) {
 
-        console.log("Meeting Ready");
+            console.log("Meeting Ready");
 
-        setLoading(false);
+            setLoading(false);
 
-    }
+        }
 
-},[localStream]);
+    }, [localStream]);
+
+    // =====================================
+    // Fullscreen Change Listener
+    // =====================================
+
+    useEffect(() => {
+
+        const handleFullscreenChange = () => {
+
+            setIsFullscreen(
+                Boolean(document.fullscreenElement)
+            );
+
+        };
+
+        document.addEventListener(
+            "fullscreenchange",
+            handleFullscreenChange
+        );
+
+        return () => {
+
+            document.removeEventListener(
+                "fullscreenchange",
+                handleFullscreenChange
+            );
+
+        };
+
+    }, []);
+
+    // =====================================
+    // Fullscreen Handler
+    // =====================================
+
+    const handleFullscreen = async () => {
+
+        try {
+
+            if (!document.fullscreenElement) {
+
+                await meetingContainerRef.current?.requestFullscreen();
+
+            } else {
+
+                await document.exitFullscreen();
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Fullscreen Error:",
+                error
+            );
+
+        }
+
+    };
+
+    // =====================================
+    // Leave Meeting
+    // =====================================
 
     const leaveMeeting = () => {
 
@@ -81,149 +180,266 @@ const MeetingRoom = () => {
 
     };
 
+    // =====================================
+    // Loading Screen
+    // =====================================
+
     if (loading) {
 
         return (
+
             <div className="h-screen flex justify-center items-center bg-black text-white text-3xl">
+
                 Connecting To Meeting...
+
             </div>
+
         );
 
     }
 
+    // =====================================
+    // Meeting UI
+    // =====================================
+
     return (
 
-<div className="h-screen flex flex-col bg-gray-100">
+        <div
+            ref={meetingContainerRef}
+            className="h-screen flex flex-col bg-gray-100"
+        >
 
-    {/* Navbar */}
+            {/* =================================
+                Navbar
+            ================================= */}
 
-    <Navbar/>
+            <Navbar />
 
-    {/* Main */}
+            {/* =================================
+                Main Meeting Area
+            ================================= */}
 
-    <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden">
 
-        {/* Left Sidebar */}
+                {/* =================================
+                    Participant Sidebar
+                ================================= */}
 
-        <div className="hidden lg:block w-72 border-r bg-white overflow-y-auto">
+                <div className="hidden lg:block w-72 border-r bg-white overflow-y-auto">
 
-            <ParticipantSidebar
+                    <ParticipantSidebar
 
-                participants={participants}
+                        participants={participants}
 
-                kickUser={kickUser}
+                        kickUser={kickUser}
 
-                muteUser={muteUser}
+                        muteUser={muteUser}
 
-                disableCamera={disableCamera}
+                        disableCamera={disableCamera}
 
-                transferHost={transferHost}
+                        transferHost={transferHost}
 
-                makeCoHost={makeCoHost}
+                        makeCoHost={makeCoHost}
 
-                lockMeeting={lockMeeting}
+                        lockMeeting={lockMeeting}
 
-                meetingLocked={false}
+                        meetingLocked={false}
 
-                isHost={true}
+                        isHost={true}
 
-            />
+                        onPin={setPinnedUser}
 
-        </div>
+                    />
 
-        {/* Video */}
+                </div>
 
-        <div className="flex-1 relative bg-black">
+                {/* =================================
+                    Video Area
+                ================================= */}
 
-            <VideoGrid
+                <div className="flex-1 relative bg-black overflow-hidden">
 
-                username={username}
+                    {/* =================================
+                        Meeting Toolbar
+                    ================================= */}
 
-                localStream={localStream}
+                    <div className="absolute top-5 left-5 z-50 flex gap-3">
 
-                remoteStreams={remoteStreams}
+                        {/* Speaker / Grid */}
 
-                participants={participants}
+                        <button
+
+                            type="button"
+
+                            onClick={() => {
+
+                                setSpeakerView(
+                                    !speakerView
+                                );
+
+                            }}
+
+                            className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-xl transition"
+
+                            title={
+                                speakerView
+                                    ? "Grid View"
+                                    : "Speaker View"
+                            }
+
+                        >
+
+                            <Grid2X2 size={20} />
+
+                        </button>
+
+                        {/* Fullscreen */}
+
+                        <button
+
+                            type="button"
+
+                            onClick={handleFullscreen}
+
+                            className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-xl transition"
+
+                            title={
+                                isFullscreen
+                                    ? "Exit Fullscreen"
+                                    : "Fullscreen"
+                            }
+
+                        >
+
+                            {
+
+                                isFullscreen
+
+                                    ?
+
+                                    <Minimize size={20} />
+
+                                    :
+
+                                    <Maximize size={20} />
+
+                            }
+
+                        </button>
+
+                    </div>
+
+                    {/* =================================
+                        Video Grid
+                    ================================= */}
+
+                    <VideoGrid
+
+                        username={username}
+
+                        localStream={localStream}
+
+                        remoteStreams={remoteStreams}
+
+                        participants={participants}
+
+                        mySocketId={mySocketId}
+
+                        cameraEnabled={cameraEnabled}
+
+                        microphoneEnabled={microphoneEnabled}
+
+                        connectionState={connectionState}
+
+                        speakerView={speakerView}
+
+                        pinnedUser={pinnedUser}
+
+                    />
+
+                    {/* =================================
+                        Emoji Reaction
+                    ================================= */}
+
+                    <div className="absolute top-5 right-5 z-50">
+
+                        <EmojiReaction
+
+                            onSelect={sendReaction}
+
+                        />
+
+                    </div>
+
+                    {/* =================================
+                        Floating Reactions
+                    ================================= */}
+
+                    {
+
+                        reactions.map((reaction) => (
+
+                            <FloatingReaction
+
+                                key={reaction.createdAt}
+
+                                reaction={reaction}
+
+                            />
+
+                        ))
+
+                    }
+
+                </div>
+
+                {/* =================================
+                    Waiting Room
+                ================================= */}
+
+                <div className="hidden xl:block w-80 border-l bg-white overflow-y-auto">
+
+                    <WaitingRoomSidebar
+
+                        waitingUsers={waitingUsers}
+
+                        approveUser={approveUser}
+
+                        rejectUser={rejectUser}
+
+                    />
+
+                </div>
+
+            </div>
+
+            {/* =================================
+                Meeting Controls
+            ================================= */}
+
+            <Controls
 
                 cameraEnabled={cameraEnabled}
 
                 microphoneEnabled={microphoneEnabled}
 
-                connectionState={connectionState}
+                onToggleCamera={handleToggleCamera}
 
-            />
+                onToggleMicrophone={handleToggleMicrophone}
 
-            <div className="absolute top-5 right-5">
+                onScreenShare={startScreenShare}
 
-                <EmojiReaction
+                onLeave={leaveMeeting}
 
-                    onSelect={sendReaction}
+                onRaiseHand={handleRaiseHand}
 
-                />
-
-            </div>
-
-            {
-
-                reactions.map((reaction)=>(
-
-                    <FloatingReaction
-
-                        key={reaction.createdAt}
-
-                        reaction={reaction}
-
-                    />
-
-                ))
-
-            }
-
-        </div>
-
-        {/* Waiting Room */}
-
-        <div className="hidden xl:block w-80 border-l bg-white overflow-y-auto">
-
-            <WaitingRoomSidebar
-
-                waitingUsers={waitingUsers}
-
-                approveUser={approveUser}
-
-                rejectUser={rejectUser}
+                onReaction={sendReaction}
 
             />
 
         </div>
 
-    </div>
-
-    {/* Controls */}
-
-    <Controls
-
-        cameraEnabled={cameraEnabled}
-
-        microphoneEnabled={microphoneEnabled}
-
-        onToggleCamera={handleToggleCamera}
-
-        onToggleMicrophone={handleToggleMicrophone}
-
-        onScreenShare={startScreenShare}
-
-        onLeave={leaveMeeting}
-
-        onRaiseHand={handleRaiseHand}
-
-        onReaction={sendReaction}
-
-    />
-
-</div>
-
-);
+    );
 
 };
 

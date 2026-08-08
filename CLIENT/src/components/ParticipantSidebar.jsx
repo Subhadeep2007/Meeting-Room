@@ -89,6 +89,8 @@ const ParticipantSidebar = ({
 
                                 participant={user}
 
+                                onPin={onPin}
+
                                 // Host Controls
                                 isHost={isHost}
 
