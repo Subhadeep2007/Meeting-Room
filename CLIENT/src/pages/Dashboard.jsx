@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import Navbar from "../layout/Navbar.jsx";
 import api from "../services/api";
+import socket from "../services/socket";
 
 import {
     successToast,
@@ -32,7 +33,7 @@ const Dashboard = () => {
 
 const [loadingMeetings, setLoadingMeetings] = useState(true);
 const [search, setSearch] = useState("");
-
+const [liveParticipantCounts, setLiveParticipantCounts] = useState({});
 
     // =====================================
     // Create Meeting
@@ -232,6 +233,35 @@ useEffect(() => {
 
     fetchMeetings();
 
+    const handleParticipantCount = ({
+        meetingCode,
+        count,
+    }) => {
+
+        setLiveParticipantCounts((prev) => ({
+
+            ...prev,
+
+            [meetingCode]: count,
+
+        }));
+
+    };
+
+    socket.on(
+        "meeting-participant-count",
+        handleParticipantCount
+    );
+
+    return () => {
+
+        socket.off(
+            "meeting-participant-count",
+            handleParticipantCount
+        );
+
+    };
+
 }, []);
 
 const filteredMeetings = meetings.filter((meeting) =>
@@ -252,8 +282,15 @@ const activeMeetings = meetings.filter(
 ).length;
 
 const totalParticipants = meetings.reduce(
-    (total, meeting) =>
-        total + meeting.participants.length,
+    (total, meeting) => {
+
+        const count =
+            liveParticipantCounts[meeting.meetingCode]
+            ?? meeting.participants.length;
+
+        return total + count;
+
+    },
     0
 );
 
@@ -583,17 +620,20 @@ const totalParticipants = meetings.reduce(
 
                                 </p>
 
-                                <p className="text-gray-500 mt-1">
+                               <p className="text-gray-500 mt-1">
 
-                                    Participants :
+    Participants :
 
-                                    <span className="font-semibold ml-2">
+    <span className="font-semibold ml-2">
 
-                                        {meeting.participants.length}
+        {
+            liveParticipantCounts[meeting.meetingCode]
+            ?? meeting.participants.length
+        }
 
-                                    </span>
+    </span>
 
-                                </p>
+</p>
 
                                 <p className="text-gray-500 mt-1">
 

@@ -3,6 +3,8 @@ import Meeting from "../models/meetingModel.js";
 
 const registerMeetingEvents = (io, socket) => {
 
+    const meetingUsers = new Map();
+
     // =========================================
     // JOIN ROOM
     // =========================================
@@ -95,6 +97,12 @@ const registerMeetingEvents = (io, socket) => {
             "room-users-count",
             users.length
         );
+        io.emit(
+            "meeting-participant-count", {
+                meetingCode,
+                count: users.length,
+            }
+        );
 
     });
 
@@ -102,12 +110,18 @@ const registerMeetingEvents = (io, socket) => {
     // LEAVE ROOM
     // =========================================
 
-    socket.on("leave-room", ({ meetingCode }) => {
+    socket.on("leave-room", async({ meetingCode }) => {
 
         if (!meetingCode) return;
 
         socket.leave(meetingCode);
-
+        await Meeting.findOneAndUpdate({
+            meetingCode,
+        }, {
+            $pull: {
+                participants: socket.user._id,
+            },
+        });
         const users = meetingUsers.get(meetingCode);
 
         if (users) {
@@ -153,6 +167,14 @@ const registerMeetingEvents = (io, socket) => {
             "room-users-count",
             onlineUsers
         );
+        io.emit(
+            "meeting-participant-count", {
+                meetingCode,
+                count: onlineUsers,
+            }
+        );
+
+
 
     });
 

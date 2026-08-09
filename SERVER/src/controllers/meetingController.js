@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { nanoid } from "nanoid";
 import Meeting from "../models/meetingModel.js";
 import mongoose from "mongoose";
+import { getIO } from "../socket/socketManager.js";
 // ===================================
 // Create Meeting
 // ===================================
@@ -374,6 +375,14 @@ export const endMeeting = async(req, res) => {
         meeting.endTime = new Date();
 
         await meeting.save();
+        const io = getIO();
+
+        io.to(meeting.meetingCode).emit(
+            "meeting-ended", {
+                meetingCode: meeting.meetingCode,
+                message: "Meeting has been ended by the host",
+            }
+        );
 
         return res.status(httpStatus.OK).json({
 

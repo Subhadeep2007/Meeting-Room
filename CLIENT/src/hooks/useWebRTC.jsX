@@ -743,6 +743,73 @@ useEffect(() => {
 
 }, []);
 
+// ========================================
+// Meeting Ended By Host
+// ========================================
+
+useEffect(() => {
+
+    const handleMeetingEnded = ({
+        meetingCode: endedMeetingCode,
+        message,
+    }) => {
+
+        console.log(
+            "Meeting Ended:",
+            endedMeetingCode,
+            message
+        );
+
+        // ================================
+        // Close All Peer Connections
+        // ================================
+
+        Object.values(
+            peersRef.current
+        ).forEach((peer) => {
+
+            peer.close();
+
+        });
+
+        peersRef.current = {};
+
+        // ================================
+        // Stop Local Media
+        // ================================
+
+        stopLocalStream();
+
+        // ================================
+        // Clear Remote Streams
+        // ================================
+
+        setRemoteStreams([]);
+
+        // ================================
+        // Redirect To Dashboard
+        // ================================
+
+        window.location.href = "/dashboard";
+
+    };
+
+    socket.on(
+        "meeting-ended",
+        handleMeetingEnded
+    );
+
+    return () => {
+
+        socket.off(
+            "meeting-ended",
+            handleMeetingEnded
+        );
+
+    };
+
+}, []);
+
 useEffect(() => {
 
     socket.on(
