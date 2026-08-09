@@ -310,7 +310,7 @@ const totalParticipants = meetings.reduce(
                 Welcome Card
             =========================== */}
 
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl text-white p-8 shadow-lg">
+            <div className="bg-linear-to-r from-blue-600 to-indigo-700 rounded-3xl text-white p-8 shadow-lg">
 
                 <h1 className="text-4xl font-bold">
 

@@ -154,7 +154,7 @@ const handleResendOTP = async () => {
 
         <div className="
             min-h-screen
-            bg-gradient-to-br
+            bg-linear-to-br
             from-blue-700
             via-indigo-700
             to-purple-800
