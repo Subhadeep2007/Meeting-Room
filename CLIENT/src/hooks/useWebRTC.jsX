@@ -43,6 +43,7 @@ const useWebRTC = (meetingCode) => {
         const [participants, setParticipants] = useState({});
         const [reactions, setReactions] = useState([]);
         const [waitingUsers, setWaitingUsers] = useState([]);
+        const [meetingLocked, setMeetingLocked] = useState(false);
         const meetingId = meetingCode;
 
     // ========================================
@@ -1210,11 +1211,16 @@ useEffect(() => {
 
     });
 
-    socket.on("meeting-lock-status", (data) => {
+   socket.on("meeting-lock-status", ({ locked }) => {
 
-        console.log(data);
+    console.log(
+        "Meeting Lock Status:",
+        locked
+    );
 
-    });
+    setMeetingLocked(locked);
+
+});
 
     socket.on("host-transferred", (data) => {
 
@@ -1872,6 +1878,7 @@ muteUser,
 disableCamera,
 transferHost,
 lockMeeting,
+meetingLocked,
 makeCoHost,
 endMeeting,
 

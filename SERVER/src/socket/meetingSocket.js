@@ -3,7 +3,6 @@ import Meeting from "../models/meetingModel.js";
 
 const registerMeetingEvents = (io, socket) => {
 
-    const meetingUsers = new Map();
 
     // =========================================
     // JOIN ROOM
@@ -177,6 +176,94 @@ const registerMeetingEvents = (io, socket) => {
 
 
     });
+
+
+    // =========================================
+    // LOCK / UNLOCK MEETING
+    // =========================================
+
+    socket.on(
+        "lock-meeting",
+        async({ meetingId, locked }) => {
+
+            try {
+
+                if (!meetingId) {
+                    return;
+                }
+
+                // =====================================
+                // Find Meeting
+                // =====================================
+
+                const meeting = await Meeting.findOne({
+                    meetingCode: meetingId.toUpperCase(),
+                });
+
+                if (!meeting) {
+
+                    return;
+
+                }
+
+                // =====================================
+                // Host Authorization
+                // =====================================
+
+                if (
+                    meeting.host.toString() !==
+                    socket.user._id.toString()
+                ) {
+
+                    socket.emit(
+                        "meeting-lock-error", {
+                            message: "Only Host Can Lock Meeting",
+                        }
+                    );
+
+                    return;
+
+                }
+
+                // =====================================
+                // Update Database
+                // =====================================
+
+                meeting.locked = Boolean(locked);
+
+                await meeting.save();
+
+                // =====================================
+                // Notify Meeting Users
+                // =====================================
+
+                io.to(meeting.meetingCode).emit(
+                    "meeting-lock-status", {
+                        meetingCode: meeting.meetingCode,
+
+                        locked: meeting.locked,
+                    }
+                );
+
+                console.log(
+                    `Meeting ${meeting.meetingCode} ${
+                    meeting.locked
+                        ? "locked"
+                        : "unlocked"
+                } by ${socket.user.username}`
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Lock Meeting Error:",
+                    error
+                );
+
+            }
+
+        }
+    );
 
     // =========================================
     // DISCONNECT

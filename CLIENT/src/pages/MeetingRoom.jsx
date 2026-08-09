@@ -88,6 +88,7 @@ const MeetingRoom = () => {
         transferHost,
         makeCoHost,
         lockMeeting,
+        meetingLocked,
         endMeeting,
 
     } = useWebRTC(meetingCode);
@@ -273,9 +274,9 @@ const handleEndMeeting = async () => {
 
                         lockMeeting={lockMeeting}
 
-                        meetingLocked={false}
+                       meetingLocked={meetingLocked}
 
-                        isHost={true}
+                        isHost={isHost}
 
                         onPin={setPinnedUser}
 
