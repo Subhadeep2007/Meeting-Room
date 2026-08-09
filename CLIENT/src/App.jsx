@@ -8,6 +8,7 @@ import MeetingRoom from "./pages/MeetingRoom.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
 
 function App() {
 
@@ -26,6 +27,11 @@ function App() {
                     path="/register"
                     element={<Register />}
                 />
+
+                <Route
+    path="/verify-email"
+    element={<VerifyEmail />}
+ />
 
                 <Route
                     path="/forgot-password"

@@ -22,6 +22,21 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
     },
 
+    emailVerified: {
+        type: Boolean,
+        default: false,
+    },
+
+    emailVerificationOTP: {
+        type: String,
+        default: null,
+    },
+
+    emailVerificationExpire: {
+        type: Date,
+        default: null,
+    },
+
     password: {
         type: String,
         required: true,

@@ -106,51 +106,39 @@ const Register = () => {
 
         try {
 
-            setLoading(true);
+    setLoading(true);
 
-            const { data } = await api.post(
-
-                "/auth/register",
-
-                {
-
-                    name: formData.name,
-
-                    username: formData.username,
-
-                    email: formData.email,
-
-                    password: formData.password,
-
-                }
-
-            );
-
-            successToast(data.message);
-
-            navigate("/");
-
+    const { data } = await api.post(
+        "/auth/register",
+        {
+            name: formData.name,
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
         }
+    );
 
-        catch (error) {
+    successToast(data.message);
 
-            errorToast(
+    navigate("/verify-email", {
+        state: {
+            email: formData.email,
+        },
+    });
 
-                error.response?.data?.message ||
+} catch (error) {
 
-                "Registration Failed"
+    errorToast(
+        error.response?.data?.message ||
+        "Registration Failed"
+    );
 
-            );
+} finally {
 
-        }
+    setLoading(false);
 
-        finally {
-
-            setLoading(false);
-
-        }
-
-    };
+}
+};
 
     // ==========================================
     // UI

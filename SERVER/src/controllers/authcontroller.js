@@ -9,80 +9,707 @@ import { sendEmail } from "../utils/sendEmail.js";
 // Register
 // ==========================
 export const register = async(req, res) => {
+
     try {
-        const { name, username, email, password } = req.body;
 
-        // Validation
-        if (!name || !username || !email || !password) {
-            return res.status(httpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "All fields are required",
-            });
-        }
-
-        // Check Existing User
-        const existingUser = await User.findOne({
-            $or: [{ email }, { username }],
-        });
-
-        if (existingUser) {
-            return res.status(httpStatus.CONFLICT).json({
-                success: false,
-                message: "User already exists",
-            });
-        }
-
-        // Hash Password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create User
-        const newUser = await User.create({
+        const {
             name,
             username,
             email,
+            password,
+        } = req.body;
+
+        // =====================================
+        // Validation
+        // =====================================
+
+        if (!name ||
+            !username ||
+            !email ||
+            !password
+        ) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: "All fields are required",
+
+            });
+
+        }
+
+        // =====================================
+        // Normalize Email
+        // =====================================
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        // =====================================
+        // Check Existing User
+        // =====================================
+
+        const existingUser = await User.findOne({
+
+            $or: [
+
+                {
+                    email: normalizedEmail,
+                },
+
+                {
+                    username: username
+                        .trim()
+                        .toLowerCase(),
+                },
+
+            ],
+
+        });
+
+        if (existingUser) {
+
+            return res.status(
+                httpStatus.CONFLICT
+            ).json({
+
+                success: false,
+
+                message: "User already exists",
+
+            });
+
+        }
+
+        // =====================================
+        // Hash Password
+        // =====================================
+
+        const hashedPassword =
+            await bcrypt.hash(
+                password,
+                10
+            );
+
+        // =====================================
+        // Generate OTP
+        // =====================================
+
+        const otp =
+            crypto
+            .randomInt(
+                100000,
+                1000000
+            )
+            .toString();
+
+        // =====================================
+        // Hash OTP
+        // =====================================
+
+        const hashedOTP =
+            crypto
+            .createHash("sha256")
+            .update(otp)
+            .digest("hex");
+
+        // =====================================
+        // OTP Expiry
+        // 10 Minutes
+        // =====================================
+
+        const otpExpire =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
+
+        // =====================================
+        // Create Unverified User
+        // =====================================
+
+        const newUser = await User.create({
+
+            name: name.trim(),
+
+            username: username
+                .trim()
+                .toLowerCase(),
+
+            email: normalizedEmail,
+
             password: hashedPassword,
+
+            emailVerified: false,
+
+            emailVerificationOTP: hashedOTP,
+
+            emailVerificationExpire: otpExpire,
+
         });
 
-        // Generate JWT
-        const token = jwt.sign({
-                id: newUser._id,
-                username: newUser.username,
-            },
-            process.env.JWT_SECRET, {
-                expiresIn: "1d",
-            }
-        );
+        // =====================================
+        // Send OTP Email
+        // =====================================
 
-        // Store Cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false, // true in production
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
+        try {
 
-        // Remove Password
-        const { password: _, refreshToken, ...user } =
-        newUser.toObject();
+            await sendEmail(
 
-        return res.status(httpStatus.CREATED).json({
+                normalizedEmail,
+
+                "Verify Your Email - Meeting Room",
+
+                `
+                <div style="font-family: Arial, sans-serif;">
+
+                    <h2>Email Verification</h2>
+
+                    <p>
+                        Hello ${name},
+                    </p>
+
+                    <p>
+                        Your OTP for Meeting Room
+                        registration is:
+                    </p>
+
+                    <h1
+                        style="
+                            letter-spacing: 8px;
+                            color: #2563eb;
+                        "
+                    >
+                        ${otp}
+                    </h1>
+
+                    <p>
+                        This OTP will expire in
+                        <strong>10 minutes</strong>.
+                    </p>
+
+                    <p>
+                        If you did not request this,
+                        please ignore this email.
+                    </p>
+
+                </div>
+                `
+
+            );
+
+        } catch (emailError) {
+
+            // =====================================
+            // Email Failed
+            // Remove Unverified User
+            // =====================================
+
+            await User.findByIdAndDelete(
+                newUser._id
+            );
+
+            console.error(
+                "OTP Email Error:",
+                emailError
+            );
+
+            return res.status(
+                httpStatus.BAD_GATEWAY
+            ).json({
+
+                success: false,
+
+                message: "Unable to send verification email",
+
+            });
+
+        }
+
+        // =====================================
+        // Response
+        // =====================================
+
+        return res.status(
+            httpStatus.CREATED
+        ).json({
+
             success: true,
-            message: "Registration Successful",
-            user,
+
+            message: "OTP sent successfully. Please verify your email.",
+
+            email: normalizedEmail,
+
         });
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
             success: false,
+
             message: "Internal Server Error",
+
         });
 
     }
+
 };
 
+// ==========================
+// Verify Email OTP
+// ==========================
+export const verifyEmailOTP = async(req, res) => {
+
+    try {
+
+        const { email, otp } = req.body;
+
+        // =====================================
+        // Validation
+        // =====================================
+
+        if (!email || !otp) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: "Email and OTP are required",
+
+            });
+
+        }
+
+        // =====================================
+        // Normalize Email
+        // =====================================
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        // =====================================
+        // Find User
+        // =====================================
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (!user) {
+
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
+
+                success: false,
+
+                message: "User not found",
+
+            });
+
+        }
+
+        // =====================================
+        // Already Verified
+        // =====================================
+
+        if (user.emailVerified) {
+
+            return res.status(
+                httpStatus.CONFLICT
+            ).json({
+
+                success: false,
+
+                message: "Email is already verified",
+
+            });
+
+        }
+
+        // =====================================
+        // Check OTP Expiry
+        // =====================================
+
+        if (!user.emailVerificationExpire ||
+            user.emailVerificationExpire.getTime() <
+            Date.now()
+        ) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: "OTP has expired",
+
+            });
+
+        }
+
+        // =====================================
+        // Hash Incoming OTP
+        // =====================================
+
+        const hashedOTP =
+            crypto
+            .createHash("sha256")
+            .update(otp.toString())
+            .digest("hex");
+
+        // =====================================
+        // Compare OTP
+        // =====================================
+
+        if (
+            hashedOTP !==
+            user.emailVerificationOTP
+        ) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: "Invalid OTP",
+
+            });
+
+        }
+
+        // =====================================
+        // Verify Email
+        // =====================================
+
+        user.emailVerified = true;
+
+        // =====================================
+        // Remove OTP
+        // =====================================
+
+        user.emailVerificationOTP = null;
+
+        user.emailVerificationExpire = null;
+
+        await user.save();
+
+        // =====================================
+        // Generate JWT
+        // =====================================
+
+        const token = jwt.sign(
+
+            {
+                id: user._id,
+
+                username: user.username,
+
+            },
+
+            process.env.JWT_SECRET,
+
+            {
+                expiresIn: "1d",
+            }
+
+        );
+
+        // =====================================
+        // Store Cookie
+        // =====================================
+
+        res.cookie(
+            "token",
+            token, {
+
+                httpOnly: true,
+
+                secure: false,
+
+                sameSite: "lax",
+
+                maxAge: 24 * 60 * 60 * 1000,
+
+            }
+        );
+
+        // =====================================
+        // Remove Sensitive Data
+        // =====================================
+
+        const {
+            password: _,
+            refreshToken,
+            emailVerificationOTP: __,
+            emailVerificationExpire: ___,
+            ...userData
+        } = user.toObject();
+
+        // =====================================
+        // Response
+        // =====================================
+
+        return res.status(
+            httpStatus.OK
+        ).json({
+
+            success: true,
+
+            message: "Email verified successfully",
+
+            user: userData,
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+};
+
+
+// ==========================
+// Resend Email OTP
+// ==========================
+export const resendEmailOTP = async(req, res) => {
+
+    try {
+
+        const { email } = req.body;
+
+        // =====================================
+        // Validation
+        // =====================================
+
+        if (!email) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: "Email is required",
+
+            });
+
+        }
+
+        // =====================================
+        // Normalize Email
+        // =====================================
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        // =====================================
+        // Find User
+        // =====================================
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (!user) {
+
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
+
+                success: false,
+
+                message: "User not found",
+
+            });
+
+        }
+
+        // =====================================
+        // Already Verified
+        // =====================================
+
+        if (user.emailVerified) {
+
+            return res.status(
+                httpStatus.CONFLICT
+            ).json({
+
+                success: false,
+
+                message: "Email is already verified",
+
+            });
+
+        }
+
+        // =====================================
+        // Generate New OTP
+        // =====================================
+
+        const otp =
+            crypto
+            .randomInt(
+                100000,
+                1000000
+            )
+            .toString();
+
+        // =====================================
+        // Hash OTP
+        // =====================================
+
+        const hashedOTP =
+            crypto
+            .createHash("sha256")
+            .update(otp)
+            .digest("hex");
+
+        // =====================================
+        // New Expiry
+        // =====================================
+
+        const otpExpire =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
+
+        // =====================================
+        // Update User
+        // =====================================
+
+        user.emailVerificationOTP =
+            hashedOTP;
+
+        user.emailVerificationExpire =
+            otpExpire;
+
+        await user.save();
+
+        // =====================================
+        // Send New OTP
+        // =====================================
+
+        try {
+
+            await sendEmail(
+
+                normalizedEmail,
+
+                "New OTP - Meeting Room",
+
+                `
+                <div
+                    style="
+                        font-family: Arial, sans-serif;
+                    "
+                >
+
+                    <h2>
+                        Email Verification
+                    </h2>
+
+                    <p>
+                        Your new OTP is:
+                    </p>
+
+                    <h1
+                        style="
+                            letter-spacing: 8px;
+                            color: #2563eb;
+                        "
+                    >
+                        ${otp}
+                    </h1>
+
+                    <p>
+                        This OTP will expire in
+                        <strong>10 minutes</strong>.
+                    </p>
+
+                    <p>
+                        Please use the latest OTP.
+                    </p>
+
+                </div>
+                `
+
+            );
+
+        } catch (emailError) {
+
+            console.error(
+                "Resend OTP Email Error:",
+                emailError
+            );
+
+            return res.status(
+                httpStatus.BAD_GATEWAY
+            ).json({
+
+                success: false,
+
+                message: "Unable to send verification email",
+
+            });
+
+        }
+
+        // =====================================
+        // Response
+        // =====================================
+
+        return res.status(
+            httpStatus.OK
+        ).json({
+
+            success: true,
+
+            message: "New OTP sent successfully",
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+};
 // ==========================
 // Login
 // ==========================
@@ -108,6 +735,26 @@ export const login = async(req, res) => {
                 message: "User not found",
             });
         }
+        // =====================================
+        // Email Verification Check
+        // =====================================
+
+        if (!user.emailVerified) {
+
+            return res.status(
+                httpStatus.FORBIDDEN
+            ).json({
+
+                success: false,
+
+                message: "Please verify your email before login",
+
+                emailVerified: false,
+
+            });
+
+        }
+
 
         // Compare Password
         const isPasswordCorrect = await bcrypt.compare(
