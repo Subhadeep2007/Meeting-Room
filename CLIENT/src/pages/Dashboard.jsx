@@ -113,17 +113,18 @@ const handleJoinMeeting = async () => {
 
         );
 
-        if (data.waiting) {
+       if (data.waiting) {
 
-            successToast(
+    successToast(
+        "Waiting for Host Approval"
+    );
 
-                "Waiting for Host Approval"
+    navigate(
+        `/meeting/${meetingCode}`
+    );
 
-            );
-
-            return;
-
-        }
+    return;
+}
 
         successToast(
 

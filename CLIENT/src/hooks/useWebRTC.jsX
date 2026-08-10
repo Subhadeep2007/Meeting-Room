@@ -44,6 +44,7 @@ const useWebRTC = (meetingCode) => {
         const [reactions, setReactions] = useState([]);
         const [waitingUsers, setWaitingUsers] = useState([]);
         const [meetingLocked, setMeetingLocked] = useState(false);
+        const [isWaiting, setIsWaiting] = useState(false);
         const meetingId = meetingCode;
 
     // ========================================
@@ -108,6 +109,48 @@ useEffect(() => {
 
 }, []);
 
+
+// ========================================
+// Meeting Locked → Waiting Room
+// ========================================
+
+// ========================================
+// Waiting User
+// ========================================
+
+useEffect(() => {
+
+    const handleMeetingLocked = ({
+        meetingCode: lockedMeetingCode,
+        message,
+    }) => {
+
+        console.log(
+            "🔒 MEETING LOCKED - USER IS WAITING:",
+            lockedMeetingCode,
+            message
+        );
+
+        setIsWaiting(true);
+        setMeetingLocked(true);
+    };
+
+    socket.on(
+        "meeting-locked",
+        handleMeetingLocked
+    );
+
+    return () => {
+
+        socket.off(
+            "meeting-locked",
+            handleMeetingLocked
+        );
+
+    };
+
+}, []);
+
     // ========================================
     // Initialize
     // ========================================
@@ -115,34 +158,51 @@ useEffect(() => {
     useEffect(() => {
 
     const initializeMedia = async () => {
+    try {
 
-        try {
+        console.log(
+            "🚀 INITIALIZING MEETING:",
+            meetingCode
+        );
 
-            console.log("Getting Camera...");
+        const stream = await getLocalStream();
 
-            const stream = await getLocalStream();
+        console.log(
+            "📷 Camera Success:",
+            stream
+        );
 
-            console.log("Camera Success:", stream);
+        setLocalStream(stream);
 
-            setLocalStream(stream);
+        console.log(
+            "📡 EMITTING join-room:",
+            meetingCode
+        );
 
-            console.log("Local Stream Stored");
-
-            startSpeakingDetection(stream);
-
-            socket.emit("join-room", {
+        socket.emit(
+            "join-room",
+            {
                 meetingCode,
-            });
+            },
+            (response) => {
+                console.log(
+                    "📡 join-room response:",
+                    response
+                );
+            }
+        );
 
-        }
+        startSpeakingDetection(stream);
 
-        catch (error) {
+    } catch (error) {
 
-            console.error("Initialization Error:", error);
+        console.error(
+            "❌ Initialization Error:",
+            error
+        );
 
-        }
-
-    };
+    }
+};
 
     // ===========================
     // Socket Connected
@@ -983,36 +1043,50 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
+
+
 useEffect(() => {
 
-    socket.on(
+    const handleWaitingUser = (user) => {
 
+        console.log(
+            "🚨 NEW WAITING USER:",
+            user
+        );
+
+        setWaitingUsers((prev) => {
+
+            const exists = prev.some(
+                (item) =>
+                    item.userId === user.userId
+            );
+
+            if (exists) {
+                return prev;
+            }
+
+            return [
+                ...prev,
+                user,
+            ];
+
+        });
+
+    };
+
+    socket.on(
         "waiting-user",
-
-        (user) => {
-
-            setWaitingUsers(
-
-                (prev) => [
-
-                    ...prev,
-
-                    user,
-
-                ]
-
-            );
-
-        }
-
+        handleWaitingUser
     );
 
     return () => {
 
         socket.off(
-
-            "waiting-user"
-
+            "waiting-user",
+            handleWaitingUser
         );
 
     };
@@ -1020,41 +1094,101 @@ useEffect(() => {
 }, []);
 useEffect(() => {
 
+    const handleWaitingUserRemoved = ({
+        userId,
+    }) => {
+
+        setWaitingUsers((prev) =>
+            prev.filter(
+                (user) =>
+                    user.userId !== userId
+            )
+        );
+
+    };
+
     socket.on(
-
-        "user-approved",
-
-        ({ userId }) => {
-
-            setWaitingUsers(
-
-                (prev) =>
-
-                    prev.filter(
-
-                        (user) =>
-
-                            user.userId !== userId
-
-                    )
-
-            );
-
-        }
-
+        "waiting-user-removed",
+        handleWaitingUserRemoved
     );
 
     return () => {
 
         socket.off(
-
-            "user-approved"
-
+            "waiting-user-removed",
+            handleWaitingUserRemoved
         );
 
     };
 
 }, []);
+
+
+// ========================================
+// User Approved
+// ========================================
+
+useEffect(() => {
+
+    const handleUserApproved = ({
+        userId,
+        socketId,
+        meetingCode: approvedMeetingCode,
+    }) => {
+
+        // =====================================
+        // Check Current Socket
+        // =====================================
+
+        if (socketId !== socket.id) {
+
+            return;
+
+        }
+
+        console.log(
+            "Host Approved Me:",
+            userId
+        );
+
+        // =====================================
+        // Remove Waiting State
+        // =====================================
+
+        setIsWaiting(false);
+
+        // =====================================
+        // Join Actual Meeting Room
+        // =====================================
+
+        socket.emit(
+            "join-room",
+            {
+                meetingCode:
+                    approvedMeetingCode ||
+                    meetingCode,
+            }
+        );
+
+    };
+
+    socket.on(
+        "user-approved",
+        handleUserApproved
+    );
+
+    return () => {
+
+        socket.off(
+            "user-approved",
+            handleUserApproved
+        );
+
+    };
+
+}, [meetingCode]);
+
+
 useEffect(() => {
 
     socket.on(
@@ -1211,16 +1345,25 @@ useEffect(() => {
 
     });
 
-   socket.on("meeting-lock-status", ({ locked }) => {
+   socket.on(
+    "meeting-lock-status",
+    ({ locked }) => {
 
-    console.log(
-        "Meeting Lock Status:",
-        locked
-    );
+        console.log(
+            "🔐 Meeting Lock Status:",
+            locked
+        );
 
-    setMeetingLocked(locked);
+        setMeetingLocked(locked);
 
-});
+        // If meeting is unlocked
+        if (!locked) {
+            setIsWaiting(false);
+        }
+
+    }
+);
+
 
     socket.on("host-transferred", (data) => {
 
@@ -1488,21 +1631,27 @@ const startScreenShare = async () => {
 const joinWaitingRoom = () => {
 
     socket.emit(
-
         "waiting-room-join",
-
         {
-
             meetingId,
-
         },
-
         (response) => {
 
-            console.log(response);
+            console.log(
+                "Waiting Room Response:",
+                response
+            );
+
+            if (
+                response?.success &&
+                response?.waiting
+            ) {
+
+                setIsWaiting(true);
+
+            }
 
         }
-
     );
 
 };
@@ -1858,6 +2007,7 @@ mySocketId,
 
 
     waitingUsers,
+    isWaiting,
 
 joinWaitingRoom,
 

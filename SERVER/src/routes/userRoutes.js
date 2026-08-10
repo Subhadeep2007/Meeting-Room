@@ -4,9 +4,17 @@ import upload from "../middleware/uploadMiddleware.js";
 
 import {
     uploadProfilePicture,
+    updateProfile,
 } from "../controllers/userController.js";
 
 const router = Router();
+
+
+router.put(
+    "/profile",
+    authMiddleware,
+    updateProfile
+);
 
 router.put(
     "/profile-picture",

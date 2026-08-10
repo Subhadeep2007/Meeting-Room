@@ -1,4 +1,5 @@
 const meetingUsers = new Map();
+const waitingUsers = new Map();
 import Meeting from "../models/meetingModel.js";
 
 const registerMeetingEvents = (io, socket) => {
@@ -12,7 +13,9 @@ const registerMeetingEvents = (io, socket) => {
 
         if (!meetingCode) return;
 
-        socket.join(meetingCode);
+
+        meetingCode = meetingCode.toUpperCase();
+
 
         const meeting = await Meeting.findOne({
             meetingCode: meetingCode.toUpperCase(),
@@ -25,7 +28,131 @@ const registerMeetingEvents = (io, socket) => {
         const isHost =
             meeting.host.toString() ===
             socket.user._id.toString();
+        // =====================================
+        // Locked Meeting
+        // =====================================
 
+        if (meeting.locked && !isHost) {
+
+            console.log(
+                `⏳ ${socket.user.username} is requesting to join ${meetingCode}`
+            );
+
+            console.log(
+                "ROOM USERS AFTER JOIN:",
+                meetingCode,
+                meetingUsers.get(meetingCode)
+            );
+
+            // =====================================
+            // Add User To Database Waiting Room
+            // =====================================
+
+            const alreadyWaiting =
+                meeting.waitingUsers.some(
+                    (userId) =>
+                    userId.toString() ===
+                    socket.user._id.toString()
+                );
+
+            if (!alreadyWaiting) {
+
+                meeting.waitingUsers.push(
+                    socket.user._id
+                );
+
+                await meeting.save();
+            }
+
+            // =====================================
+            // Store Waiting User Socket
+            // =====================================
+
+            waitingUsers.set(
+                socket.user._id.toString(), {
+                    socketId: socket.id,
+                    meetingCode: meeting.meetingCode,
+                }
+            );
+
+            console.log(
+                "⏳ Waiting User Stored:",
+                socket.user.username,
+                socket.id
+            );
+
+            // =====================================
+            // Find Host
+            // =====================================
+
+            const roomUsers =
+                meetingUsers.get(meetingCode) || [];
+
+            const host = roomUsers.find(
+                (user) =>
+                user.userId.toString() ===
+                meeting.host.toString()
+            );
+
+            // =====================================
+            // Notify Host
+            // =====================================
+
+            if (host) {
+
+                console.log("✅ HOST FOUND");
+                console.log("Host Username:", host.username);
+                console.log("Host Socket ID:", host.socketId);
+
+                io.to(host.socketId).emit(
+                    "waiting-user", {
+                        userId: socket.user._id.toString(),
+                        socketId: socket.id,
+                        username: socket.user.username,
+                        profilePicture: socket.user.profilePicture,
+                    }
+                );
+
+                console.log(
+                    "✅ waiting-user EVENT SENT TO HOST"
+                );
+
+            } else {
+
+                console.log(
+                    "❌ HOST NOT FOUND"
+                );
+
+                console.log(
+                    "Meeting Code:",
+                    meetingCode
+                );
+
+                console.log(
+                    "Current Meeting Users:",
+                    meetingUsers.get(meetingCode)
+                );
+            }
+
+            // =====================================
+            // Tell Current User
+            // =====================================
+
+            socket.emit(
+                "meeting-locked", {
+                    meetingCode,
+                    message: "Meeting is locked. Please wait for Host approval.",
+                }
+            );
+
+            return;
+        }
+
+        // =====================================
+        // Join Socket Room
+        // =====================================
+
+        socket.join(meetingCode);
         // Create room if not exists
         if (!meetingUsers.has(meetingCode)) {
             meetingUsers.set(meetingCode, []);
@@ -178,9 +305,370 @@ const registerMeetingEvents = (io, socket) => {
     });
 
 
-    // =========================================
-    // LOCK / UNLOCK MEETING
-    // =========================================
+    socket.on(
+        "approve-user",
+        async({ meetingId, userId }, callback) => {
+
+            try {
+
+                if (!meetingId || !userId) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Meeting Code and User ID are required",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Find Meeting By Meeting Code
+                // =====================================
+
+                const meeting = await Meeting.findOne({
+                    meetingCode: meetingId.toUpperCase(),
+                });
+
+                if (!meeting) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Meeting Not Found",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Host Authorization
+                // =====================================
+
+                if (
+                    meeting.host.toString() !==
+                    socket.user._id.toString()
+                ) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Only Host Can Approve Users",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Check Waiting User
+                // =====================================
+
+                const waitingUser =
+                    meeting.waitingUsers.find(
+                        (id) =>
+                        id.toString() ===
+                        userId.toString()
+                    );
+
+                if (!waitingUser) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "User is not in Waiting Room",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Remove From Waiting Room
+                // =====================================
+
+                meeting.waitingUsers =
+                    meeting.waitingUsers.filter(
+                        (id) =>
+                        id.toString() !==
+                        userId.toString()
+                    );
+
+                // =====================================
+                // Add To Participants
+                // =====================================
+
+                const alreadyParticipant =
+                    meeting.participants.some(
+                        (id) =>
+                        id.toString() ===
+                        userId.toString()
+                    );
+
+                if (!alreadyParticipant) {
+
+                    meeting.participants.push(userId);
+
+                }
+
+                await meeting.save();
+
+                // =====================================
+                // Find Waiting User Socket
+                // =====================================
+
+                const approvedUser =
+                    waitingUsers.get(
+                        userId.toString()
+                    );
+
+                console.log(
+                    "✅ Approved User Socket:",
+                    approvedUser
+                );
+
+                // =====================================
+                // Notify Approved User
+                // =====================================
+
+                if (approvedUser) {
+
+                    io.to(approvedUser.socketId).emit(
+                        "user-approved", {
+                            userId,
+                            socketId: approvedUser.socketId,
+                            meetingCode: meeting.meetingCode,
+                        }
+                    );
+
+                    waitingUsers.delete(
+                        userId.toString()
+                    );
+
+                }
+
+                // =====================================
+                // Remove From Host Waiting List
+                // =====================================
+
+                socket.emit(
+                    "waiting-user-removed", {
+                        userId,
+                    }
+                );
+
+                // =====================================
+                // Response
+                // =====================================
+
+                if (callback) {
+
+                    callback({
+                        success: true,
+                        message: "User Approved Successfully",
+                    });
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Approve User Error:",
+                    error
+                );
+
+                if (callback) {
+
+                    callback({
+                        success: false,
+                        message: "Internal Server Error",
+                    });
+
+                }
+
+            }
+
+        }
+    );
+
+
+
+
+
+
+    socket.on(
+        "reject-user",
+        async({ meetingId, userId }, callback) => {
+
+            try {
+
+                if (!meetingId || !userId) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Meeting Code and User ID are required",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Find Meeting By Meeting Code
+                // =====================================
+
+                const meeting = await Meeting.findOne({
+                    meetingCode: meetingId.toUpperCase(),
+                });
+
+                if (!meeting) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Meeting Not Found",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Host Authorization
+                // =====================================
+
+                if (
+                    meeting.host.toString() !==
+                    socket.user._id.toString()
+                ) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "Only Host Can Reject Users",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Check Waiting User
+                // =====================================
+
+                const isWaiting =
+                    meeting.waitingUsers.some(
+                        (id) =>
+                        id.toString() ===
+                        userId.toString()
+                    );
+
+                if (!isWaiting) {
+
+                    if (callback) {
+                        callback({
+                            success: false,
+                            message: "User is not in Waiting Room",
+                        });
+                    }
+
+                    return;
+                }
+
+                // =====================================
+                // Remove From Waiting Room
+                // =====================================
+
+                meeting.waitingUsers =
+                    meeting.waitingUsers.filter(
+                        (id) =>
+                        id.toString() !==
+                        userId.toString()
+                    );
+
+                await meeting.save();
+
+                // =====================================
+                // Find Waiting User Socket
+                // =====================================
+
+                const rejectedUser =
+                    waitingUsers.get(
+                        userId.toString()
+                    );
+
+                console.log(
+                    "❌ Rejected User Socket:",
+                    rejectedUser
+                );
+
+                // =====================================
+                // Notify Rejected User
+                // =====================================
+
+                if (rejectedUser) {
+
+                    io.to(rejectedUser.socketId).emit(
+                        "user-rejected", {
+                            userId,
+                            meetingCode: meeting.meetingCode,
+                        }
+                    );
+
+                    waitingUsers.delete(
+                        userId.toString()
+                    );
+
+                }
+
+                // =====================================
+                // Remove From Host Waiting List
+                // =====================================
+
+                socket.emit(
+                    "waiting-user-removed", {
+                        userId,
+                    }
+                );
+
+                // =====================================
+                // Response
+                // =====================================
+
+                if (callback) {
+
+                    callback({
+                        success: true,
+                        message: "User Rejected Successfully",
+                    });
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Reject User Error:",
+                    error
+                );
+
+                if (callback) {
+
+                    callback({
+                        success: false,
+                        message: "Internal Server Error",
+                    });
+
+                }
+
+            }
+
+        }
+    );
+
+
 
     socket.on(
         "lock-meeting",
@@ -192,18 +680,12 @@ const registerMeetingEvents = (io, socket) => {
                     return;
                 }
 
-                // =====================================
-                // Find Meeting
-                // =====================================
-
                 const meeting = await Meeting.findOne({
                     meetingCode: meetingId.toUpperCase(),
                 });
 
                 if (!meeting) {
-
                     return;
-
                 }
 
                 // =====================================
@@ -222,19 +704,26 @@ const registerMeetingEvents = (io, socket) => {
                     );
 
                     return;
-
                 }
 
                 // =====================================
-                // Update Database
+                // Update Lock Status
                 // =====================================
 
                 meeting.locked = Boolean(locked);
 
                 await meeting.save();
 
+                console.log(
+                    `Meeting ${meeting.meetingCode} ${
+                    meeting.locked
+                        ? "locked"
+                        : "unlocked"
+                } by ${socket.user.username}`
+                );
+
                 // =====================================
-                // Notify Meeting Users
+                // Notify Users
                 // =====================================
 
                 io.to(meeting.meetingCode).emit(
@@ -243,14 +732,6 @@ const registerMeetingEvents = (io, socket) => {
 
                         locked: meeting.locked,
                     }
-                );
-
-                console.log(
-                    `Meeting ${meeting.meetingCode} ${
-                    meeting.locked
-                        ? "locked"
-                        : "unlocked"
-                } by ${socket.user.username}`
                 );
 
             } catch (error) {

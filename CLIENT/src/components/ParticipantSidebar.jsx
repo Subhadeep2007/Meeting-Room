@@ -64,68 +64,7 @@ const ParticipantSidebar = ({
                 </h2>
 
 
-                {/* =================================
-                    Lock / Unlock Meeting
-                ================================= */}
 
-                {isHost && (
-
-                    <button
-
-                        type="button"
-
-                        onClick={() => {
-
-                            lockMeeting(
-                                !meetingLocked
-                            );
-
-                        }}
-
-                        className="
-                            flex
-                            items-center
-                            justify-center
-                            w-10
-                            h-10
-                            rounded-lg
-                            bg-gray-800
-                            hover:bg-gray-700
-                            text-white
-                            transition
-                        "
-
-                        title={
-                            meetingLocked
-                                ? "Unlock Meeting"
-                                : "Lock Meeting"
-                        }
-
-                    >
-
-                        {
-
-                            meetingLocked ? (
-
-                                <Unlock
-                                    size={20}
-                                    className="text-green-400"
-                                />
-
-                            ) : (
-
-                                <Lock
-                                    size={20}
-                                    className="text-yellow-400"
-                                />
-
-                            )
-
-                        }
-
-                    </button>
-
-                )}
 
             </div>
 
@@ -136,32 +75,32 @@ const ParticipantSidebar = ({
 
             {isHost && (
 
-    <button
-        type="button"
+                <button
+                    type="button"
 
-        onClick={() => {
+                    onClick={() => {
 
-            console.log(
-                "🔒 LOCK BUTTON CLICKED"
-            );
+                        console.log(
+                            "🔒 LOCK BUTTON CLICKED"
+                        );
 
-            console.log(
-                "Current meetingLocked:",
-                meetingLocked
-            );
+                        console.log(
+                            "Current meetingLocked:",
+                            meetingLocked
+                        );
 
-            console.log(
-                "lockMeeting function:",
-                lockMeeting
-            );
+                        console.log(
+                            "lockMeeting function:",
+                            lockMeeting
+                        );
 
-            lockMeeting(
-                !meetingLocked
-            );
+                        lockMeeting(
+                            !meetingLocked
+                        );
 
-        }}
+                    }}
 
-        className="
+                    className="
             flex
             items-center
             justify-center
@@ -174,23 +113,23 @@ const ParticipantSidebar = ({
             cursor-pointer
         "
 
-        title={
-            meetingLocked
-                ? "Unlock Meeting"
-                : "Lock Meeting"
-        }
+                    title={
+                        !meetingLocked
+                            ? "Unlock Meeting"
+                            : "Lock Meeting"
+                    }
 
-    >
+                >
 
-        {meetingLocked ? (
-            <Unlock size={20} />
-        ) : (
-            <Lock size={20} />
-        )}
+                    {!meetingLocked ? (
+                        <Unlock size={20} />
+                    ) : (
+                        <Lock size={20} />
+                    )}
 
-    </button>
+                </button>
 
-)}
+            )}
 
             {/* =================================
                 Search

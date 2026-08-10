@@ -67,6 +67,7 @@ const MeetingRoom = () => {
         sendReaction,
 
         waitingUsers,
+        isWaiting,
         approveUser,
         rejectUser,
 
@@ -211,6 +212,44 @@ const handleEndMeeting = async () => {
     }
 
 };
+
+
+
+    // =====================================
+// Waiting Room Screen
+// =====================================
+
+if (isWaiting) {
+
+    return (
+        <div className="h-screen flex flex-col justify-center items-center bg-gray-950 text-white">
+
+            <div className="text-6xl mb-6">
+                ⏳
+            </div>
+
+            <h1 className="text-3xl font-bold mb-3">
+                Waiting for Host Approval
+            </h1>
+
+            <p className="text-gray-400 text-center max-w-md">
+                The meeting is locked. Please wait while the host
+                approves your request to join.
+            </p>
+
+            <button
+                type="button"
+                onClick={leaveMeeting}
+                className="mt-8 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition"
+            >
+                Leave Meeting
+            </button>
+
+        </div>
+    );
+
+}
+
     // =====================================
     // Loading Screen
     // =====================================

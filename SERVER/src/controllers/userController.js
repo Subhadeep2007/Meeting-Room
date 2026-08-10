@@ -118,3 +118,152 @@ export const uploadProfilePicture = async(req, res) => {
     }
 
 };
+
+
+// =====================================
+// Update Profile
+// =====================================
+
+export const updateProfile = async(req, res) => {
+
+    try {
+
+        const { name, username } = req.body;
+
+        // =====================================
+        // Validation
+        // =====================================
+
+        if (!name || !username) {
+
+            return res.status(httpStatus.BAD_REQUEST).json({
+
+                success: false,
+
+                message: "Name and username are required",
+
+            });
+
+        }
+
+        const trimmedName = name.trim();
+
+        const trimmedUsername =
+            username.trim().toLowerCase();
+
+        if (!trimmedName || !trimmedUsername) {
+
+            return res.status(httpStatus.BAD_REQUEST).json({
+
+                success: false,
+
+                message: "Name and username cannot be empty",
+
+            });
+
+        }
+
+        // =====================================
+        // Check Username
+        // =====================================
+
+        const existingUser = await User.findOne({
+
+            username: trimmedUsername,
+
+            _id: {
+                $ne: req.user._id,
+            },
+
+        });
+
+        if (existingUser) {
+
+            return res.status(httpStatus.CONFLICT).json({
+
+                success: false,
+
+                message: "Username already exists",
+
+            });
+
+        }
+
+        // =====================================
+        // Find Current User
+        // =====================================
+
+        const user = await User.findById(
+            req.user._id
+        );
+
+        if (!user) {
+
+            return res.status(httpStatus.NOT_FOUND).json({
+
+                success: false,
+
+                message: "User not found",
+
+            });
+
+        }
+
+        // =====================================
+        // Update
+        // =====================================
+
+        user.name = trimmedName;
+
+        user.username = trimmedUsername;
+
+        await user.save();
+
+        // =====================================
+        // Remove Sensitive Data
+        // =====================================
+
+        const {
+            password,
+            refreshToken,
+            emailVerificationOTP,
+            emailVerificationExpire,
+            resetPasswordToken,
+            resetPasswordExpire,
+            ...userData
+        } = user.toObject();
+
+        // =====================================
+        // Response
+        // =====================================
+
+        return res.status(httpStatus.OK).json({
+
+            success: true,
+
+            message: "Profile Updated Successfully",
+
+            user: userData,
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Update Profile Error:",
+            error
+        );
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+};
