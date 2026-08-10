@@ -53,7 +53,7 @@ const Login = () => {
 
     return (
 
-        <div className="min-h-screen bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-linear-to-br from-blue-700 via-indigo-700 to-purple-800 flex items-center justify-center px-4">
 
             <div className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl p-8">
 
