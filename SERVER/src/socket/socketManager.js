@@ -51,19 +51,58 @@ export const initializeSocket = (server) => {
             // First Connection
             if (onlineUsers.get(userId).size === 1) {
 
+                const user = await User.findById(userId)
+                    .select("settings");
+
+                const showOnlineStatus =
+                    user &&
+                    user.settings &&
+                    user.settings.showOnlineStatus !== undefined ?
+                    user.settings.showOnlineStatus :
+                    true;
+
+
                 await User.findByIdAndUpdate(userId, {
 
-                    isOnline: true,
+                    isOnline: showOnlineStatus,
 
                 });
 
-                io.emit("user-online", {
+                // =====================================
+                // Broadcast only if user allows it
+                // =====================================
 
-                    userId,
+                if (showOnlineStatus) {
 
-                    username: socket.user.username,
+                    await User.findByIdAndUpdate(
+                        userId, {
+                            isOnline: true,
+                        }
+                    );
 
-                });
+                    io.emit("user-online", {
+
+                        userId,
+
+                        username: socket.user.username,
+
+                    });
+
+                }
+
+
+                // =====================================
+                // User wants to hide online status
+                // =====================================
+                else {
+
+                    await User.findByIdAndUpdate(
+                        userId, {
+                            isOnline: false,
+                        }
+                    );
+
+                }
 
             }
 
@@ -94,21 +133,46 @@ export const initializeSocket = (server) => {
 
                         const lastSeen = new Date();
 
-                        await User.findByIdAndUpdate(userId, {
 
-                            isOnline: false,
+                        // Get latest settings
+                        const user = await User.findById(userId)
+                            .select("settings");
 
-                            lastSeen,
+                        const showOnlineStatus =
+                            user &&
+                            user.settings &&
+                            user.settings.showOnlineStatus !== undefined ?
+                            user.settings.showOnlineStatus :
+                            true;
 
-                        });
 
-                        io.emit("user-offline", {
+                        // =====================================
+                        // Always save actual last seen
+                        // =====================================
 
-                            userId,
+                        await User.findByIdAndUpdate(
+                            userId, {
+                                isOnline: false,
+                                lastSeen,
+                            }
+                        );
 
-                            lastSeen,
 
-                        });
+                        // =====================================
+                        // Tell other users only if allowed
+                        // =====================================
+
+                        if (showOnlineStatus) {
+
+                            io.emit("user-offline", {
+
+                                userId,
+
+                                lastSeen,
+
+                            });
+
+                        }
 
                     }
 

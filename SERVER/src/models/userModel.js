@@ -82,6 +82,44 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+
+    // =============================
+    // User Settings
+    // =============================
+
+    settings: {
+
+        cameraEnabled: {
+            type: Boolean,
+            default: true,
+        },
+
+        microphoneEnabled: {
+            type: Boolean,
+            default: true,
+        },
+
+        meetingNotifications: {
+            type: Boolean,
+            default: true,
+        },
+
+        chatNotifications: {
+            type: Boolean,
+            default: true,
+        },
+
+        darkMode: {
+            type: Boolean,
+            default: false,
+        },
+
+        showOnlineStatus: {
+            type: Boolean,
+            default: true,
+        },
+
+    },
 }, {
     timestamps: true,
 });

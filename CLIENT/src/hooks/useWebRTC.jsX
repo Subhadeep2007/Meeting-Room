@@ -157,7 +157,8 @@ useEffect(() => {
 
     useEffect(() => {
 
-    const initializeMedia = async () => {
+   const initializeMedia = async () => {
+
     try {
 
         console.log(
@@ -165,14 +166,93 @@ useEffect(() => {
             meetingCode
         );
 
+        // =====================================
+        // Get User Settings
+        // =====================================
+
+        const { data } = await api.get(
+            "/user/settings"
+        );
+
+        const settings = data.settings;
+
+        console.log(
+            "⚙️ User Settings:",
+            settings
+        );
+
+
+        // =====================================
+        // Get Local Media
+        // =====================================
+
         const stream = await getLocalStream();
 
         console.log(
-            "📷 Camera Success:",
+            "📷 Camera/Mic Stream:",
             stream
         );
 
+
+        // =====================================
+        // Apply Camera Setting
+        // =====================================
+
+        const cameraState =
+            settings?.cameraEnabled ?? true;
+
+        stream
+            .getVideoTracks()
+            .forEach((track) => {
+
+                track.enabled = cameraState;
+
+            });
+
+        setCameraEnabled(cameraState);
+
+
+        // =====================================
+        // Apply Microphone Setting
+        // =====================================
+
+        const microphoneState =
+            settings?.microphoneEnabled ?? true;
+
+        stream
+            .getAudioTracks()
+            .forEach((track) => {
+
+                track.enabled = microphoneState;
+
+            });
+
+        setMicrophoneEnabled(
+            microphoneState
+        );
+
+
+        // =====================================
+        // Save Local Stream
+        // =====================================
+
         setLocalStream(stream);
+
+
+        console.log(
+            "📷 Camera Enabled:",
+            cameraState
+        );
+
+        console.log(
+            "🎤 Microphone Enabled:",
+            microphoneState
+        );
+
+
+        // =====================================
+        // Join Meeting
+        // =====================================
 
         console.log(
             "📡 EMITTING join-room:",
@@ -185,23 +265,34 @@ useEffect(() => {
                 meetingCode,
             },
             (response) => {
+
                 console.log(
                     "📡 join-room response:",
                     response
                 );
+
             }
         );
 
+
+        // =====================================
+        // Speaking Detection
+        // =====================================
+
         startSpeakingDetection(stream);
+
 
     } catch (error) {
 
         console.error(
             "❌ Initialization Error:",
+            error.response?.data ||
+            error.message ||
             error
         );
 
     }
+
 };
 
     // ===========================
@@ -1365,18 +1456,7 @@ useEffect(() => {
 );
 
 
-    socket.on("host-transferred", (data) => {
-
-        console.log(data);
-
-    });
-
-    socket.on("cohost-added", (data) => {
-
-        console.log(data);
-
-    });
-
+    
     return () => {
 
         socket.off("force-mute");
@@ -1385,9 +1465,7 @@ useEffect(() => {
 
         socket.off("meeting-lock-status");
 
-        socket.off("host-transferred");
-
-        socket.off("cohost-added");
+       
 
     };
 
@@ -1435,52 +1513,73 @@ const handleToggleCamera = (forceState) => {
 // Toggle Microphone
 // ========================================
 
-const handleToggleMicrophone = () => {
+// ========================================
+// Toggle Microphone
+// ========================================
 
-    const enabled = toggleMicrophone();
+const handleToggleMicrophone = (forceState) => {
+
+    if (!localStream) {
+
+        console.log(
+            "Local stream not available"
+        );
+
+        return;
+
+    }
+
+    let enabled;
+
+    if (typeof forceState === "boolean") {
+
+        const audioTracks =
+            localStream.getAudioTracks();
+
+        audioTracks.forEach((track) => {
+
+            track.enabled = forceState;
+
+        });
+
+        enabled = forceState;
+
+    } else {
+
+        enabled = toggleMicrophone();
+
+    }
 
     setMicrophoneEnabled(enabled);
 
     socket.emit(
+        "microphone-status",
+        {
+            meetingCode,
+            enabled,
+        }
+    );
 
-    "microphone-status",
-
-    {
-
-        meetingCode,
-
-        enabled,
-
-    }
-
-);
+    // =====================================
+    // Update Peer Audio Tracks
+    // =====================================
 
     Object.values(
-
         peersRef.current
-
     ).forEach((peer) => {
 
         const sender = peer
-
             .getSenders()
-
             .find(
-
                 (sender) =>
-
                     sender.track?.kind === "audio"
-
             );
 
         if (sender) {
 
             sender.replaceTrack(
-
                 localStream
-
                     .getAudioTracks()[0]
-
             );
 
         }
@@ -1488,7 +1587,6 @@ const handleToggleMicrophone = () => {
     });
 
 };
-
 
 // ======================================
 // Start Speaking Detection
@@ -1939,49 +2037,7 @@ const endMeeting = async () => {
     }
 
 };
-// ======================================
-// Transfer Host
-// ======================================
 
-const transferHost = (participant) => {
-
-    socket.emit(
-
-        "transfer-host",
-
-        {
-
-            meetingId,
-
-            newHostId: participant.userId,
-
-        },
-
-        (response) => {
-
-            console.log(response);
-
-        }
-
-    );
-
-};
-const makeCoHost = (participant) => {
-
-    socket.emit(
-        "make-cohost",
-        {
-            meetingId,
-            userId: participant.userId,
-        },
-        (response) => {
-
-            console.log(response);
-
-        }
-    );
-
-};
 
 return {
 
@@ -2026,10 +2082,10 @@ sendReaction,
 kickUser,
 muteUser,
 disableCamera,
-transferHost,
+
 lockMeeting,
 meetingLocked,
-makeCoHost,
+
 endMeeting,
 
 };

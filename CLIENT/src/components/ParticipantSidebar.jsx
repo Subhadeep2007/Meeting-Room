@@ -1,10 +1,12 @@
 import { useState } from "react";
+
 import {
     Lock,
     Unlock,
 } from "lucide-react";
 
 import ParticipantCard from "./ParticipantCard";
+
 
 const ParticipantSidebar = ({
 
@@ -24,10 +26,6 @@ const ParticipantSidebar = ({
 
     disableCamera,
 
-    transferHost,
-
-    makeCoHost,
-
     lockMeeting,
 
     meetingLocked,
@@ -35,6 +33,7 @@ const ParticipantSidebar = ({
 }) => {
 
     const [search, setSearch] = useState("");
+
 
     // =====================================
     // Participants
@@ -47,35 +46,51 @@ const ParticipantSidebar = ({
                 .includes(search.toLowerCase())
     );
 
+
     return (
 
-        <div className="w-80 bg-gray-900 h-full p-4 border-l border-gray-700">
+        <div className="
+            w-80
+            bg-gray-900
+            h-full
+            p-4
+            border-l
+            border-gray-700
+        ">
+
 
             {/* =================================
                 Header
             ================================= */}
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="
+                flex
+                items-center
+                justify-between
+                mb-4
+            ">
 
-                <h2 className="text-white text-xl font-bold">
+                <h2 className="
+                    text-white
+                    text-xl
+                    font-bold
+                ">
 
                     Participants ({users.length})
 
                 </h2>
 
-
-
-
             </div>
 
 
             {/* =================================
-                Lock Status
+                Lock Meeting
             ================================= */}
 
             {isHost && (
 
                 <button
+
                     type="button"
 
                     onClick={() => {
@@ -101,35 +116,41 @@ const ParticipantSidebar = ({
                     }}
 
                     className="
-            flex
-            items-center
-            justify-center
-            w-10
-            h-10
-            rounded-lg
-            bg-red-600
-            hover:bg-red-700
-            text-white
-            cursor-pointer
-        "
+                        flex
+                        items-center
+                        justify-center
+                        w-10
+                        h-10
+                        rounded-lg
+                        bg-red-600
+                        hover:bg-red-700
+                        text-white
+                        cursor-pointer
+                        mb-4
+                    "
 
                     title={
-                        !meetingLocked
+                        meetingLocked
                             ? "Unlock Meeting"
                             : "Lock Meeting"
                     }
 
                 >
 
-                    {!meetingLocked ? (
-                        <Unlock size={20} />
-                    ) : (
+                    {meetingLocked ? (
+
                         <Lock size={20} />
+
+                    ) : (
+
+                        <Unlock size={20} />
+
                     )}
 
                 </button>
 
             )}
+
 
             {/* =================================
                 Search
@@ -198,15 +219,17 @@ const ParticipantSidebar = ({
 
                                 muteUser={muteUser}
 
-                                disableCamera={disableCamera}
+                                disableCamera={
+                                    disableCamera
+                                }
 
-                                transferHost={transferHost}
+                                lockMeeting={
+                                    lockMeeting
+                                }
 
-                                makeCoHost={makeCoHost}
-
-                                lockMeeting={lockMeeting}
-
-                                meetingLocked={meetingLocked}
+                                meetingLocked={
+                                    meetingLocked
+                                }
 
                             />
 
@@ -235,5 +258,6 @@ const ParticipantSidebar = ({
     );
 
 };
+
 
 export default ParticipantSidebar;

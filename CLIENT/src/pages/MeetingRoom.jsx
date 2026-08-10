@@ -1,11 +1,13 @@
 import api from "../services/api";
 
 import { useEffect, useRef, useState } from "react";
+
 import {
     Grid2X2,
     Maximize,
     Minimize,
 } from "lucide-react";
+
 import { useNavigate, useParams } from "react-router-dom";
 
 import useWebRTC from "../hooks/useWebRTC";
@@ -19,11 +21,13 @@ import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
 
 import Navbar from "../layout/Navbar.jsx";
 
+
 const MeetingRoom = () => {
 
     const navigate = useNavigate();
 
     const { meetingCode } = useParams();
+
 
     // =====================================
     // User
@@ -31,11 +35,13 @@ const MeetingRoom = () => {
 
     const username = "Subha";
 
+
     // =====================================
     // Loading
     // =====================================
 
     const [loading, setLoading] = useState(true);
+
 
     // =====================================
     // Meeting UI States
@@ -47,52 +53,77 @@ const MeetingRoom = () => {
 
     const [pinnedUser, setPinnedUser] = useState(null);
 
+
     // =====================================
     // Fullscreen Reference
     // =====================================
 
     const meetingContainerRef = useRef(null);
 
+
     // =====================================
     // WebRTC
     // =====================================
 
     const {
+
         localStream,
+
         remoteStreams,
+
         participants,
+
         mySocketId,
 
+
         reactions,
+
         sendReaction,
 
+
         waitingUsers,
+
         isWaiting,
+
         approveUser,
+
         rejectUser,
 
+
         cameraEnabled,
+
         microphoneEnabled,
+
         connectionState,
 
+
         handleToggleCamera,
+
         handleToggleMicrophone,
 
+
         startScreenShare,
+
         stopScreenShare,
+
 
         handleRaiseHand,
 
+
         kickUser,
+
         muteUser,
+
         disableCamera,
-        transferHost,
-        makeCoHost,
+
         lockMeeting,
+
         meetingLocked,
+
         endMeeting,
 
     } = useWebRTC(meetingCode);
+
 
     // =====================================
     // Loading Check
@@ -100,17 +131,24 @@ const MeetingRoom = () => {
 
     useEffect(() => {
 
-        console.log("Local Stream:", localStream);
+        console.log(
+            "Local Stream:",
+            localStream
+        );
+
 
         if (localStream) {
 
-            console.log("Meeting Ready");
+            console.log(
+                "Meeting Ready"
+            );
 
             setLoading(false);
 
         }
 
     }, [localStream]);
+
 
     // =====================================
     // Fullscreen Change Listener
@@ -121,15 +159,19 @@ const MeetingRoom = () => {
         const handleFullscreenChange = () => {
 
             setIsFullscreen(
-                Boolean(document.fullscreenElement)
+                Boolean(
+                    document.fullscreenElement
+                )
             );
 
         };
+
 
         document.addEventListener(
             "fullscreenchange",
             handleFullscreenChange
         );
+
 
         return () => {
 
@@ -142,6 +184,7 @@ const MeetingRoom = () => {
 
     }, []);
 
+
     // =====================================
     // Fullscreen Handler
     // =====================================
@@ -152,7 +195,9 @@ const MeetingRoom = () => {
 
             if (!document.fullscreenElement) {
 
-                await meetingContainerRef.current?.requestFullscreen();
+                await meetingContainerRef
+                    .current
+                    ?.requestFullscreen();
 
             } else {
 
@@ -171,6 +216,7 @@ const MeetingRoom = () => {
 
     };
 
+
     // =====================================
     // Leave Meeting
     // =====================================
@@ -182,73 +228,119 @@ const MeetingRoom = () => {
         navigate("/dashboard");
 
     };
-// =====================================
-// End Meeting
-// =====================================
-// =====================================
-// Current User Host Check
-// =====================================
 
-const isHost =
-    participants[mySocketId]?.isHost ?? false;
 
-const handleEndMeeting = async () => {
+    // =====================================
+    // Current User Host Check
+    // =====================================
 
-    try {
+    const isHost =
+        participants[mySocketId]?.isHost ?? false;
 
-        await endMeeting();
 
-        stopScreenShare();
+    // =====================================
+    // End Meeting
+    // =====================================
 
-        navigate("/dashboard");
+    const handleEndMeeting = async () => {
 
-    } catch (error) {
+        try {
 
-        console.error(
-            "Failed to end meeting:",
-            error
+            await endMeeting();
+
+            stopScreenShare();
+
+            navigate("/dashboard");
+
+        } catch (error) {
+
+            console.error(
+                "Failed to end meeting:",
+                error
+            );
+
+        }
+
+    };
+
+
+    // =====================================
+    // Waiting Room Screen
+    // =====================================
+
+    if (isWaiting) {
+
+        return (
+
+            <div className="
+                h-screen
+                flex
+                flex-col
+                justify-center
+                items-center
+                bg-gray-950
+                text-white
+            ">
+
+                <div className="text-6xl mb-6">
+
+                    ⏳
+
+                </div>
+
+
+                <h1 className="
+                    text-3xl
+                    font-bold
+                    mb-3
+                ">
+
+                    Waiting for Host Approval
+
+                </h1>
+
+
+                <p className="
+                    text-gray-400
+                    text-center
+                    max-w-md
+                ">
+
+                    The meeting is locked.
+                    Please wait while the host
+                    approves your request to join.
+
+                </p>
+
+
+                <button
+
+                    type="button"
+
+                    onClick={leaveMeeting}
+
+                    className="
+                        mt-8
+                        px-6
+                        py-3
+                        rounded-lg
+                        bg-red-600
+                        hover:bg-red-700
+                        transition
+                    "
+
+                >
+
+                    Leave Meeting
+
+                </button>
+
+            </div>
+
         );
 
     }
 
-};
-
-
-
-    // =====================================
-// Waiting Room Screen
-// =====================================
-
-if (isWaiting) {
-
-    return (
-        <div className="h-screen flex flex-col justify-center items-center bg-gray-950 text-white">
-
-            <div className="text-6xl mb-6">
-                ⏳
-            </div>
-
-            <h1 className="text-3xl font-bold mb-3">
-                Waiting for Host Approval
-            </h1>
-
-            <p className="text-gray-400 text-center max-w-md">
-                The meeting is locked. Please wait while the host
-                approves your request to join.
-            </p>
-
-            <button
-                type="button"
-                onClick={leaveMeeting}
-                className="mt-8 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition"
-            >
-                Leave Meeting
-            </button>
-
-        </div>
-    );
-
-}
 
     // =====================================
     // Loading Screen
@@ -258,7 +350,15 @@ if (isWaiting) {
 
         return (
 
-            <div className="h-screen flex justify-center items-center bg-black text-white text-3xl">
+            <div className="
+                h-screen
+                flex
+                justify-center
+                items-center
+                bg-black
+                text-white
+                text-3xl
+            ">
 
                 Connecting To Meeting...
 
@@ -268,6 +368,7 @@ if (isWaiting) {
 
     }
 
+
     // =====================================
     // Meeting UI
     // =====================================
@@ -276,7 +377,12 @@ if (isWaiting) {
 
         <div
             ref={meetingContainerRef}
-            className="h-screen flex flex-col bg-gray-100"
+            className="
+                h-screen
+                flex
+                flex-col
+                bg-gray-100
+            "
         >
 
             {/* =================================
@@ -285,17 +391,30 @@ if (isWaiting) {
 
             <Navbar />
 
+
             {/* =================================
                 Main Meeting Area
             ================================= */}
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="
+                flex
+                flex-1
+                overflow-hidden
+            ">
+
 
                 {/* =================================
                     Participant Sidebar
                 ================================= */}
 
-                <div className="hidden lg:block w-72 border-r bg-white overflow-y-auto">
+                <div className="
+                    hidden
+                    lg:block
+                    w-72
+                    border-r
+                    bg-white
+                    overflow-y-auto
+                ">
 
                     <ParticipantSidebar
 
@@ -305,15 +424,17 @@ if (isWaiting) {
 
                         muteUser={muteUser}
 
-                        disableCamera={disableCamera}
+                        disableCamera={
+                            disableCamera
+                        }
 
-                        transferHost={transferHost}
+                        lockMeeting={
+                            lockMeeting
+                        }
 
-                        makeCoHost={makeCoHost}
-
-                        lockMeeting={lockMeeting}
-
-                       meetingLocked={meetingLocked}
+                        meetingLocked={
+                            meetingLocked
+                        }
 
                         isHost={isHost}
 
@@ -323,17 +444,32 @@ if (isWaiting) {
 
                 </div>
 
+
                 {/* =================================
                     Video Area
                 ================================= */}
 
-                <div className="flex-1 relative bg-black overflow-hidden">
+                <div className="
+                    flex-1
+                    relative
+                    bg-black
+                    overflow-hidden
+                ">
+
 
                     {/* =================================
                         Meeting Toolbar
                     ================================= */}
 
-                    <div className="absolute top-5 left-5 z-50 flex gap-3">
+                    <div className="
+                        absolute
+                        top-5
+                        left-5
+                        z-50
+                        flex
+                        gap-3
+                    ">
+
 
                         {/* Speaker / Grid */}
 
@@ -349,7 +485,14 @@ if (isWaiting) {
 
                             }}
 
-                            className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-xl transition"
+                            className="
+                                bg-black/60
+                                hover:bg-black/80
+                                text-white
+                                p-3
+                                rounded-xl
+                                transition
+                            "
 
                             title={
                                 speakerView
@@ -363,15 +506,25 @@ if (isWaiting) {
 
                         </button>
 
+
                         {/* Fullscreen */}
 
                         <button
 
                             type="button"
 
-                            onClick={handleFullscreen}
+                            onClick={
+                                handleFullscreen
+                            }
 
-                            className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-xl transition"
+                            className="
+                                bg-black/60
+                                hover:bg-black/80
+                                text-white
+                                p-3
+                                rounded-xl
+                                transition
+                            "
 
                             title={
                                 isFullscreen
@@ -385,19 +538,28 @@ if (isWaiting) {
 
                                 isFullscreen
 
-                                    ?
+                                    ? (
 
-                                    <Minimize size={20} />
+                                        <Minimize
+                                            size={20}
+                                        />
 
-                                    :
+                                    )
 
-                                    <Maximize size={20} />
+                                    : (
+
+                                        <Maximize
+                                            size={20}
+                                        />
+
+                                    )
 
                             }
 
                         </button>
 
                     </div>
+
 
                     {/* =================================
                         Video Grid
@@ -407,39 +569,66 @@ if (isWaiting) {
 
                         username={username}
 
-                        localStream={localStream}
+                        localStream={
+                            localStream
+                        }
 
-                        remoteStreams={remoteStreams}
+                        remoteStreams={
+                            remoteStreams
+                        }
 
-                        participants={participants}
+                        participants={
+                            participants
+                        }
 
-                        mySocketId={mySocketId}
+                        mySocketId={
+                            mySocketId
+                        }
 
-                        cameraEnabled={cameraEnabled}
+                        cameraEnabled={
+                            cameraEnabled
+                        }
 
-                        microphoneEnabled={microphoneEnabled}
+                        microphoneEnabled={
+                            microphoneEnabled
+                        }
 
-                        connectionState={connectionState}
+                        connectionState={
+                            connectionState
+                        }
 
-                        speakerView={speakerView}
+                        speakerView={
+                            speakerView
+                        }
 
-                        pinnedUser={pinnedUser}
+                        pinnedUser={
+                            pinnedUser
+                        }
 
                     />
+
 
                     {/* =================================
                         Emoji Reaction
                     ================================= */}
 
-                    <div className="absolute top-5 right-5 z-50">
+                    <div className="
+                        absolute
+                        top-5
+                        right-5
+                        z-50
+                    ">
 
                         <EmojiReaction
 
-                            onSelect={sendReaction}
+                            onSelect={
+                                sendReaction
+                            }
 
                         />
 
                     </div>
+
 
                     {/* =================================
                         Floating Reactions
@@ -447,35 +636,55 @@ if (isWaiting) {
 
                     {
 
-                        reactions.map((reaction) => (
+                        reactions.map(
+                            (reaction) => (
 
-                            <FloatingReaction
+                                <FloatingReaction
 
-                                key={reaction.createdAt}
+                                    key={
+                                        reaction.createdAt
+                                    }
 
-                                reaction={reaction}
+                                    reaction={
+                                        reaction
+                                    }
 
-                            />
+                                />
 
-                        ))
+                            )
+                        )
 
                     }
 
                 </div>
 
+
                 {/* =================================
                     Waiting Room
                 ================================= */}
 
-                <div className="hidden xl:block w-80 border-l bg-white overflow-y-auto">
+                <div className="
+                    hidden
+                    xl:block
+                    w-80
+                    border-l
+                    bg-white
+                    overflow-y-auto
+                ">
 
                     <WaitingRoomSidebar
 
-                        waitingUsers={waitingUsers}
+                        waitingUsers={
+                            waitingUsers
+                        }
 
-                        approveUser={approveUser}
+                        approveUser={
+                            approveUser
+                        }
 
-                        rejectUser={rejectUser}
+                        rejectUser={
+                            rejectUser
+                        }
 
                     />
 
@@ -483,29 +692,52 @@ if (isWaiting) {
 
             </div>
 
+
             {/* =================================
                 Meeting Controls
             ================================= */}
 
             <Controls
 
-                cameraEnabled={cameraEnabled}
+                cameraEnabled={
+                    cameraEnabled
+                }
 
-                microphoneEnabled={microphoneEnabled}
+                microphoneEnabled={
+                    microphoneEnabled
+                }
 
-                onToggleCamera={handleToggleCamera}
+                onToggleCamera={
+                    handleToggleCamera
+                }
 
-                onToggleMicrophone={handleToggleMicrophone}
+                onToggleMicrophone={
+                    handleToggleMicrophone
+                }
 
-                onScreenShare={startScreenShare}
+                onScreenShare={
+                    startScreenShare
+                }
 
-                onLeave={leaveMeeting}
-                onEndMeeting={handleEndMeeting}
+                onLeave={
+                    leaveMeeting
+                }
 
-                isHost={isHost}
-                onRaiseHand={handleRaiseHand}
+                onEndMeeting={
+                    handleEndMeeting
+                }
 
-                onReaction={sendReaction}
+                isHost={
+                    isHost
+                }
+
+                onRaiseHand={
+                    handleRaiseHand
+                }
+
+                onReaction={
+                    sendReaction
+                }
 
             />
 
@@ -514,5 +746,6 @@ if (isWaiting) {
     );
 
 };
+
 
 export default MeetingRoom;

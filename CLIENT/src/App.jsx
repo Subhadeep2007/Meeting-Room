@@ -1,4 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+} from "react-router-dom";
+
+import { useEffect, useState } from "react";
+
+import api from "./services/api";
 
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -10,7 +20,68 @@ import Settings from "./pages/Settings.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 
+
 function App() {
+
+    const [darkMode, setDarkMode] = useState(false);
+
+
+    // =====================================
+    // Get User Settings
+    // =====================================
+
+    useEffect(() => {
+
+        const getSettings = async () => {
+
+            try {
+
+                const { data } = await api.get(
+                    "/user/settings"
+                );
+
+                setDarkMode(
+                    data.settings?.darkMode || false
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "App Settings Error:",
+                    error
+                );
+
+            }
+
+        };
+
+        getSettings();
+
+    }, []);
+
+
+    // =====================================
+    // Apply Dark Mode
+    // =====================================
+
+    useEffect(() => {
+
+        if (darkMode) {
+
+            document.documentElement.classList.add(
+                "dark"
+            );
+
+        } else {
+
+            document.documentElement.classList.remove(
+                "dark"
+            );
+
+        }
+
+    }, [darkMode]);
+
 
     return (
 
@@ -29,20 +100,18 @@ function App() {
                 />
 
                 <Route
-    path="/verify-email"
-    element={<VerifyEmail />}
- />
+                    path="/verify-email"
+                    element={<VerifyEmail />}
+                />
 
                 <Route
                     path="/forgot-password"
                     element={<ForgotPassword />}
                 />
+
                 <Route
-
-                  path="/reset-password/:token"
-
-                 element={<ResetPassword/>}
-
+                    path="/reset-password/:token"
+                    element={<ResetPassword />}
                 />
 
                 <Route

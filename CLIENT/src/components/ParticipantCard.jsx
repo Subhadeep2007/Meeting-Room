@@ -5,23 +5,33 @@ import {
     VideoOff,
     Hand,
     Crown,
+    Pin,
 } from "lucide-react";
 
 import HostControls from "./HostControls";
 
+
 const ParticipantCard = ({
     participant,
 
+    // ==========================
     // Host Controls
+    // ==========================
+
     isHost,
+
     onPin,
+
     kickUser,
+
     muteUser,
+
     disableCamera,
-    transferHost,
-    makeCoHost,
+
     lockMeeting,
+
     meetingLocked,
+
 }) => {
 
     return (
@@ -34,6 +44,7 @@ const ParticipantCard = ({
                 p-3
                 rounded-lg
                 transition
+
                 ${
                     participant.isSpeaking
                         ? "border-2 border-green-500 bg-green-900"
@@ -49,27 +60,40 @@ const ParticipantCard = ({
             <div className="flex items-center gap-3">
 
                 <img
-                    src={participant.profilePicture?.url || "/default-avatar.png"}
+                    src={
+                        participant.profilePicture?.url ||
+                        "/default-avatar.png"
+                    }
                     alt={participant.username}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="
+                        w-10
+                        h-10
+                        rounded-full
+                        object-cover
+                    "
                 />
+
 
                 <div>
 
-                    <div className="font-semibold text-white">
+                    <div className="
+                        font-semibold
+                        text-white
+                    ">
 
                         {participant.username}
 
                     </div>
 
-                    <div className="text-xs text-gray-400">
 
-                        {
-                            participant.isHost
-                                ? "Host 👑"
-                                : participant.isCoHost
-                                    ? "Co-Host ⭐"
-                                    : "Participant"
+                    <div className="
+                        text-xs
+                        text-gray-400
+                    ">
+
+                        {participant.isHost
+                            ? "Host 👑"
+                            : "Participant"
                         }
 
                     </div>
@@ -78,54 +102,98 @@ const ParticipantCard = ({
 
             </div>
 
+
             {/* ===========================
                 Right Section
             =========================== */}
 
-            <div className="flex items-center gap-2">
+            <div className="
+                flex
+                items-center
+                gap-2
+            ">
 
-                {/* Camera */}
+                {/* ==========================
+                    Camera
+                ========================== */}
 
                 {
                     participant.cameraEnabled
-                        ? <Video size={18} className="text-green-400" />
-                        : <VideoOff size={18} className="text-red-500" />
+
+                        ? (
+                            <Video
+                                size={18}
+                                className="text-green-400"
+                            />
+                        )
+
+                        : (
+                            <VideoOff
+                                size={18}
+                                className="text-red-500"
+                            />
+                        )
                 }
 
-                {/* Mic */}
+
+                {/* ==========================
+                    Microphone
+                ========================== */}
 
                 {
                     participant.microphoneEnabled
-                        ? <Mic size={18} className="text-green-400" />
-                        : <MicOff size={18} className="text-red-500" />
+
+                        ? (
+                            <Mic
+                                size={18}
+                                className="text-green-400"
+                            />
+                        )
+
+                        : (
+                            <MicOff
+                                size={18}
+                                className="text-red-500"
+                            />
+                        )
                 }
 
-                {/* Hand Raised */}
+
+                {/* ==========================
+                    Hand Raised
+                ========================== */}
 
                 {
                     participant.handRaised && (
+
                         <Hand
                             size={18}
                             className="text-yellow-400"
                         />
+
                     )
                 }
 
-                {/* Host Badge */}
+
+                {/* ==========================
+                    Host Badge
+                ========================== */}
 
                 {
                     participant.isHost && (
+
                         <Crown
                             size={18}
                             className="text-yellow-400"
                         />
+
                     )
                 }
 
 
-{/* ===========================
+                {/* ==========================
                     Pin Participant
-                =========================== */}
+                ========================== */}
 
                 {
                     onPin && (
@@ -161,9 +229,9 @@ const ParticipantCard = ({
                 }
 
 
-                {/* ===========================
+                {/* ==========================
                     Host Controls
-                =========================== */}
+                ========================== */}
 
                 {
                     isHost &&
@@ -177,15 +245,15 @@ const ParticipantCard = ({
 
                             onMute={muteUser}
 
-                            onDisableCamera={disableCamera}
+                            onDisableCamera={
+                                disableCamera
+                            }
 
-                            onTransferHost={transferHost}
+                            onLock={lockMeeting}
 
-                            onMakeCoHost={makeCoHost}
-
-                            onLockMeeting={lockMeeting}
-
-                            meetingLocked={meetingLocked}
+                            meetingLocked={
+                                meetingLocked
+                            }
 
                         />
 
@@ -199,5 +267,6 @@ const ParticipantCard = ({
     );
 
 };
+
 
 export default ParticipantCard;

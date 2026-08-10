@@ -30,7 +30,7 @@ const Dashboard = () => {
     const [meetingTitle, setMeetingTitle] = useState("");
     const [meetingCode, setMeetingCode] = useState("");
     const [meetings, setMeetings] = useState([]);
-
+const [user, setUser] = useState(null);
 const [loadingMeetings, setLoadingMeetings] = useState(true);
 const [search, setSearch] = useState("");
 const [liveParticipantCounts, setLiveParticipantCounts] = useState({});
@@ -271,7 +271,36 @@ const filteredMeetings = meetings.filter((meeting) =>
         .includes(search.toLowerCase())
 );
 
+// ======================================
+// Get Current User
+// ======================================
 
+useEffect(() => {
+
+    const getCurrentUser = async () => {
+
+        try {
+
+            const { data } = await api.get(
+                "/auth/current-user"
+            );
+
+            setUser(data.user);
+
+        } catch (error) {
+
+            console.error(
+                "Dashboard User Error:",
+                error
+            );
+
+        }
+
+    };
+
+    getCurrentUser();
+
+}, []);
 // ======================================
 // Dashboard Statistics
 // ======================================
@@ -315,9 +344,9 @@ const totalParticipants = meetings.reduce(
 
                 <h1 className="text-4xl font-bold">
 
-                    Welcome Back, Subha 👋
+    Welcome Back, {user?.name || "User"} 👋
 
-                </h1>
+</h1>
 
                 <p className="mt-3 text-lg">
 

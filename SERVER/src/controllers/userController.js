@@ -3,7 +3,7 @@ import httpStatus from "http-status";
 import User from "../models/userModel.js";
 import { generateAccessToken } from "../utils/generateToken.js";
 import cloudinary from "../config/cloudinary.js";
-
+import { getIO } from "../socket/socketManager.js";
 const register = async(req, res) => {
     try {
         const { name, username, email, password } = req.body;
@@ -251,6 +251,250 @@ export const updateProfile = async(req, res) => {
 
         console.error(
             "Update Profile Error:",
+            error
+        );
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+}; // =====================================
+// Get User Settings
+// =====================================
+
+export const getSettings = async(req, res) => {
+
+    try {
+
+        const user = await User.findById(
+            req.user._id
+        ).select("settings");
+
+        if (!user) {
+
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
+
+                success: false,
+
+                message: "User not found",
+
+            });
+
+        }
+
+        return res.status(
+            httpStatus.OK
+        ).json({
+
+            success: true,
+
+            settings: user.settings,
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Settings Error:",
+            error
+        );
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
+};
+
+
+// =====================================
+// Update User Settings
+// =====================================
+
+export const updateSettings = async(req, res) => {
+
+    try {
+
+        const {
+            cameraEnabled,
+            microphoneEnabled,
+            meetingNotifications,
+            chatNotifications,
+            darkMode,
+            showOnlineStatus,
+        } = req.body;
+
+        const user = await User.findById(
+            req.user._id
+        );
+
+        if (!user) {
+
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
+
+                success: false,
+
+                message: "User not found",
+
+            });
+
+        }
+
+        // =================================
+        // Update Only Provided Values
+        // =================================
+
+        if (
+            typeof cameraEnabled ===
+            "boolean"
+        ) {
+
+            user.settings.cameraEnabled =
+                cameraEnabled;
+
+        }
+
+        if (
+            typeof microphoneEnabled ===
+            "boolean"
+        ) {
+
+            user.settings.microphoneEnabled =
+                microphoneEnabled;
+
+        }
+
+        if (
+            typeof meetingNotifications ===
+            "boolean"
+        ) {
+
+            user.settings.meetingNotifications =
+                meetingNotifications;
+
+        }
+
+        if (
+            typeof chatNotifications ===
+            "boolean"
+        ) {
+
+            user.settings.chatNotifications =
+                chatNotifications;
+
+        }
+
+        if (
+            typeof darkMode ===
+            "boolean"
+        ) {
+
+            user.settings.darkMode =
+                darkMode;
+
+        }
+
+        if (
+            typeof showOnlineStatus ===
+            "boolean"
+        ) {
+
+            user.settings.showOnlineStatus =
+                showOnlineStatus;
+
+        }
+
+        await user.save();
+
+
+        const io = getIO();
+
+        if (typeof showOnlineStatus === "boolean") {
+
+            // =====================================
+            // Show Online Status ON
+            // =====================================
+
+            if (showOnlineStatus) {
+
+                await User.findByIdAndUpdate(
+                    user._id, {
+                        isOnline: true,
+                    }
+                );
+
+                io.emit("user-online", {
+
+                    userId: user._id.toString(),
+
+                    username: user.username,
+
+                });
+
+            }
+
+            // =====================================
+            // Show Online Status OFF
+            // =====================================
+            else {
+
+                const lastSeen = new Date();
+
+                await User.findByIdAndUpdate(
+                    user._id, {
+                        isOnline: false,
+                        lastSeen,
+                    }
+                );
+
+                io.emit("user-offline", {
+
+                    userId: user._id.toString(),
+
+                    lastSeen,
+
+                });
+
+            }
+
+        }
+
+
+        return res.status(
+            httpStatus.OK
+        ).json({
+
+            success: true,
+
+            message: "Settings Updated Successfully",
+
+            settings: user.settings,
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Update Settings Error:",
             error
         );
 

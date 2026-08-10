@@ -1,140 +1,146 @@
-import{
+import {
+    UserX,
+    MicOff,
+    VideoOff,
+    Lock,
+    Unlock,
+} from "lucide-react";
+
+const HostControls = ({
+    participant,
+
+    onKick,
+
+    onMute,
+
+    onDisableCamera,
+
+    onLock,
+
+    meetingLocked,
+}) => {
+
+    return (
+
+        <div className="flex items-center gap-2">
+
+            {/* ==========================
+                Kick User
+            ========================== */}
+
+            <button
+                type="button"
+                onClick={() =>
+                    onKick(
+                        participant.socketId
+                    )
+                }
+                className="
+                    p-2
+                    rounded-lg
+                    text-red-400
+                    hover:bg-red-500/20
+                    hover:text-red-300
+                    transition
+                "
+                title="Kick User"
+            >
+
+                <UserX size={18} />
+
+            </button>
+
+
+            {/* ==========================
+                Mute User
+            ========================== */}
+
+            <button
+                type="button"
+                onClick={() =>
+                    onMute(
+                        participant.socketId
+                    )
+                }
+                className="
+                    p-2
+                    rounded-lg
+                    text-yellow-400
+                    hover:bg-yellow-500/20
+                    hover:text-yellow-300
+                    transition
+                "
+                title="Mute User"
+            >
+
+                <MicOff size={18} />
+
+            </button>
+
+
+            {/* ==========================
+                Disable Camera
+            ========================== */}
+
+            <button
+                type="button"
+                onClick={() =>
+                    onDisableCamera(
+                        participant.socketId
+                    )
+                }
+                className="
+                    p-2
+                    rounded-lg
+                    text-blue-400
+                    hover:bg-blue-500/20
+                    hover:text-blue-300
+                    transition
+                "
+                title="Disable Camera"
+            >
 
-UserX,
+                <VideoOff size={18} />
 
-MicOff,
+            </button>
 
-VideoOff,
 
-Lock,
+            {/* ==========================
+                Lock / Unlock Meeting
+            ========================== */}
 
-Unlock,
+            <button
+                type="button"
+                onClick={onLock}
+                className="
+                    p-2
+                    rounded-lg
+                    text-white
+                    hover:bg-gray-700
+                    transition
+                "
+                title={
+                    meetingLocked
+                        ? "Unlock Meeting"
+                        : "Lock Meeting"
+                }
+            >
 
-Crown,
+                {meetingLocked ? (
 
-Star
+                    <Unlock size={18} />
 
-}from"lucide-react";
+                ) : (
 
-const HostControls=({
+                    <Lock size={18} />
 
-participant,
+                )}
 
-onKick,
+            </button>
 
-onMute,
+        </div>
 
-onDisableCamera,
-
-onTransferHost,
-
-onMakeCoHost,
-
-onLock,
-
-meetingLocked,
-
-})=>{
-
-return(
-
-<div className="flex gap-2">
-
-<button
-
-onClick={()=>onKick(
-
-participant.socketId
-
-)}
-
->
-
-<UserX/>
-
-</button>
-
-<button
-
-onClick={()=>onMute(
-
-participant.socketId
-
-)}
-
->
-
-<MicOff/>
-
-</button>
-
-<button
-
-onClick={()=>onDisableCamera(
-
-participant.socketId
-
-)}
-
->
-
-<VideoOff/>
-
-</button>
-
-<button
-
-onClick={()=>onTransferHost(
-
-participant.userId
-
-)}
-
->
-
-<Crown/>
-
-</button>
-
-<button
-
-onClick={()=>onMakeCoHost(
-
-participant.userId
-
-)}
-
->
-
-<Star/>
-
-</button>
-
-<button
-
-onClick={onLock}
-
->
-
-{
-
-meetingLocked
-
-?
-
-<Unlock/>
-
-:
-
-<Lock/>
-
-}
-
-</button>
-
-</div>
-
-);
+    );
 
 };
 

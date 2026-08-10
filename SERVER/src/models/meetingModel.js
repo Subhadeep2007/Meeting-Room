@@ -44,21 +44,8 @@ const meetingSchema = new mongoose.Schema(
 
         },
 
-        // =============================
-        // Co Hosts
-        // =============================
 
-        coHosts: [
 
-            {
-
-                type: mongoose.Schema.Types.ObjectId,
-
-                ref: "User",
-
-            },
-
-        ],
 
         // =============================
         // Participants
@@ -92,21 +79,7 @@ const meetingSchema = new mongoose.Schema(
 
         ],
 
-        // =============================
-        // Banned Users
-        // =============================
 
-        bannedUsers: [
-
-            {
-
-                type: mongoose.Schema.Types.ObjectId,
-
-                ref: "User",
-
-            },
-
-        ],
 
         // =============================
         // Meeting Lock
@@ -152,17 +125,7 @@ const meetingSchema = new mongoose.Schema(
             default: null,
 
         },
-        // =============================
-        // Recording
-        // =============================
 
-        recording: {
-
-            type: Boolean,
-
-            default: false,
-
-        },
 
         // =============================
         // Screen Share
