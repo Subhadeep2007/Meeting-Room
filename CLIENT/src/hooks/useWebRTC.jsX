@@ -57,9 +57,9 @@ const useWebRTC = (meetingCode) => {
 
     const analyserRef = useRef(null);
 
-const audioContextRef = useRef(null);
+    const audioContextRef = useRef(null);
 
-const speakingIntervalRef = useRef(null);
+    const speakingIntervalRef = useRef(null);
 
 // ========================================
 // Current Meeting User Info
@@ -154,8 +154,7 @@ useEffect(() => {
     // ========================================
     // Initialize
     // ========================================
-
-    useEffect(() => {
+useEffect(() => {
 
    const initializeMedia = async () => {
 
@@ -557,6 +556,9 @@ useEffect(() => {
 }, [localStream]);
 
 
+
+
+
 useEffect(() => {
 
     socket.on(
@@ -619,6 +621,11 @@ useEffect(() => {
 
 }, [localStream]);
 
+
+
+
+
+
 useEffect(() => {
 
     socket.on(
@@ -660,6 +667,10 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
+
 
 
 useEffect(() => {
@@ -895,6 +906,8 @@ useEffect(() => {
 
 }, []);
 
+
+
 // ========================================
 // Meeting Ended By Host
 // ========================================
@@ -962,6 +975,9 @@ useEffect(() => {
 
 }, []);
 
+
+
+
 useEffect(() => {
 
     socket.on(
@@ -1001,6 +1017,9 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
 
 
 useEffect(() => {
@@ -1048,6 +1067,10 @@ useEffect(() => {
 },[]);
 
 
+
+
+
+
 useEffect(() => {
 
     socket.on(
@@ -1091,6 +1114,11 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
+
+
 useEffect(() => {
 
     socket.on(
@@ -1183,6 +1211,10 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
+
 useEffect(() => {
 
     const handleWaitingUserRemoved = ({
@@ -1213,6 +1245,8 @@ useEffect(() => {
     };
 
 }, []);
+
+
 
 
 // ========================================
@@ -1280,6 +1314,8 @@ useEffect(() => {
 }, [meetingCode]);
 
 
+
+
 useEffect(() => {
 
     socket.on(
@@ -1317,6 +1353,9 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
 // ======================================
 // Remove Waiting User
 // ======================================
@@ -1338,6 +1377,9 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
 
 
 useEffect(() => {
@@ -1393,6 +1435,11 @@ useEffect(() => {
     };
 
 }, []);
+
+
+
+
+
 useEffect(()=>{
 
 socket.on(
@@ -1422,6 +1469,11 @@ socket.off(
 };
 
 },[]);
+
+
+
+
+
 useEffect(() => {
 
     socket.on("force-mute", () => {
