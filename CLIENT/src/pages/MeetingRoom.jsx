@@ -18,7 +18,7 @@ import EmojiReaction from "../components/EmojiReaction";
 import FloatingReaction from "../components/FloatingReaction";
 import ParticipantSidebar from "../components/ParticipantSidebar";
 import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
-
+import ChatPanel from "../components/ChatPanel";
 import Navbar from "../layout/Navbar.jsx";
 
 
@@ -42,7 +42,14 @@ const MeetingRoom = () => {
 
     const [loading, setLoading] = useState(true);
 
+    // =====================================
+// Meeting ID
+// =====================================
 
+const [
+    meetingId,
+    setMeetingId,
+] = useState(null);
     // =====================================
     // Meeting UI States
     // =====================================
@@ -148,6 +155,49 @@ const MeetingRoom = () => {
         }
 
     }, [localStream]);
+
+
+
+    // =====================================
+// Get MongoDB Meeting ID
+// =====================================
+
+useEffect(() => {
+
+    const fetchMeeting = async () => {
+
+        try {
+
+            const { data } =
+                await api.get(
+                    `/meeting/${meetingCode}`
+                );
+
+
+            setMeetingId(
+                data.meeting._id
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Failed to fetch meeting:",
+                error
+            );
+
+        }
+
+    };
+
+
+    if (meetingCode) {
+
+        fetchMeeting();
+
+    }
+
+}, [meetingCode]);
 
 
     // =====================================
@@ -659,37 +709,84 @@ const MeetingRoom = () => {
                 </div>
 
 
-                {/* =================================
-                    Waiting Room
-                ================================= */}
+              {/* =================================
+    Waiting Room
+================================= */}
 
-                <div className="
-                    hidden
-                    xl:block
-                    w-80
-                    border-l
-                    bg-white
-                    overflow-y-auto
-                ">
+<div className="
+    hidden
+    xl:block
+    w-80
+    border-l
+    bg-white
+    overflow-y-auto
+">
 
-                    <WaitingRoomSidebar
+    <WaitingRoomSidebar
 
-                        waitingUsers={
-                            waitingUsers
-                        }
+        waitingUsers={
+            waitingUsers
+        }
 
-                        approveUser={
-                            approveUser
-                        }
+        approveUser={
+            approveUser
+        }
 
-                        rejectUser={
-                            rejectUser
-                        }
+        rejectUser={
+            rejectUser
+        }
 
-                    />
+    />
 
-                </div>
+</div>
 
+
+{/* =================================
+    Meeting Chat
+================================= */}
+
+<div className="
+    
+    block
+    w-80
+    border-l
+    border-gray-700
+    overflow-hidden
+">
+
+    {meetingId ? (
+
+        <ChatPanel
+
+            meetingId={
+                meetingId
+            }
+
+            meetingCode={
+                meetingCode
+            }
+
+        />
+
+    ) : (
+
+        <div className="
+            h-full
+            bg-gray-900
+            text-gray-400
+            flex
+            items-center
+            justify-center
+            text-sm
+        ">
+
+            Loading Chat...
+
+        </div>
+
+    )}
+
+</div>  
             </div>
 
 

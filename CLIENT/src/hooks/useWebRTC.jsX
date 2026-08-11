@@ -1,5 +1,3 @@
-
-
 import { io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import api from "../services/api";
@@ -14,6 +12,21 @@ import {
     toggleCamera,
     toggleMicrophone,
 } from "../utils/mediaDevices";
+
+
+import {
+    initializeUserEncryption,
+    getPublicKey,
+    createMeetingEncryptionKey,
+    getMeetingKey,
+    createEncryptedMeetingKeyForUser,
+    receiveEncryptedMeetingKey,
+    removeMeetingKey,
+} from "../services/chatEncryptionManager.jsx";
+
+import {
+    importPublicKey,
+} from "../services/clientEncryption.jsx";
 
 import { createPeerConnection } from "../utils/peerConnection";
 
@@ -61,6 +74,568 @@ const useWebRTC = (meetingCode) => {
 
     const speakingIntervalRef = useRef(null);
 
+
+
+// ========================================
+// CHAT ENCRYPTION KEY EXCHANGE
+// ========================================
+
+useEffect(() => {
+
+    let mounted = true;
+
+
+    // =====================================
+    // Initialize User Encryption
+    // =====================================
+
+    const initializeEncryption = async () => {
+
+        try {
+
+            await initializeUserEncryption();
+
+            console.log(
+                "🔐 User encryption initialized"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "❌ Encryption initialization failed:",
+                error
+            );
+
+        }
+
+    };
+
+
+    initializeEncryption();
+
+
+    // =====================================
+    // Current User Joined Meeting
+    // =====================================
+
+    const handleMeetingUserInfo = async ({
+        socketId,
+        userId,
+        isHost,
+    }) => {
+
+        if (!mounted) {
+
+            return;
+
+        }
+
+
+        // =====================================
+        // Only Handle Current Socket
+        // =====================================
+
+        if (
+            socketId !== socket.id
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            console.log(
+                "🔐 Meeting encryption setup:",
+                {
+                    userId,
+                    isHost,
+                }
+            );
+
+
+            // =================================
+            // HOST
+            // =================================
+
+            if (isHost) {
+
+                const existingKey =
+                    await getMeetingKey(
+                        meetingCode
+                    );
+
+
+                if (!existingKey) {
+
+                    await createMeetingEncryptionKey(
+                        meetingCode
+                    );
+
+                    console.log(
+                        "🔐 Host created meeting encryption key"
+                    );
+
+                }
+
+                 // =================================
+    // Tell Chat UI
+    // =================================
+
+    window.dispatchEvent(
+        new CustomEvent(
+            "chat-encryption-ready"
+        )
+    );
+
+
+                return;
+
+            }
+
+
+            // =================================
+            // PARTICIPANT
+            // =================================
+
+            const publicKey =
+                await getPublicKey();
+
+
+            // Publish public key
+            socket.emit(
+                "publish-chat-public-key",
+                {
+
+                    meetingCode,
+
+                    publicKey,
+
+                }
+            );
+
+
+            console.log(
+                "🔐 Public key published"
+            );
+
+
+            // Ask host for encrypted meeting key
+            socket.emit(
+                "request-chat-encryption-key",
+                {
+
+                    meetingCode,
+
+                }
+            );
+
+
+            console.log(
+                "🔐 Requested meeting encryption key"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Meeting encryption setup failed:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.on(
+        "meeting-user-info",
+        handleMeetingUserInfo
+    );
+
+
+    return () => {
+
+        mounted = false;
+
+        socket.off(
+            "meeting-user-info",
+            handleMeetingUserInfo
+        );
+
+    };
+
+}, [meetingCode]);
+
+
+
+
+// ========================================
+// HOST RECEIVES PARTICIPANT PUBLIC KEY
+// ========================================
+
+useEffect(() => {
+
+    const handleChatPublicKey = async ({
+        userId,
+        publicKey,
+    }) => {
+
+        try {
+
+            // =====================================
+            // Current User Must Be Host
+            // =====================================
+
+            const currentParticipant =
+                participants[socket.id];
+
+
+            if (
+                !currentParticipant?.isHost
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !userId ||
+                !publicKey
+            ) {
+
+                return;
+
+            }
+
+
+            console.log(
+                "🔐 Participant public key received:",
+                userId
+            );
+
+
+            // =====================================
+            // Import Participant Public Key
+            // =====================================
+
+            const importedPublicKey =
+                await importPublicKey(
+                    publicKey
+                );
+
+
+            // =====================================
+            // Get Meeting AES Key
+            // =====================================
+
+            let meetingKey =
+                await getMeetingKey(
+                    meetingCode
+                );
+
+
+            // Safety: create if missing
+
+            if (!meetingKey) {
+
+                meetingKey =
+                    await createMeetingEncryptionKey(
+                        meetingCode
+                    );
+
+            }
+
+
+            // =====================================
+            // Encrypt Meeting Key
+            // For Participant
+            // =====================================
+
+            const encryptedMeetingKey =
+                await createEncryptedMeetingKeyForUser(
+
+                    meetingCode,
+
+                    importedPublicKey
+
+                );
+
+
+            // =====================================
+            // Send To Participant
+            // =====================================
+
+            socket.emit(
+                "send-encrypted-chat-key",
+                {
+
+                    meetingCode,
+
+                    userId,
+
+                    encryptedMeetingKey,
+
+                }
+            );
+
+
+            console.log(
+                "🔐 Encrypted meeting key sent:",
+                userId
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Failed to send encrypted meeting key:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.on(
+        "chat-public-key",
+        handleChatPublicKey
+    );
+
+
+    return () => {
+
+        socket.off(
+            "chat-public-key",
+            handleChatPublicKey
+        );
+
+    };
+
+}, [
+    meetingCode,
+    participants,
+]);
+
+
+
+// ========================================
+// HOST CHAT KEY REQUEST
+// ========================================
+
+useEffect(() => {
+
+    const handleChatKeyRequest = async ({
+        meetingCode: requestedMeetingCode,
+        userId,
+    }) => {
+
+        try {
+
+            // =====================================
+            // Only Current Meeting
+            // =====================================
+
+            if (
+                requestedMeetingCode !== meetingCode
+            ) {
+
+                return;
+
+            }
+
+
+            // =====================================
+            // Only Host
+            // =====================================
+
+            const currentParticipant =
+                participants[socket.id];
+
+
+            if (
+                !currentParticipant?.isHost
+            ) {
+
+                return;
+
+            }
+
+
+            if (!userId) {
+
+                return;
+
+            }
+
+
+            console.log(
+                "🔐 Chat key requested by:",
+                userId
+            );
+
+
+            // =====================================
+            // Check Meeting Key
+            // =====================================
+
+            const meetingKey =
+                await getMeetingKey(
+                    meetingCode
+                );
+
+
+            if (!meetingKey) {
+
+                console.error(
+                    "❌ Meeting encryption key not available"
+                );
+
+                return;
+
+            }
+
+
+            // =====================================
+            // IMPORTANT
+            // =====================================
+            // Public key is sent separately.
+            //
+            // The host's public-key handler
+            // handles the actual encryption.
+            // =====================================
+
+        } catch (error) {
+
+            console.error(
+                "❌ Chat key request error:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.on(
+        "chat-key-request",
+        handleChatKeyRequest
+    );
+
+
+    return () => {
+
+        socket.off(
+            "chat-key-request",
+            handleChatKeyRequest
+        );
+
+    };
+
+}, [
+    meetingCode,
+    participants,
+]);
+
+
+
+// ========================================
+// RECEIVE ENCRYPTED MEETING KEY
+// ========================================
+
+useEffect(() => {
+
+    const handleEncryptedChatKey = async ({
+        meetingCode: encryptedMeetingCode,
+        encryptedMeetingKey,
+    }) => {
+
+        try {
+
+            if (
+                encryptedMeetingCode !==
+                meetingCode
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !encryptedMeetingKey
+            ) {
+
+                return;
+
+            }
+
+
+            console.log(
+                "🔐 Encrypted meeting key received"
+            );
+
+
+            // =====================================
+            // Decrypt Using Private Key
+            // =====================================
+
+            await receiveEncryptedMeetingKey(
+
+                meetingCode,
+
+                encryptedMeetingKey
+
+            );
+
+
+            console.log(
+                "✅ Meeting encryption key ready"
+            );
+
+
+            // =====================================
+            // Optional Browser Event
+            // =====================================
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "chat-encryption-ready"
+                )
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ Failed to decrypt meeting key:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.on(
+        "encrypted-chat-key",
+        handleEncryptedChatKey
+    );
+
+
+    return () => {
+
+        socket.off(
+            "encrypted-chat-key",
+            handleEncryptedChatKey
+        );
+
+    };
+
+}, [meetingCode]);
 // ========================================
 // Current Meeting User Info
 // ========================================
@@ -355,6 +930,8 @@ useEffect(() => {
         setRemoteStreams([]);
 
         stopLocalStream();
+
+       
 
         disconnectSocket();
 
@@ -1646,11 +2223,68 @@ const handleToggleMicrophone = (forceState) => {
 
 const startSpeakingDetection = (stream) => {
 
-    if (!stream) return;
+    // =====================================
+    // No Stream
+    // =====================================
+
+    if (!stream) {
+
+        console.log(
+            "ℹ️ Speaking detection skipped: no stream"
+        );
+
+        return;
+
+    }
+
+    // =====================================
+    // Check Microphone Track
+    // =====================================
+
+    const audioTracks =
+        stream.getAudioTracks();
+
+    if (audioTracks.length === 0) {
+
+        console.log(
+            "ℹ️ Speaking detection skipped: no microphone"
+        );
+
+        return;
+
+    }
+
+    // =====================================
+    // Clear Existing Detection
+    // =====================================
+
+    if (speakingIntervalRef.current) {
+
+        clearInterval(
+            speakingIntervalRef.current
+        );
+
+        speakingIntervalRef.current = null;
+
+    }
+
+    // =====================================
+    // Audio Context
+    // =====================================
 
     const AudioContext =
         window.AudioContext ||
         window.webkitAudioContext;
+
+    if (!AudioContext) {
+
+        console.warn(
+            "⚠️ AudioContext is not supported"
+        );
+
+        return;
+
+    }
 
     const audioContext = new AudioContext();
 
@@ -1702,7 +2336,6 @@ const startSpeakingDetection = (stream) => {
     }, 250);
 
 };
-
 
 
 const startScreenShare = async () => {
@@ -1938,19 +2571,32 @@ const sendReaction = (emoji) => {
 const stopScreenShare = async () => {
 
     const cameraStream =
-
         await getLocalStream();
 
     const cameraTrack =
-
         cameraStream
-
             .getVideoTracks()[0];
 
+    // =====================================
+    // No Camera Available
+    // =====================================
+
+    if (!cameraTrack) {
+
+        console.warn(
+            "⚠️ Cannot restore camera: no camera track available"
+        );
+
+        setLocalStream(
+            cameraStream
+        );
+
+        return;
+
+    }
+
     Object.values(
-
         peersRef.current
-
     ).forEach((peer) => {
 
         const sender = peer
@@ -1974,8 +2620,6 @@ const stopScreenShare = async () => {
             );
 
         }
-
-        
 
     });
 

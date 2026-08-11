@@ -1,105 +1,112 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-    meeting: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Meeting",
-        required: true,
-        index: true,
-    },
 
-    sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
+        // ==========================================
+        // Meeting
+        // ==========================================
 
-    encryptedMessage: {
-        type: String,
-        required: true,
-    },
+        meeting: {
 
-    iv: {
-        type: String,
-        required: true,
-    },
+            type: mongoose.Schema.Types.ObjectId,
 
-    authTag: {
-        type: String,
-        required: true,
-    },
+            ref: "Meeting",
 
-    messageType: {
-        type: String,
-        enum: [
-            "text",
-            "image",
-            "video",
-            "audio",
-            "file",
-        ],
-        default: "text",
-    },
+            required: true,
 
-    // Reply Feature
-    replyTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Message",
-        default: null,
-    },
+            index: true,
 
-    // File Attachments
-    attachments: [{
-        url: {
+        },
+
+
+        // ==========================================
+        // Sender
+        // ==========================================
+
+        sender: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+            required: true,
+
+        },
+
+
+        // ==========================================
+        // Encrypted Message
+        // ==========================================
+
+        encryptedMessage: {
+
             type: String,
+
+            required: true,
+
         },
 
-        public_id: {
+
+        // ==========================================
+        // Initialization Vector
+        // ==========================================
+
+        iv: {
+
             type: String,
+
+            required: true,
+
         },
 
-        fileName: {
+
+
+
+
+        // ==========================================
+        // Message Type
+        // ==========================================
+
+        messageType: {
+
             type: String,
+
+            enum: ["text"],
+
+            default: "text",
+
         },
 
-        fileSize: {
-            type: Number,
-        },
-
-        mimeType: {
-            type: String,
-        },
-    }, ],
-
-    isEdited: {
-        type: Boolean,
-        default: false,
     },
 
-    isDeleted: {
-        type: Boolean,
-        default: false,
-    },
+    {
 
-    deliveredTo: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    }, ],
+        timestamps: true,
 
-    readBy: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-    }, ],
-}, {
-    timestamps: true,
-});
+    }
+);
 
-// Compound Index
+
+// ==========================================
+// Chat History Index
+// ==========================================
+
 messageSchema.index({
+
     meeting: 1,
+
     createdAt: -1,
+
 });
 
-const Message = mongoose.model("Message", messageSchema);
+
+const Message = mongoose.model(
+
+    "Message",
+
+    messageSchema
+
+);
+
 
 export default Message;

@@ -263,6 +263,7 @@ export const getMyMeetings = async(req, res) => {
 };
 
 
+
 // =====================================
 // Get Meeting Details
 // =====================================
@@ -273,21 +274,43 @@ export const getMeetingDetails = async(req, res) => {
 
         const { id } = req.params;
 
-        const meeting = await Meeting.findById(id)
+        let meeting;
 
-        .populate(
-            "host",
-            "name username profilePicture"
-        )
 
-        .populate(
-            "participants",
-            "name username profilePicture"
-        );
+        // =====================================
+        // If MongoDB ObjectId
+        // =====================================
+
+        if (
+            mongoose.Types.ObjectId.isValid(id)
+        ) {
+
+            meeting =
+                await Meeting.findById(id);
+
+        }
+
+
+        // =====================================
+        // If Meeting Code
+        // =====================================
+        else {
+
+            meeting =
+                await Meeting.findOne({
+
+                    meetingCode: id.toUpperCase(),
+
+                });
+
+        }
+
 
         if (!meeting) {
 
-            return res.status(httpStatus.NOT_FOUND).json({
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
 
                 success: false,
 
@@ -297,7 +320,36 @@ export const getMeetingDetails = async(req, res) => {
 
         }
 
-        return res.status(httpStatus.OK).json({
+
+        // =====================================
+        // Populate Host
+        // =====================================
+
+        await meeting.populate({
+
+            path: "host",
+
+            select: "name username profilePicture",
+
+        });
+
+
+        // =====================================
+        // Populate Participants
+        // =====================================
+
+        await meeting.populate({
+
+            path: "participants",
+
+            select: "name username profilePicture",
+
+        });
+
+
+        return res.status(
+            httpStatus.OK
+        ).json({
 
             success: true,
 
@@ -305,9 +357,18 @@ export const getMeetingDetails = async(req, res) => {
 
         });
 
+
     } catch (error) {
 
-        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+        console.error(
+            "Get Meeting Details Error:",
+            error
+        );
+
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
 
             success: false,
 

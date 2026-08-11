@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
 import crypto from "crypto";
+import {
+    encryptMessage,
+    decryptMessage
+} from "./encryptionService.js";
 
 // ===============================
 // Constants

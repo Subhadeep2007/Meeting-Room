@@ -1,308 +1,336 @@
 import mongoose from "mongoose";
+
 import Message from "../models/messageModel.js";
 import Meeting from "../models/meetingModel.js";
 
-import { encryptMessage } from "./encryptionService.js";
-
-
-import { decryptMessage } from "./encryptionService.js";
+// ==========================================
+// CREATE MESSAGE
+// ==========================================
 
 export const createMessage = async({
     meetingId,
     sender,
-    message,
-    messageType = "text",
-    replyTo = null,
-    attachments = [],
+    encryptedMessage,
+    iv,
 }) => {
 
     // ==========================================
-    // Check Meeting Exists
+    // Validate Meeting ID
     // ==========================================
 
-    const meeting = await Meeting.findById(meetingId);
+    if (!meetingId ||
+        !mongoose.Types.ObjectId.isValid(meetingId)
+    ) {
+        throw new Error(
+            "Invalid meeting ID"
+        );
+    }
+
+    // ==========================================
+    // Validate Sender
+    // ==========================================
+
+    if (!sender) {
+        throw new Error(
+            "Sender is required"
+        );
+    }
+
+    // ==========================================
+    // Validate Encrypted Data
+    // ==========================================
+
+    if (!encryptedMessage ||
+        !iv
+    ) {
+        throw new Error(
+            "Encrypted message data is required"
+        );
+    }
+
+    // ==========================================
+    // Find Meeting
+    // ==========================================
+
+    const meeting =
+        await Meeting.findById(
+            meetingId
+        );
 
     if (!meeting) {
-        throw new Error("Meeting not found");
+        throw new Error(
+            "Meeting not found"
+        );
     }
 
     // ==========================================
-    // Check Meeting Active
+    // CHAT ONLY WHILE MEETING IS LIVE
     // ==========================================
 
-    if (!meeting.isActive) {
-        throw new Error("Meeting has ended");
+    if (
+        meeting.status !== "live"
+    ) {
+        throw new Error(
+            "Chat is available only while meeting is live"
+        );
     }
 
     // ==========================================
-    // Check User is Participant
+    // Check Participant
     // ==========================================
 
-    const isParticipant = meeting.participants.some(
-        (participant) => participant.equals(sender)
-    );
+    const isParticipant =
+        meeting.participants.some(
+            (participant) =>
+            participant.toString() ===
+            sender.toString()
+        );
 
-    if (!isParticipant) {
-        throw new Error("You are not a participant of this meeting");
+    // ==========================================
+    // Check Host
+    // ==========================================
+
+    const isHost =
+        meeting.host.toString() ===
+        sender.toString();
+
+    // ==========================================
+    // Authorization
+    // ==========================================
+
+    if (!isParticipant &&
+        !isHost
+    ) {
+        throw new Error(
+            "You are not a participant of this meeting"
+        );
     }
 
     // ==========================================
-    // Reply Message Validation
+    // Save Encrypted Message
     // ==========================================
 
-    if (replyTo) {
+    const newMessage =
+        await Message.create({
 
-        const replyMessage = await Message.findById(replyTo);
+            meeting: meetingId,
 
-        if (!replyMessage) {
-            throw new Error("Reply message not found");
-        }
+            sender,
 
-        if (!replyMessage.meeting.equals(meetingId)) {
-            throw new Error(
-                "Reply message belongs to another meeting"
-            );
-        }
-    }
+            encryptedMessage,
 
-    // ==========================================
-    // Encrypt Message
-    // ==========================================
+            iv,
 
-    const {
-        encryptedMessage,
-        iv,
-        authTag,
-    } = encryptMessage(message || "");
+            messageType: "text",
+
+        });
 
     // ==========================================
-    // Save Message
+    // Populate Sender
     // ==========================================
 
-    const newMessage = await Message.create({
+    await newMessage.populate({
 
-        meeting: meetingId,
+        path: "sender",
 
-        sender,
-
-        encryptedMessage,
-
-        iv,
-
-        authTag,
-
-        messageType,
-
-        replyTo,
-
-        attachments,
+        select: "name username profilePicture",
 
     });
 
     // ==========================================
-    // Populate Sender & Reply
+    // Return
     // ==========================================
 
-    await newMessage.populate([{
-            path: "sender",
-            select: "name username profilePicture",
-        },
-        {
-            path: "replyTo",
-            populate: {
-                path: "sender",
-                select: "name username profilePicture",
-            },
-        },
-    ]);
+    return {
 
-    return newMessage;
+        message: newMessage,
+
+        meetingCode: meeting.meetingCode,
+
+    };
 };
 
 
-
-
+// ==========================================
+// GET MESSAGE HISTORY
+// ==========================================
 
 export const getMessageHistory = async({
     meetingId,
     userId,
     cursor,
-    limit = 20,
+    limit = 30,
 }) => {
 
-    const meeting = await Meeting.findById(meetingId);
+    // ==========================================
+    // Validate Meeting ID
+    // ==========================================
+
+    if (!meetingId ||
+        !mongoose.Types.ObjectId.isValid(
+            meetingId
+        )
+    ) {
+        throw new Error(
+            "Invalid meeting ID"
+        );
+    }
+
+    // ==========================================
+    // Validate User
+    // ==========================================
+
+    if (!userId) {
+        throw new Error(
+            "User ID is required"
+        );
+    }
+
+    // ==========================================
+    // Find Meeting
+    // ==========================================
+
+    const meeting =
+        await Meeting.findById(
+            meetingId
+        );
 
     if (!meeting) {
-        throw new Error("Meeting not found");
+        throw new Error(
+            "Meeting not found"
+        );
     }
 
-    const isParticipant = meeting.participants.some(
-        participant => participant.equals(userId)
-    );
+    // ==========================================
+    // Check Participant
+    // ==========================================
 
-    if (!isParticipant) {
-        throw new Error("You are not a participant");
+    const isParticipant =
+        meeting.participants.some(
+            (participant) =>
+            participant.toString() ===
+            userId.toString()
+        );
+
+    // ==========================================
+    // Check Host
+    // ==========================================
+
+    const isHost =
+        meeting.host.toString() ===
+        userId.toString();
+
+    // ==========================================
+    // Authorization
+    // ==========================================
+
+    if (!isParticipant &&
+        !isHost
+    ) {
+        throw new Error(
+            "You are not authorized to view this chat"
+        );
     }
+
+    // ==========================================
+    // Build Query
+    // ==========================================
 
     const query = {
+
         meeting: meetingId,
+
     };
+
+    // ==========================================
+    // Cursor Pagination
+    // ==========================================
 
     if (cursor) {
 
-        query._id = {
-            $lt: new mongoose.Types.ObjectId(cursor),
-        };
+        if (!mongoose.Types.ObjectId.isValid(
+                cursor
+            )) {
+            throw new Error(
+                "Invalid cursor"
+            );
+        }
 
+        query._id = {
+
+            $lt: new mongoose.Types.ObjectId(
+                cursor
+            ),
+
+        };
     }
 
-    const messages = await Message.find(query)
+    // ==========================================
+    // Get Messages
+    // ==========================================
 
-    .populate("sender", "username profilePicture")
+    const messages =
+        await Message.find(
+            query
+        )
 
-    .populate({
-        path: "replyTo",
-        populate: {
-            path: "sender",
-            select: "username profilePicture",
-        },
-    })
+    .populate(
+        "sender",
+        "name username profilePicture"
+    )
 
     .sort({
         _id: -1,
     })
 
-    .limit(limit + 1)
+    .limit(
+        limit + 1
+    )
 
     .lean();
 
-    const hasNextPage = messages.length > limit;
+    // ==========================================
+    // Check More Messages
+    // ==========================================
+
+    const hasNextPage =
+        messages.length > limit;
 
     if (hasNextPage) {
         messages.pop();
     }
 
-    const decryptedMessages = messages.map(message => {
+    // ==========================================
+    // Reverse For Chat UI
+    // ==========================================
 
-        if (message.messageType === "text") {
+    messages.reverse();
 
-            message.message = decryptMessage({
+    // ==========================================
+    // Next Cursor
+    // ==========================================
 
-                encryptedMessage: message.encryptedMessage,
+    const nextCursor =
+        hasNextPage &&
+        messages.length > 0 ?
+        messages[0]._id :
+        null;
 
-                iv: message.iv,
-
-                authTag: message.authTag,
-
-            });
-
-        }
-
-        delete message.encryptedMessage;
-        delete message.iv;
-        delete message.authTag;
-
-        return message;
-
-    });
+    // ==========================================
+    // IMPORTANT
+    // ==========================================
+    // Server NEVER decrypts messages.
+    //
+    // Frontend decrypts using meeting AES key.
+    // ==========================================
 
     return {
 
-        messages: decryptedMessages,
+        messages,
 
-        nextCursor: hasNextPage ?
-            decryptedMessages[decryptedMessages.length - 1]._id : null,
+        nextCursor,
 
         hasNextPage,
 
     };
-
-};
-export const markDelivered = async(
-
-    messageId,
-
-    userId
-
-) => {
-
-    const message =
-
-        await Message.findById(messageId);
-
-    if (!message) {
-
-        throw new Error(
-
-            "Message not found"
-
-        );
-
-    }
-
-    const alreadyDelivered =
-
-        message.deliveredTo.some(
-
-            id => id.equals(userId)
-
-        );
-
-    if (!alreadyDelivered) {
-
-        message.deliveredTo.push(
-
-            userId
-
-        );
-
-        await message.save();
-
-    }
-
-    return message;
-
-};
-
-
-export const markRead = async(
-
-    messageId,
-
-    userId
-
-) => {
-
-    const message =
-
-        await Message.findById(messageId);
-
-    if (!message) {
-
-        throw new Error(
-
-            "Message not found"
-
-        );
-
-    }
-
-    const alreadyRead =
-
-        message.readBy.some(
-
-            id => id.equals(userId)
-
-        );
-
-    if (!alreadyRead) {
-
-        message.readBy.push(userId);
-
-        await message.save();
-
-    }
-
-    return message;
-
 };

@@ -1,228 +1,240 @@
 import {
     createMessage,
-    markDelivered,
-
-    markRead
 } from "../services/messageService.js";
 
-const registerChatEvents = (io, socket) => {
+
+// ==========================================
+// REGISTER CHAT EVENTS
+// ==========================================
+
+const registerChatEvents = (
+    io,
+    socket
+) => {
+
 
     // ==========================================
     // SEND MESSAGE
     // ==========================================
 
-    socket.on("send-message", async(data, callback) => {
+    socket.on(
+        "send-message",
+        async(
+            data,
+            callback
+        ) => {
 
-        try {
+            try {
 
-            const {
-                meetingId,
-                message,
-                messageType = "text",
-                replyTo = null,
-                attachments = [],
-            } = data || {};
+                const {
 
-            // Validation
+                    meetingId,
 
-            if (!meetingId) {
+                    encryptedMessage,
 
-                if (callback) {
-                    callback({
-                        success: false,
-                        message: "Meeting ID is required",
-                    });
+                    iv,
+
+                } = data || {};
+
+
+                // ==========================================
+                // Validate Meeting ID
+                // ==========================================
+
+                if (!meetingId) {
+
+                    if (callback) {
+
+                        callback({
+
+                            success: false,
+
+                            message: "Meeting ID is required",
+
+                        });
+
+                    }
+
+                    return;
+
                 }
 
-                return;
-            }
 
-            if (!message && attachments.length === 0) {
+                // ==========================================
+                // Validate Encrypted Message
+                // ==========================================
 
-                if (callback) {
-                    callback({
-                        success: false,
-                        message: "Message or Attachment is required",
-                    });
+                if (!encryptedMessage ||
+                    !iv
+                ) {
+
+                    if (callback) {
+
+                        callback({
+
+                            success: false,
+
+                            message: "Encrypted message data is required",
+
+                        });
+
+                    }
+
+                    return;
+
                 }
 
-                return;
-            }
 
-            const savedMessage = await createMessage({
+                // ==========================================
+                // Save Message
+                // ==========================================
 
-                meetingId,
+                const result =
+                    await createMessage({
 
-                sender: socket.user._id,
+                        meetingId,
 
-                message,
+                        sender: socket.user._id,
 
-                messageType,
+                        encryptedMessage,
 
-                replyTo,
+                        iv,
 
-                attachments,
+                    });
 
-            });
 
-            // Broadcast
+                const {
+                    message: savedMessage,
+                    meetingCode,
+                } = result;
 
-            io.to(meetingId).emit(
-                "receive-message",
-                savedMessage
-            );
-            // ==========================
-            // Notification
-            // ==========================
 
-            const notification = createNotification(
+                // ==========================================
+                // Broadcast To Meeting
+                // ==========================================
 
-                NotificationType.NEW_MESSAGE,
+                io.to(
+                    meetingCode
+                ).emit(
 
-                "New Message",
+                    "receive-message",
 
-                `${socket.user.username} sent a message.`
+                    savedMessage
 
-            );
+                );
 
-            io.to(meetingId).emit(
 
-                "notification",
+                // ==========================================
+                // ACK
+                // ==========================================
 
-                notification
+                if (callback) {
 
-            );
-            // ACK
+                    callback({
 
-            if (callback) {
+                        success: true,
 
-                callback({
+                        message: "Message sent successfully",
 
-                    success: true,
+                        data: savedMessage,
 
-                    message: "Message sent successfully",
+                    });
 
-                    data: savedMessage,
+                }
 
-                });
 
-            }
+            } catch (error) {
 
-        } catch (error) {
+                console.error(
+                    "Send Message Error:",
+                    error
+                );
 
-            console.error(error);
 
-            if (callback) {
+                if (callback) {
 
-                callback({
+                    callback({
 
-                    success: false,
+                        success: false,
 
-                    message: error.message,
+                        message: error.message,
 
-                });
+                    });
+
+                }
 
             }
 
         }
-
-    });
-
+    );
 
 
     // ==========================================
     // USER TYPING
     // ==========================================
 
-    socket.on("typing", ({ meetingId }) => {
+    socket.on(
+        "typing",
+        ({
+            meetingId,
+        } = {}) => {
 
-        socket.to(meetingId).emit("user-typing", {
+            if (!meetingId) {
 
-            userId: socket.user._id,
+                return;
 
-            username: socket.user.username,
+            }
 
-            profilePicture: socket.user.profilePicture,
 
-        });
+            socket
+                .to(meetingId)
+                .emit(
+                    "user-typing", {
 
-    });
+                        userId: socket.user._id.toString(),
 
+                        username: socket.user.username,
+
+                        profilePicture: socket.user.profilePicture,
+
+                    }
+                );
+
+        }
+    );
 
 
     // ==========================================
     // STOP TYPING
     // ==========================================
 
-    socket.on("stop-typing", ({ meetingId }) => {
-
-        socket.to(meetingId).emit("user-stop-typing", {
-
-            userId: socket.user._id,
-
-        });
-
-    });
-
-
-
-    // ==========================================
-    // DISCONNECT
-    // ==========================================
-
-    socket.on("disconnect", () => {
-
-        console.log(`${socket.user.username} disconnected`);
-
-    });
-
-
     socket.on(
+        "stop-typing",
+        ({
+            meetingId,
+        } = {}) => {
 
-        "message-delivered",
+            if (!meetingId) {
 
-        async(
-
-            {
-
-                messageId
+                return;
 
             }
 
-        ) => {
 
-            try {
+            socket
+                .to(meetingId)
+                .emit(
+                    "user-stop-typing", {
 
-                await markDelivered(
-
-                    messageId,
-
-                    socket.user._id
-
-                );
-
-                io.emit(
-
-                    "message-delivered",
-
-                    {
-
-                        messageId,
-
-                        userId: socket.user._id
+                        userId: socket.user._id.toString(),
 
                     }
-
                 );
 
-            } catch (err) {
-
-                console.log(err);
-
-            }
-
-        });
+        }
+    );
 
 };
+
 
 export default registerChatEvents;

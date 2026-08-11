@@ -1,125 +1,14 @@
 import httpStatus from "http-status";
 
-import Message from "../models/messageModel.js";
-import Meeting from "../models/meetingModel.js";
-
-import { encryptMessage } from "../services/encryptionService.js";
-
+import {
+    getMessageHistory,
+} from "../services/messageService.js";
 
 
-import { getMessageHistory } from "../services/messageService.js";
+// ==========================================
+// GET MESSAGE HISTORY
+// ==========================================
 
-export const sendMessage = async(req, res) => {
-    try {
-        const {
-            meetingId,
-            message,
-            messageType = "text",
-            replyTo = null,
-            attachments = [],
-        } = req.body;
-
-        // Logged In User
-        const sender = req.user._id;
-
-        // ===========================
-        // Validation
-        // ===========================
-
-        if (!meetingId) {
-            return res.status(httpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Meeting ID is required",
-            });
-        }
-
-        if (!message && attachments.length === 0) {
-            return res.status(httpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Message or attachment is required",
-            });
-        }
-
-        // ===========================
-        // Check Meeting Exists
-        // ===========================
-
-        const meeting = await Meeting.findById(meetingId);
-
-        if (!meeting) {
-            return res.status(httpStatus.NOT_FOUND).json({
-                success: false,
-                message: "Meeting not found",
-            });
-        }
-
-        // ===========================
-        // Check User is Participant
-        // ===========================
-
-        const isParticipant = meeting.participants.some((participant) =>
-            participant.equals(sender)
-        );
-
-        if (!isParticipant) {
-            return res.status(httpStatus.FORBIDDEN).json({
-                success: false,
-                message: "You are not a participant of this meeting",
-            });
-        }
-
-        // ===========================
-        // Encrypt Message
-        // ===========================
-
-        const { encryptedMessage, iv, authTag } = encryptMessage(
-            message || ""
-        );
-
-        // ===========================
-        // Save Message
-        // ===========================
-
-        const newMessage = await Message.create({
-            meeting: meetingId,
-            sender,
-            encryptedMessage,
-            iv,
-            authTag,
-            messageType,
-            replyTo,
-            attachments,
-        });
-
-        // ===========================
-        // Populate Data
-        // ===========================
-
-        await newMessage.populate([{
-                path: "sender",
-                select: "name username profilePicture",
-            },
-            {
-                path: "replyTo",
-            },
-        ]);
-
-        // ===========================
-        // Response
-        // ===========================
-
-        return res.status(httpStatus.CREATED).json({
-            success: true,
-            message: "Message sent successfully",
-            data: newMessage,
-        });
-    } catch (error) {
-        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
 export const getMessages = async(req, res) => {
 
     try {
@@ -128,21 +17,77 @@ export const getMessages = async(req, res) => {
 
         const { cursor } = req.query;
 
-        const limit = Number(req.query.limit) || 20;
 
-        const result = await getMessageHistory({
+        // ==========================================
+        // Validate Meeting ID
+        // ==========================================
 
-            meetingId,
+        if (!meetingId) {
 
-            userId: req.user._id,
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
 
-            cursor,
+                success: false,
 
-            limit,
+                message: "Meeting ID is required",
 
-        });
+            });
 
-        return res.status(200).json({
+        }
+
+
+        // ==========================================
+        // Limit
+        // ==========================================
+
+        let limit =
+            Number(req.query.limit) || 30;
+
+
+        // Minimum Limit
+
+        if (limit < 1) {
+
+            limit = 30;
+
+        }
+
+
+        // Maximum Limit
+
+        if (limit > 50) {
+
+            limit = 50;
+
+        }
+
+
+        // ==========================================
+        // Get Message History
+        // ==========================================
+
+        const result =
+            await getMessageHistory({
+
+                meetingId,
+
+                userId: req.user._id,
+
+                cursor,
+
+                limit,
+
+            });
+
+
+        // ==========================================
+        // Response
+        // ==========================================
+
+        return res.status(
+            httpStatus.OK
+        ).json({
 
             success: true,
 
@@ -150,13 +95,95 @@ export const getMessages = async(req, res) => {
 
         });
 
+
     } catch (error) {
 
-        return res.status(500).json({
+        console.error(
+            "Get Message History Error:",
+            error
+        );
+
+
+        // ==========================================
+        // Meeting Not Found
+        // ==========================================
+
+        if (
+            error.message ===
+            "Meeting not found"
+        ) {
+
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
+
+                success: false,
+
+                message: "Meeting not found",
+
+            });
+
+        }
+
+
+        // ==========================================
+        // Unauthorized Chat Access
+        // ==========================================
+
+        if (
+            error.message ===
+            "You are not authorized to view this chat"
+        ) {
+
+            return res.status(
+                httpStatus.FORBIDDEN
+            ).json({
+
+                success: false,
+
+                message: "You are not authorized to view this chat",
+
+            });
+
+        }
+
+
+        // ==========================================
+        // Invalid Meeting ID / Cursor
+        // ==========================================
+
+        if (
+            error.message ===
+            "Invalid meeting ID" ||
+
+            error.message ===
+            "Invalid cursor"
+        ) {
+
+            return res.status(
+                httpStatus.BAD_REQUEST
+            ).json({
+
+                success: false,
+
+                message: error.message,
+
+            });
+
+        }
+
+
+        // ==========================================
+        // Internal Error
+        // ==========================================
+
+        return res.status(
+            httpStatus.INTERNAL_SERVER_ERROR
+        ).json({
 
             success: false,
 
-            message: error.message,
+            message: "Internal Server Error",
 
         });
 
