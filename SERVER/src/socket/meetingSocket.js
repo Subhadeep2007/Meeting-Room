@@ -106,7 +106,12 @@ const registerMeetingEvents = (io, socket) => {
                     meeting.host
                     .toString() ===
                     socket.user._id.toString();
-
+                const isParticipant =
+                    meeting.participants.some(
+                        (userId) =>
+                        userId.toString() ===
+                        socket.user._id.toString()
+                    );
 
                 // =====================================
                 // Locked Meeting
@@ -114,7 +119,8 @@ const registerMeetingEvents = (io, socket) => {
 
                 if (
                     meeting.locked &&
-                    !isHost
+                    !isHost &&
+                    !isParticipant
                 ) {
 
                     console.log(
@@ -313,8 +319,52 @@ const registerMeetingEvents = (io, socket) => {
                         user.socketId !==
                         socket.id
                     );
+                const waitingUsersList =
+                    await Meeting.findById(
+                        meeting._id
+                    )
+                    .populate(
+                        "waitingUsers",
+                        "name username profilePicture"
+                    )
+                    .select(
+                        "waitingUsers host"
+                    )
+                    .lean();
+                // =====================================
+                // SEND WAITING USERS TO HOST
+                // =====================================
 
+                if (isHost) {
 
+                    let waitingList = [];
+
+                    if (
+                        waitingUsersList &&
+                        waitingUsersList.waitingUsers
+                    ) {
+
+                        waitingList =
+                            waitingUsersList.waitingUsers.map(
+                                (user) => ({
+
+                                    userId: user._id.toString(),
+
+                                    username: user.username,
+
+                                    profilePicture: user.profilePicture,
+
+                                })
+                            );
+
+                    }
+
+                    socket.emit(
+                        "existing-waiting-users",
+                        waitingList
+                    );
+
+                }
                 // =====================================
                 // Tell Current User
                 // =====================================
@@ -325,8 +375,12 @@ const registerMeetingEvents = (io, socket) => {
                         socketId: socket.id,
 
                         userId: socket.user._id,
-
+                        username: socket.user.username,
+                        profilePicture: socket.user.profilePicture,
                         isHost,
+                        hostId: meeting.host,
+
+                        users: existingUsers,
 
                     }
                 );
@@ -437,190 +491,87 @@ const registerMeetingEvents = (io, socket) => {
     // LEAVE ROOM
     // =========================================
 
-    socket.on(
-        "leave-room",
-        async({
-                meetingCode,
-            } = {},
-            callback
-        ) => {
+    socket.on("leave-room", async({ meetingCode }) => {
 
-            try {
+        if (!meetingCode) return;
 
-                if (!meetingCode) {
+        meetingCode = meetingCode.toUpperCase();
 
-                    if (callback) {
+        socket.leave(meetingCode);
 
-                        callback({
+        // =========================================
+        // IMPORTANT
+        // Do NOT remove user from participants
+        // participants = meeting membership
+        // meetingUsers = currently online users
+        // =========================================
 
-                            success: false,
+        const users = meetingUsers.get(meetingCode);
 
-                            message: "Meeting code is required",
+        if (users) {
 
-                        });
+            const updatedUsers = users.filter(
+                (user) =>
+                user.socketId !== socket.id
+            );
 
-                    }
+            if (updatedUsers.length === 0) {
 
-                    return;
-                }
-
-
-                const normalizedCode =
+                meetingUsers.delete(
                     meetingCode
-                    .trim()
-                    .toUpperCase();
-
-
-                socket.leave(
-                    normalizedCode
                 );
 
+            } else {
 
-                // =====================================
-                // Remove Participant
-                // =====================================
-
-                await Meeting.findOneAndUpdate({
-                    meetingCode: normalizedCode,
-                }, {
-                    $pull: {
-                        participants: socket.user._id,
-                    },
-                });
-
-
-                // =====================================
-                // Remove From Online Users
-                // =====================================
-
-                const users =
-                    meetingUsers.get(
-                        normalizedCode
-                    );
-
-
-                if (users) {
-
-                    const updatedUsers =
-                        users.filter(
-                            (user) =>
-                            user.socketId !==
-                            socket.id
-                        );
-
-
-                    if (
-                        updatedUsers.length === 0
-                    ) {
-
-                        meetingUsers.delete(
-                            normalizedCode
-                        );
-
-                    } else {
-
-                        meetingUsers.set(
-                            normalizedCode,
-                            updatedUsers
-                        );
-
-                    }
-
-                }
-
-
-                // =====================================
-                // Notify Other Users
-                // =====================================
-
-                socket
-                    .to(normalizedCode)
-                    .emit(
-                        "user-left", {
-
-                            socketId: socket.id,
-
-                            userId: socket.user._id,
-
-                            username: socket.user.username,
-
-                        }
-                    );
-
-
-                // =====================================
-                // Count
-                // =====================================
-
-                const roomUsers =
-                    meetingUsers.get(
-                        normalizedCode
-                    );
-
-
-                const onlineUsers =
-                    roomUsers ?
-                    roomUsers.length :
-                    0;
-
-
-                io.to(
-                    normalizedCode
-                ).emit(
-                    "room-users-count",
-                    onlineUsers
+                meetingUsers.set(
+                    meetingCode,
+                    updatedUsers
                 );
-
-
-                io.emit(
-                    "meeting-participant-count", {
-
-                        meetingCode: normalizedCode,
-
-                        count: onlineUsers,
-
-                    }
-                );
-
-
-                if (callback) {
-
-                    callback({
-
-                        success: true,
-
-                        message: "Left meeting successfully",
-
-                    });
-
-                }
-
-
-            } catch (error) {
-
-                console.error(
-                    "Leave Room Error:",
-                    error
-                );
-
-
-                if (callback) {
-
-                    callback({
-
-                        success: false,
-
-                        message: "Failed to leave meeting",
-
-                    });
-
-                }
 
             }
 
         }
-    );
 
+        // =========================================
+        // Notify remaining users
+        // =========================================
+
+        socket.to(meetingCode).emit(
+            "user-left", {
+                socketId: socket.id,
+
+                userId: socket.user._id,
+
+                username: socket.user.username,
+            }
+        );
+
+        // =========================================
+        // Update Online Count
+        // =========================================
+
+        const roomUsers =
+            meetingUsers.get(meetingCode);
+
+        const onlineUsers =
+            roomUsers ?
+            roomUsers.length :
+            0;
+
+        io.to(meetingCode).emit(
+            "room-users-count",
+            onlineUsers
+        );
+
+        io.emit(
+            "meeting-participant-count", {
+                meetingCode,
+
+                count: onlineUsers,
+            }
+        );
+
+    });
 
     // =========================================
     // APPROVE USER
@@ -784,6 +735,12 @@ const registerMeetingEvents = (io, socket) => {
                     waitingUsers.get(
                         userId.toString()
                     );
+
+                console.log("APPROVE DEBUG:", {
+                    userId: userId.toString(),
+                    approvedUser,
+                    waitingMapKeys: [...waitingUsers.keys()],
+                });
 
 
                 if (approvedUser) {
@@ -1199,8 +1156,7 @@ const registerMeetingEvents = (io, socket) => {
                         locked: meeting.locked,
 
                         message: meeting.locked ?
-                            "Meeting locked" :
-                            "Meeting unlocked",
+                            "Meeting locked" : "Meeting unlocked",
 
                     });
 
@@ -1449,13 +1405,15 @@ const registerMeetingEvents = (io, socket) => {
         "request-chat-encryption-key",
         async({
                 meetingCode,
+                publicKey,
             } = {},
             callback
         ) => {
 
+
             try {
 
-                if (!meetingCode) {
+                if (!meetingCode || !publicKey) {
 
                     if (callback) {
 
@@ -1598,6 +1556,7 @@ const registerMeetingEvents = (io, socket) => {
                                 userId: requesterId,
 
                                 socketId: socket.id,
+                                publicKey,
 
                             }
                         );

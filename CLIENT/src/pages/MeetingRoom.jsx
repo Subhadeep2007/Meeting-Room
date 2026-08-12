@@ -33,8 +33,7 @@ const MeetingRoom = () => {
     // User
     // =====================================
 
-    const username = "Subha";
-
+    
 
     // =====================================
     // Loading
@@ -131,6 +130,8 @@ const [
 
     } = useWebRTC(meetingCode);
 
+const username =
+    participants[mySocketId]?.username || "User";
 
     // =====================================
     // Loading Check
@@ -429,9 +430,11 @@ useEffect(() => {
             ref={meetingContainerRef}
             className="
                 h-screen
+                w-full
                 flex
                 flex-col
                 bg-gray-100
+                overflow-hidden
             "
         >
 
@@ -449,6 +452,7 @@ useEffect(() => {
             <div className="
                 flex
                 flex-1
+                min-h-0
                 overflow-hidden
             ">
 
@@ -460,7 +464,9 @@ useEffect(() => {
                 <div className="
                     hidden
                     lg:block
-                    w-72
+                    w-56
+                    xl:w-72
+                    shrink-0
                     border-r
                     bg-white
                     overflow-y-auto
@@ -501,6 +507,8 @@ useEffect(() => {
 
                 <div className="
                     flex-1
+                    min-w-0
+                    min-h-0
                     relative
                     bg-black
                     overflow-hidden
@@ -513,11 +521,16 @@ useEffect(() => {
 
                     <div className="
                         absolute
-                        top-5
-                        left-5
+                        top-2
+                        left-2
+                        sm:top-3
+                        sm:left-3
+                        md:top-5
+                        md:left-5
                         z-50
                         flex
-                        gap-3
+                        gap-2
+                        sm:gap-3
                     ">
 
 
@@ -539,7 +552,8 @@ useEffect(() => {
                                 bg-black/60
                                 hover:bg-black/80
                                 text-white
-                                p-3
+                                p-2
+                                sm:p-3
                                 rounded-xl
                                 transition
                             "
@@ -571,7 +585,8 @@ useEffect(() => {
                                 bg-black/60
                                 hover:bg-black/80
                                 text-white
-                                p-3
+                                p-2
+                                sm:p-3
                                 rounded-xl
                                 transition
                             "
@@ -664,8 +679,12 @@ useEffect(() => {
 
                     <div className="
                         absolute
-                        top-5
-                        right-5
+                        top-2
+                        right-2
+                        sm:top-3
+                        sm:right-3
+                        md:top-5
+                        md:right-5
                         z-50
                     ">
 
@@ -716,7 +735,9 @@ useEffect(() => {
 <div className="
     hidden
     xl:block
-    w-80
+    w-64
+    2xl:w-80
+    shrink-0
     border-l
     bg-white
     overflow-y-auto

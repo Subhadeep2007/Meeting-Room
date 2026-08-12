@@ -245,6 +245,54 @@ const registerSignalingEvents = (io, socket) => {
     );
 
 
+    // ======================================
+    // REQUEST CURRENT MEDIA STATUS
+    // ======================================
+
+    socket.on(
+        "request-media-status",
+        ({ meetingCode }) => {
+
+            socket
+                .to(meetingCode)
+                .emit(
+                    "request-media-status", {
+                        requesterSocketId: socket.id,
+                    }
+                );
+
+        }
+    );
+
+    // ======================================
+    // RECEIVE MEDIA STATUS RESPONSE
+    // ======================================
+
+    socket.on(
+        "media-status-response",
+        ({
+            targetSocketId,
+            meetingCode,
+            cameraEnabled,
+            microphoneEnabled,
+        }) => {
+
+            io.to(targetSocketId).emit(
+                "media-status-response", {
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    cameraEnabled,
+
+                    microphoneEnabled,
+                }
+            );
+
+        }
+    );
+
+
 
     // ======================================
     // Microphone Status

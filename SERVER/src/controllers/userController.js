@@ -67,6 +67,11 @@ export const uploadProfilePicture = async(req, res) => {
 
     try {
 
+        console.log("========== PROFILE UPLOAD ==========");
+        console.log("USER:", req.user);
+        console.log("FILE:", req.file);
+
+
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -76,15 +81,24 @@ export const uploadProfilePicture = async(req, res) => {
 
         const user = await User.findById(req.user._id);
 
-        // Delete old image
-        if (user.profilePicture.public_id) {
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Delete old image only if it exists
+        if (
+            user.profilePicture &&
+            user.profilePicture.public_id
+        ) {
 
             await cloudinary.uploader.destroy(
                 user.profilePicture.public_id
             );
 
         }
-
         // Save new image
         user.profilePicture = {
             url: req.file.path,

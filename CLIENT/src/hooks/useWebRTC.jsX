@@ -8,6 +8,7 @@ import socket, {
 
 import {
     getLocalStream,
+    getCurrentStream,
     stopLocalStream,
     toggleCamera,
     toggleMicrophone,
@@ -40,6 +41,7 @@ const useWebRTC = (meetingCode) => {
     // State
     // ========================================
     const [mySocketId, setMySocketId] = useState("");
+    const [currentUsername, setCurrentUsername] = useState("");
     const [localStream, setLocalStream] = useState(null);
 
     const [remoteStreams, setRemoteStreams] = useState([]);
@@ -121,6 +123,7 @@ useEffect(() => {
     const handleMeetingUserInfo = async ({
         socketId,
         userId,
+        
         isHost,
     }) => {
 
@@ -142,6 +145,8 @@ useEffect(() => {
             return;
 
         }
+
+        
 
 
         try {
@@ -223,14 +228,24 @@ useEffect(() => {
 
             // Ask host for encrypted meeting key
             socket.emit(
-                "request-chat-encryption-key",
-                {
+    "request-chat-encryption-key",
+    {
+        meetingCode,
+        publicKey,
+    },
+    (response) => {
 
-                    meetingCode,
+        if (!response?.success) {
 
-                }
+            console.error(
+                "❌ Chat key request failed:",
+                response?.message
             );
 
+        }
+
+    }
+);
 
             console.log(
                 "🔐 Requested meeting encryption key"
@@ -422,25 +437,19 @@ useEffect(() => {
 
 
 
-// ========================================
-// HOST CHAT KEY REQUEST
-// ========================================
-
 useEffect(() => {
 
     const handleChatKeyRequest = async ({
         meetingCode: requestedMeetingCode,
         userId,
+        publicKey,
     }) => {
 
         try {
 
-            // =====================================
-            // Only Current Meeting
-            // =====================================
-
             if (
-                requestedMeetingCode !== meetingCode
+                requestedMeetingCode?.toUpperCase() !==
+                meetingCode.toUpperCase()
             ) {
 
                 return;
@@ -448,16 +457,9 @@ useEffect(() => {
             }
 
 
-            // =====================================
-            // Only Host
-            // =====================================
-
-            const currentParticipant =
-                participants[socket.id];
-
-
             if (
-                !currentParticipant?.isHost
+                !userId ||
+                !publicKey
             ) {
 
                 return;
@@ -465,7 +467,15 @@ useEffect(() => {
             }
 
 
-            if (!userId) {
+            const myUserId =
+                participants[socket.id]?.userId;
+
+
+            if (
+                myUserId &&
+                myUserId.toString() ===
+                userId.toString()
+            ) {
 
                 return;
 
@@ -473,13 +483,13 @@ useEffect(() => {
 
 
             console.log(
-                "🔐 Chat key requested by:",
+                "🔐 Chat key request received from:",
                 userId
             );
 
 
             // =====================================
-            // Check Meeting Key
+            // Get Our AES Meeting Key
             // =====================================
 
             const meetingKey =
@@ -490,8 +500,8 @@ useEffect(() => {
 
             if (!meetingKey) {
 
-                console.error(
-                    "❌ Meeting encryption key not available"
+                console.log(
+                    "ℹ️ We do not have meeting encryption key"
                 );
 
                 return;
@@ -500,18 +510,73 @@ useEffect(() => {
 
 
             // =====================================
-            // IMPORTANT
+            // Import Requester's RSA Public Key
             // =====================================
-            // Public key is sent separately.
-            //
-            // The host's public-key handler
-            // handles the actual encryption.
+
+            const importedPublicKey =
+                await importPublicKey(
+                    publicKey
+                );
+
+
             // =====================================
+            // Encrypt AES Key For Requester
+            // =====================================
+
+            const encryptedMeetingKey =
+                await createEncryptedMeetingKeyForUser(
+
+                    meetingCode,
+
+                    importedPublicKey
+
+                );
+
+
+            // =====================================
+            // Send Through Server
+            // =====================================
+
+            socket.emit(
+                "send-encrypted-chat-key",
+                {
+
+                    meetingCode,
+
+                    userId,
+
+                    encryptedMeetingKey,
+
+                },
+                (response) => {
+
+                    if (
+                        !response?.success
+                    ) {
+
+                        console.error(
+                            "❌ Failed to deliver chat key:",
+                            response?.message
+                        );
+
+                        return;
+
+                    }
+
+
+                    console.log(
+                        "🔐 Chat key delivered to:",
+                        userId
+                    );
+
+                }
+            );
+
 
         } catch (error) {
 
             console.error(
-                "❌ Chat key request error:",
+                "❌ Chat key distribution error:",
                 error
             );
 
@@ -534,6 +599,7 @@ useEffect(() => {
         );
 
     };
+
 
 }, [
     meetingCode,
@@ -645,26 +711,88 @@ useEffect(() => {
     const handleMeetingUserInfo = ({
         socketId,
         userId,
+        username,
+        profilePicture,
         isHost,
+        users = [],
     }) => {
 
-        setParticipants((prev) => ({
+        setParticipants((prev) => {
 
-            ...prev,
+            const updated = {
+                ...prev,
+            };
 
-            [socketId]: {
+            // Current user
+            updated[socketId] = {
 
-                ...(prev[socketId] || {}),
+                ...(updated[socketId] || {}),
 
                 socketId,
-
                 userId,
-
+                username,
+                profilePicture,
                 isHost,
+                isOnline: true,
 
-            },
+            };
 
-        }));
+            // Existing users already inside the meeting
+            users.forEach((user) => {
+
+                updated[user.socketId] = {
+
+                    ...(updated[user.socketId] || {}),
+
+                    socketId: user.socketId,
+                    userId: user.userId,
+                    username: user.username,
+                    profilePicture: user.profilePicture,
+                    cameraEnabled:
+                        updated[user.socketId]?.cameraEnabled ?? true,
+                    microphoneEnabled:
+                        updated[user.socketId]?.microphoneEnabled ?? true,
+                    handRaised:
+                        updated[user.socketId]?.handRaised ?? false,
+                    isSpeaking:
+                        updated[user.socketId]?.isSpeaking ?? false,
+                    isHost: user.isHost ?? false,
+                    isOnline: true,
+
+                };
+
+            });
+
+            return updated;
+
+        });
+
+
+        // ========================================
+    // REQUEST CURRENT MEDIA STATUS
+    // FROM EXISTING USERS
+    // ========================================
+
+    if (
+        socketId === socket.id &&
+        users.length > 0
+    ) {
+
+        socket.emit(
+            "request-media-status",
+            {
+                meetingCode,
+            }
+        );
+
+    }
+
+
+        if (socketId === socket.id) {
+
+            setCurrentUsername(username);
+
+        }
 
     };
 
@@ -678,6 +806,193 @@ useEffect(() => {
         socket.off(
             "meeting-user-info",
             handleMeetingUserInfo
+        );
+
+    };
+
+}, []);
+
+// ========================================
+// REQUEST CURRENT MEDIA STATUS
+// ========================================
+
+useEffect(() => {
+
+    const handleMediaStatusRequest = ({
+        requesterSocketId,
+    }) => {
+
+        // =====================================
+        // Send My Current Camera Status
+        // =====================================
+
+        socket.emit(
+            "media-status-response",
+            {
+                targetSocketId:
+                    requesterSocketId,
+
+                meetingCode,
+
+                cameraEnabled,
+
+                microphoneEnabled,
+            }
+        );
+
+    };
+
+
+    socket.on(
+        "request-media-status",
+        handleMediaStatusRequest
+    );
+
+
+    return () => {
+
+        socket.off(
+            "request-media-status",
+            handleMediaStatusRequest
+        );
+
+    };
+
+}, [
+    meetingCode,
+    cameraEnabled,
+    microphoneEnabled,
+]);
+
+
+// ========================================
+// RECEIVE MEDIA STATUS
+// ========================================
+
+useEffect(() => {
+
+    const handleMediaStatusResponse = ({
+        socketId,
+        cameraEnabled,
+        microphoneEnabled,
+    }) => {
+
+        setParticipants((prev) => ({
+
+            ...prev,
+
+            [socketId]: {
+
+                ...prev[socketId],
+
+                cameraEnabled,
+
+                microphoneEnabled,
+
+            },
+
+        }));
+
+    };
+
+
+    socket.on(
+        "media-status-response",
+        handleMediaStatusResponse
+    );
+
+
+    return () => {
+
+        socket.off(
+            "media-status-response",
+            handleMediaStatusResponse
+        );
+
+    };
+
+}, []);
+
+
+
+// ========================================
+// Existing Meeting Users
+// ========================================
+
+useEffect(() => {
+
+    const handleExistingMeetingUsers = (
+        existingUsers
+    ) => {
+
+        console.log(
+            "👥 EXISTING MEETING USERS:",
+            existingUsers
+        );
+
+        setParticipants((prev) => {
+
+            const updated = {
+                ...prev,
+            };
+
+            existingUsers.forEach((user) => {
+
+                updated[user.socketId] = {
+                    ...(updated[user.socketId] || {}),
+
+                    socketId:
+                        user.socketId,
+
+                    userId:
+                        user.userId,
+
+                    username:
+                        user.username,
+
+                    profilePicture:
+                        user.profilePicture,
+  cameraEnabled:
+                        updated[user.socketId]
+                            ?.cameraEnabled ?? true,
+
+                    microphoneEnabled:
+                        updated[user.socketId]
+                            ?.microphoneEnabled ?? true,
+
+                    handRaised:
+                        updated[user.socketId]
+                            ?.handRaised ?? false,
+
+                    isSpeaking:
+                        updated[user.socketId]
+                            ?.isSpeaking ?? false,
+
+                    isHost:
+                        user.isHost ?? false,
+                    
+                };
+
+            });
+
+            return updated;
+
+        });
+
+    };
+
+
+    socket.on(
+        "existing-meeting-users",
+        handleExistingMeetingUsers
+    );
+
+
+    return () => {
+
+        socket.off(
+            "existing-meeting-users",
+            handleExistingMeetingUsers
         );
 
     };
@@ -726,6 +1041,43 @@ useEffect(() => {
 
 }, []);
 
+// ========================================
+// Existing Waiting Users
+// ========================================
+
+useEffect(() => {
+
+    const handleExistingWaitingUsers = (
+        users = []
+    ) => {
+
+        console.log(
+            "⏳ EXISTING WAITING USERS:",
+            users
+        );
+
+        setWaitingUsers(users);
+
+    };
+
+
+    socket.on(
+        "existing-waiting-users",
+        handleExistingWaitingUsers
+    );
+
+
+    return () => {
+
+        socket.off(
+            "existing-waiting-users",
+            handleExistingWaitingUsers
+        );
+
+    };
+
+}, []);
+
     // ========================================
     // Initialize
     // ========================================
@@ -766,7 +1118,20 @@ useEffect(() => {
             "📷 Camera/Mic Stream:",
             stream
         );
+console.log(
+    "CURRENT STREAM:",
+    getCurrentStream()
+);
 
+console.log(
+    "VIDEO TRACKS:",
+    getCurrentStream()?.getVideoTracks()
+);
+
+console.log(
+    "AUDIO TRACKS:",
+    getCurrentStream()?.getAudioTracks()
+);
 
         // =====================================
         // Apply Camera Setting
@@ -2122,6 +2487,16 @@ const handleToggleCamera = (forceState) => {
     const enabled = toggleCamera(forceState);
 
     setCameraEnabled(enabled);
+    setParticipants((prev) => ({
+    ...prev,
+
+    [socket.id]: {
+        ...prev[socket.id],
+
+        cameraEnabled: enabled,
+    },
+
+}));
 
     // =====================================
     // Tell Other Participants
@@ -2180,6 +2555,16 @@ const handleToggleMicrophone = (forceState) => {
     }
 
     setMicrophoneEnabled(enabled);
+    setParticipants((prev) => ({
+    ...prev,
+
+    [socket.id]: {
+        ...prev[socket.id],
+
+        microphoneEnabled: enabled,
+    },
+
+}));
 
     socket.emit(
         "microphone-status",
