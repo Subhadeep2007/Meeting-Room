@@ -18,6 +18,7 @@ const HostControls = ({
     onLock,
 
     meetingLocked,
+
 }) => {
 
     return (
@@ -30,11 +31,13 @@ const HostControls = ({
 
             <button
                 type="button"
+
                 onClick={() =>
                     onKick(
-                        participant.socketId
+                        participant
                     )
                 }
+
                 className="
                     p-2
                     rounded-lg
@@ -43,7 +46,9 @@ const HostControls = ({
                     hover:text-red-300
                     transition
                 "
+
                 title="Kick User"
+
             >
 
                 <UserX size={18} />
@@ -57,11 +62,13 @@ const HostControls = ({
 
             <button
                 type="button"
+
                 onClick={() =>
                     onMute(
-                        participant.socketId
+                        participant
                     )
                 }
+
                 className="
                     p-2
                     rounded-lg
@@ -70,7 +77,9 @@ const HostControls = ({
                     hover:text-yellow-300
                     transition
                 "
+
                 title="Mute User"
+
             >
 
                 <MicOff size={18} />
@@ -84,11 +93,13 @@ const HostControls = ({
 
             <button
                 type="button"
+
                 onClick={() =>
                     onDisableCamera(
-                        participant.socketId
+                        participant
                     )
                 }
+
                 className="
                     p-2
                     rounded-lg
@@ -97,7 +108,9 @@ const HostControls = ({
                     hover:text-blue-300
                     transition
                 "
+
                 title="Disable Camera"
+
             >
 
                 <VideoOff size={18} />
@@ -111,7 +124,9 @@ const HostControls = ({
 
             <button
                 type="button"
+
                 onClick={onLock}
+
                 className="
                     p-2
                     rounded-lg
@@ -119,11 +134,13 @@ const HostControls = ({
                     hover:bg-gray-700
                     transition
                 "
+
                 title={
                     meetingLocked
                         ? "Unlock Meeting"
                         : "Lock Meeting"
                 }
+
             >
 
                 {meetingLocked ? (

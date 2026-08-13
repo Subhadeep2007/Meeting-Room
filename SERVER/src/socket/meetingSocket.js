@@ -75,6 +75,50 @@ const registerMeetingEvents = (io, socket) => {
                     return;
                 }
 
+                // =====================================
+                // CHECK KICKED USER
+                // =====================================
+
+                const kickedUser =
+                    await Meeting.collection.findOne({
+                        _id: meeting._id,
+
+                        kickedUsers: socket.user._id,
+                    });
+
+                if (kickedUser) {
+
+                    console.log(
+                        `🚫 ${socket.user.username} was kicked and cannot rejoin ${normalizedCode}`
+                    );
+
+                    // Do NOT allow socket to enter meeting
+
+                    if (callback) {
+
+                        callback({
+
+                            success: false,
+
+                            message: "You were removed by Host and cannot rejoin this meeting",
+
+                        });
+
+                    }
+
+                    // Tell frontend to leave/redirect
+
+                    socket.emit(
+                        "kicked", {
+                            success: false,
+
+                            message: "You were removed by Host and cannot rejoin this meeting",
+
+                        }
+                    );
+
+                    return;
+                }
 
                 // =====================================
                 // Meeting Ended

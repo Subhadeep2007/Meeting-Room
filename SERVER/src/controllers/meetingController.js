@@ -127,7 +127,16 @@ export const joinMeeting = async(req, res) => {
 
         }
 
+        // ======================================
+        // CHECK EXISTING PARTICIPANT
+        // ======================================
 
+        const alreadyJoined =
+            meeting.participants.some(
+                (participant) =>
+                participant.toString() ===
+                req.user._id.toString()
+            );
 
         // ======================================
         // Waiting Room
@@ -172,22 +181,7 @@ export const joinMeeting = async(req, res) => {
 
         }
 
-        // Already Joined?
-        const alreadyJoined = meeting.participants.some(
-            (participant) => participant.equals(req.user._id)
-        );
 
-        if (alreadyJoined) {
-
-            return res.status(httpStatus.CONFLICT).json({
-
-                success: false,
-
-                message: "You have already joined this meeting",
-
-            });
-
-        }
 
         // Add User
         meeting.participants.push(req.user._id);

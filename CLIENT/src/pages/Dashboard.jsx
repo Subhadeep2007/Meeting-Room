@@ -126,6 +126,19 @@ const handleJoinMeeting = async () => {
     return;
 }
 
+
+if (data.rejoining) {
+
+    successToast(
+        "Rejoining Meeting..."
+    );
+
+    navigate(
+        `/meeting/${meetingCode}`
+    );
+
+    return;
+}
         successToast(
 
             data.message
@@ -139,6 +152,7 @@ const handleJoinMeeting = async () => {
         );
 
     }
+    
 
     catch (error) {
 

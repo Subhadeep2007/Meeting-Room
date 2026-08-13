@@ -195,38 +195,38 @@ const ParticipantCard = ({
                     Pin Participant
                 ========================== */}
 
-                {
-                    onPin && (
+               {
+    onPin && (
 
-                        <button
+        <button
 
-                            type="button"
+            type="button"
 
-                            onClick={() =>
-                                onPin(
-                                    participant._id
-                                )
-                            }
+            onClick={() =>
+                onPin(
+                    participant
+                )
+            }
 
-                            className="
-                                p-1.5
-                                rounded-lg
-                                text-blue-400
-                                hover:bg-blue-500/20
-                                hover:text-blue-300
-                                transition
-                            "
+            className="
+                p-1.5
+                rounded-lg
+                text-blue-400
+                hover:bg-blue-500/20
+                hover:text-blue-300
+                transition
+            "
 
-                            title="Pin Participant"
+            title="Pin Participant"
 
-                        >
+        >
 
-                            <Pin size={18} />
+            <Pin size={18} />
 
-                        </button>
+        </button>
 
-                    )
-                }
+    )
+} 
 
 
                 {/* ==========================

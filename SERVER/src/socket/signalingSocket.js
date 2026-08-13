@@ -2,7 +2,7 @@ import { SOCKET_EVENTS } from "../constants/socketEvents.js";
 import Meeting from "../models/meetingModel.js";
 import User from "../models/userModel.js";
 
-
+import mongoose from "mongoose";
 import {
 
     getMeeting,
@@ -473,7 +473,7 @@ const registerSignalingEvents = (io, socket) => {
     socket.on(
         "kick-user",
         async({
-                meetingId,
+                meetingCode,
                 targetSocketId,
                 targetUserId,
             },
@@ -482,7 +482,10 @@ const registerSignalingEvents = (io, socket) => {
 
             try {
 
-                const meeting = await getMeeting(meetingId);
+                const meeting =
+                    await Meeting.findOne({
+                        meetingCode,
+                    });
 
                 // Host Permission
                 if (!verifyHostPermission(meeting, socket.user._id)) {
@@ -522,7 +525,29 @@ const registerSignalingEvents = (io, socket) => {
 
                     return;
                 }
+                // =====================================
+                // 👇 YAHAN ADD KARO
+                // Permanently Block This User
+                // From Rejoining This Meeting
+                // =====================================
 
+                const kickedUserId =
+                    new mongoose.Types.ObjectId(
+                        targetUserId.toString()
+                    );
+
+                await Meeting.collection.updateOne({
+                    _id: meeting._id,
+                }, {
+                    $pull: {
+                        participants: kickedUserId,
+                        waitingUsers: kickedUserId,
+                    },
+
+                    $addToSet: {
+                        kickedUsers: kickedUserId,
+                    },
+                });
                 // Kick User
                 io.to(targetSocketId).emit("kicked", {
                     success: true,
@@ -561,7 +586,7 @@ const registerSignalingEvents = (io, socket) => {
     socket.on(
         "mute-user",
         async({
-                meetingId,
+                meetingCode,
                 targetSocketId,
                 targetUserId,
             },
@@ -570,8 +595,10 @@ const registerSignalingEvents = (io, socket) => {
 
             try {
 
-                const meeting = await getMeeting(meetingId);
-
+                const meeting =
+                    await Meeting.findOne({
+                        meetingCode,
+                    });
                 // Host Permission
                 if (!verifyHostPermission(meeting, socket.user._id)) {
 
@@ -1166,7 +1193,7 @@ const registerSignalingEvents = (io, socket) => {
 
             {
 
-                meetingId,
+                meetingCode,
 
                 userId,
 
@@ -1178,10 +1205,9 @@ const registerSignalingEvents = (io, socket) => {
 
             try {
 
-                const meeting =
-
-                    await getMeeting(meetingId);
-
+                const meeting = await Meeting.findOne({
+                    meetingCode,
+                });
                 if (
 
                     !verifyHostPermission(
@@ -1299,7 +1325,7 @@ const registerSignalingEvents = (io, socket) => {
 
             {
 
-                meetingId,
+                meetingCode,
 
                 userId,
 
@@ -1311,14 +1337,13 @@ const registerSignalingEvents = (io, socket) => {
 
             try {
 
+
+
+
                 const meeting =
-
-                    await getMeeting(
-
-                        meetingId
-
-                    );
-
+                    await Meeting.findOne({
+                        meetingCode,
+                    });
                 if (
 
                     !verifyHostPermission(

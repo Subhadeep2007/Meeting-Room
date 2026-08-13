@@ -3020,7 +3020,7 @@ const kickUser = (participant) => {
     socket.emit(
         "kick-user",
         {
-            meetingId,
+            meetingCode,
             targetSocketId: participant.socketId,
             targetUserId: participant.userId,
         },
@@ -3039,7 +3039,7 @@ const muteUser = (participant) => {
     socket.emit(
         "mute-user",
         {
-            meetingId,
+            meetingCode,
             targetSocketId: participant.socketId,
             targetUserId: participant.userId,
         },
@@ -3056,7 +3056,7 @@ const disableCamera = (participant) => {
     socket.emit(
         "disable-camera",
         {
-            meetingId,
+            meetingCode,
             targetSocketId: participant.socketId,
             targetUserId: participant.userId,
         },
