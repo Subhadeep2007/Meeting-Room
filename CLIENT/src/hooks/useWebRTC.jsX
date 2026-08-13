@@ -2104,6 +2104,71 @@ useEffect(() => {
     };
 
 }, []);
+// ========================================
+// Participant Pinned
+// ========================================
+
+useEffect(() => {
+
+    const handleUserPinned = ({
+        pinned,
+        pinnedBy,
+        pinnedByUsername,
+    }) => {
+
+        if (pinned) {
+
+            console.log(
+                "📌 YOU ARE PINNED BY:",
+                pinnedByUsername
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "participant-pinned",
+                    {
+                        detail: {
+                            pinned: true,
+                            pinnedBy,
+                            pinnedByUsername,
+                        },
+                    }
+                )
+            );
+
+        } else {
+
+            console.log(
+                "📌 YOU ARE UNPINNED"
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "participant-unpinned"
+                )
+            );
+
+        }
+
+    };
+
+
+    socket.on(
+        "user-pinned",
+        handleUserPinned
+    );
+
+
+    return () => {
+
+        socket.off(
+            "user-pinned",
+            handleUserPinned
+        );
+
+    };
+
+}, []);
 
 
 
@@ -3015,6 +3080,41 @@ const stopScreenShare = async () => {
     );
 };
 
+// ======================================
+// Pin / Unpin User
+// ======================================
+
+const pinUser = (participant, pinned) => {
+
+    if (!participant) {
+        return;
+    }
+
+    socket.emit(
+        "pin-user",
+        {
+            meetingCode,
+
+            targetSocketId:
+                participant.socketId,
+
+            targetUserId:
+                participant.userId,
+
+            pinned,
+        },
+        (response) => {
+
+            console.log(
+                "📌 Pin Response:",
+                response
+            );
+
+        }
+    );
+
+};
+
 const kickUser = (participant) => {
 
     socket.emit(
@@ -3146,9 +3246,9 @@ mySocketId,
     waitingUsers,
     isWaiting,
 
-joinWaitingRoom,
+    joinWaitingRoom,
 
-approveUser,
+    approveUser,
 
 rejectUser,
 
@@ -3163,6 +3263,7 @@ sendReaction,
 kickUser,
 muteUser,
 disableCamera,
+pinUser,
 
 lockMeeting,
 meetingLocked,

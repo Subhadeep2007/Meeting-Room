@@ -21,6 +21,7 @@ const ParticipantCard = ({
     isHost,
 
     onPin,
+    pinnedUser,
 
     kickUser,
 
@@ -195,18 +196,31 @@ const ParticipantCard = ({
                     Pin Participant
                 ========================== */}
 
-               {
+              {
     onPin && (
 
         <button
 
             type="button"
 
-            onClick={() =>
-                onPin(
-                    participant
-                )
-            }
+            onClick={() => {
+
+                if (
+                    pinnedUser?.socketId ===
+                    participant.socketId
+                ) {
+
+                    // Unpin
+                    onPin(null);
+
+                } else {
+
+                    // Pin
+                    onPin(participant);
+
+                }
+
+            }}
 
             className="
                 p-1.5
@@ -217,7 +231,14 @@ const ParticipantCard = ({
                 transition
             "
 
-            title="Pin Participant"
+            title={
+                pinnedUser?.socketId ===
+                participant.socketId
+
+                    ? "Unpin Participant"
+
+                    : "Pin Participant"
+            }
 
         >
 
@@ -226,8 +247,7 @@ const ParticipantCard = ({
         </button>
 
     )
-} 
-
+}
 
                 {/* ==========================
                     Host Controls

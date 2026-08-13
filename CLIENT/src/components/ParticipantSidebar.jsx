@@ -13,6 +13,7 @@ const ParticipantSidebar = ({
     participants,
 
     onPin,
+    pinnedUser,
 
     // ================================
     // Host Controls
@@ -208,6 +209,7 @@ const ParticipantSidebar = ({
                                 participant={user}
 
                                 onPin={onPin}
+                                pinnedUser={pinnedUser}
 
                                 // =========================
                                 // Host Controls

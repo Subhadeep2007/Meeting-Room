@@ -137,7 +137,29 @@ export const joinMeeting = async(req, res) => {
                 participant.toString() ===
                 req.user._id.toString()
             );
+        // ======================================
+        // REJOINING EXISTING PARTICIPANT
+        // ======================================
 
+        if (alreadyJoined) {
+
+            return res.status(
+                httpStatus.OK
+            ).json({
+
+                success: true,
+
+                rejoining: true,
+
+                waiting: false,
+
+                message: "Rejoining Meeting...",
+
+                meeting,
+
+            });
+
+        }
         // ======================================
         // Waiting Room
         // ======================================

@@ -22,7 +22,7 @@ import {
     createNotification,
     NotificationType,
 } from "../services/notificationService.js";
-
+const pinnedUsers = new Map();
 const registerSignalingEvents = (io, socket) => {
 
     // =====================================
@@ -667,6 +667,251 @@ const registerSignalingEvents = (io, socket) => {
         }
     );
 
+    // =======================================
+    // Pin / Unpin User
+    // =======================================
+
+    socket.on(
+        "pin-user",
+        async({
+                meetingCode,
+                targetSocketId,
+                targetUserId,
+                pinned,
+            },
+            callback
+        ) => {
+
+            try {
+
+                // =====================================
+                // Find Meeting
+                // =====================================
+
+                const meeting =
+                    await Meeting.findOne({
+                        meetingCode,
+                    });
+
+
+                // =====================================
+                // Meeting Check
+                // =====================================
+
+                if (!meeting) {
+
+                    if (callback) {
+
+                        return callback({
+                            success: false,
+                            message: "Meeting not found.",
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+                // =====================================
+                // Host Permission
+                // =====================================
+
+                if (!verifyHostPermission(
+                        meeting,
+                        socket.user._id
+                    )) {
+
+                    if (callback) {
+
+                        return callback({
+                            success: false,
+                            message: "Only Host or CoHost can pin.",
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+                // =====================================
+                // Participant Exists
+                // =====================================
+
+                if (!participantExists(
+                        meeting,
+                        targetUserId
+                    )) {
+
+                    if (callback) {
+
+                        return callback({
+                            success: false,
+                            message: "Participant not found.",
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+                // =====================================
+                // PIN USER
+                // =====================================
+
+                if (pinned) {
+
+                    const previousPinnedSocketId =
+                        pinnedUsers.get(
+                            meetingCode
+                        );
+
+
+                    // =================================
+                    // Another User Was Already Pinned
+                    // =================================
+
+                    if (
+                        previousPinnedSocketId &&
+                        previousPinnedSocketId !==
+                        targetSocketId
+                    ) {
+
+                        io.to(
+                            previousPinnedSocketId
+                        ).emit(
+                            "user-pinned", {
+                                pinned: false,
+
+                                pinnedBy: socket.user._id.toString(),
+
+                                pinnedByUsername: socket.user.username,
+                            }
+                        );
+
+                    }
+
+
+                    // =================================
+                    // Save New Pinned User
+                    // =================================
+
+                    pinnedUsers.set(
+                        meetingCode,
+                        targetSocketId
+                    );
+
+
+                    // =================================
+                    // Notify New Pinned User
+                    // =================================
+
+                    io.to(
+                        targetSocketId
+                    ).emit(
+                        "user-pinned", {
+                            pinned: true,
+
+                            pinnedBy: socket.user._id.toString(),
+
+                            pinnedByUsername: socket.user.username,
+                        }
+                    );
+
+
+                    // =================================
+                    // Host Callback
+                    // =================================
+
+                    if (callback) {
+
+                        return callback({
+                            success: true,
+                            message: "Participant pinned successfully.",
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+                // =====================================
+                // UNPIN USER
+                // =====================================
+
+                const currentPinnedSocketId =
+                    pinnedUsers.get(
+                        meetingCode
+                    );
+
+
+                // =====================================
+                // Only Current Pinned User Can Unpin
+                // =====================================
+
+                if (
+                    currentPinnedSocketId ===
+                    targetSocketId
+                ) {
+
+                    pinnedUsers.delete(
+                        meetingCode
+                    );
+
+
+                    io.to(
+                        targetSocketId
+                    ).emit(
+                        "user-pinned", {
+                            pinned: false,
+
+                            pinnedBy: socket.user._id.toString(),
+
+                            pinnedByUsername: socket.user.username,
+                        }
+                    );
+
+                }
+
+
+                // =====================================
+                // Host Callback
+                // =====================================
+
+                if (callback) {
+
+                    return callback({
+                        success: true,
+                        message: "Participant unpinned successfully.",
+                    });
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Pin User Error:",
+                    error
+                );
+
+
+                if (callback) {
+
+                    return callback({
+                        success: false,
+                        message: error.message,
+                    });
+
+                }
+
+            }
+
+        }
+    );
     // =======================================
     // Disable Camera
     // =======================================

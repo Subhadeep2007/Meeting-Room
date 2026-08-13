@@ -58,7 +58,8 @@ const [
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const [pinnedUser, setPinnedUser] = useState(null);
-
+const [pinNotice, setPinNotice] =
+    useState(null);
 
     // =====================================
     // Fullscreen Reference
@@ -121,6 +122,7 @@ const [
         muteUser,
 
         disableCamera,
+        pinUser,
 
         lockMeeting,
 
@@ -234,7 +236,54 @@ useEffect(() => {
         };
 
     }, []);
+useEffect(() => {
 
+    const handlePinned = (event) => {
+
+        setPinNotice({
+            pinned: true,
+
+            username:
+                event.detail?.pinnedByUsername ||
+                "Host",
+        });
+
+    };
+
+
+    const handleUnpinned = () => {
+
+        setPinNotice(null);
+
+    };
+
+
+    window.addEventListener(
+        "participant-pinned",
+        handlePinned
+    );
+
+    window.addEventListener(
+        "participant-unpinned",
+        handleUnpinned
+    );
+
+
+    return () => {
+
+        window.removeEventListener(
+            "participant-pinned",
+            handlePinned
+        );
+
+        window.removeEventListener(
+            "participant-unpinned",
+            handleUnpinned
+        );
+
+    };
+
+}, []);
 
     // =====================================
     // Fullscreen Handler
@@ -418,7 +467,43 @@ useEffect(() => {
         );
 
     }
+const handlePinParticipant = (participant) => {
 
+    // =========================
+    // UNPIN
+    // =========================
+
+    if (participant === null) {
+
+        if (pinnedUser) {
+
+            pinUser(
+                pinnedUser,
+                false
+            );
+
+        }
+
+        setPinnedUser(null);
+
+        return;
+    }
+
+
+    // =========================
+    // PIN
+    // =========================
+
+    pinUser(
+        participant,
+        true
+    );
+
+    setPinnedUser(
+        participant
+    );
+
+};
 
     // =====================================
     // Meeting UI
@@ -494,7 +579,8 @@ useEffect(() => {
 
                         isHost={isHost}
 
-                        onPin={setPinnedUser}
+                       onPin={handlePinParticipant}
+                        pinnedUser={pinnedUser}
 
                     />
 
@@ -624,7 +710,30 @@ useEffect(() => {
                         </button>
 
                     </div>
+{pinNotice?.pinned && (
 
+    <div className="
+        absolute
+        top-4
+        left-1/2
+        -translate-x-1/2
+        z-50
+        px-4
+        py-2
+        rounded-lg
+        bg-blue-600
+        text-white
+        text-sm
+        font-semibold
+        shadow-lg
+    ">
+
+        📌 You are pinned by{" "}
+        {pinNotice.username}
+
+    </div>
+
+)}
 
                     {/* =================================
                         Video Grid
