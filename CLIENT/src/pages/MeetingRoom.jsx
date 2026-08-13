@@ -6,6 +6,10 @@ import {
     Grid2X2,
     Maximize,
     Minimize,
+    Users,
+    MessageCircle,
+    Clock3,
+    X,
 } from "lucide-react";
 
 import { useNavigate, useParams } from "react-router-dom";
@@ -58,8 +62,13 @@ const [
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const [pinnedUser, setPinnedUser] = useState(null);
-const [pinNotice, setPinNotice] =
-    useState(null);
+    const [pinNotice, setPinNotice] = useState(null);
+
+    // =====================================
+    // Responsive Side Panels
+    // =====================================
+
+    const [activePanel, setActivePanel] = useState(null);
 
     // =====================================
     // Fullscreen Reference
@@ -535,15 +544,15 @@ const handlePinParticipant = (participant) => {
             ================================= */}
 
             <div className="
+                relative
                 flex
                 flex-1
                 min-h-0
                 overflow-hidden
             ">
 
-
                 {/* =================================
-                    Participant Sidebar
+                    Desktop Participant Sidebar
                 ================================= */}
 
                 <div className="
@@ -579,7 +588,8 @@ const handlePinParticipant = (participant) => {
 
                         isHost={isHost}
 
-                       onPin={handlePinParticipant}
+                        onPin={handlePinParticipant}
+
                         pinnedUser={pinnedUser}
 
                     />
@@ -600,7 +610,6 @@ const handlePinParticipant = (participant) => {
                     overflow-hidden
                 ">
 
-
                     {/* =================================
                         Meeting Toolbar
                     ================================= */}
@@ -618,7 +627,6 @@ const handlePinParticipant = (participant) => {
                         gap-2
                         sm:gap-3
                     ">
-
 
                         {/* Speaker / Grid */}
 
@@ -710,30 +718,43 @@ const handlePinParticipant = (participant) => {
                         </button>
 
                     </div>
-{pinNotice?.pinned && (
 
-    <div className="
-        absolute
-        top-4
-        left-1/2
-        -translate-x-1/2
-        z-50
-        px-4
-        py-2
-        rounded-lg
-        bg-blue-600
-        text-white
-        text-sm
-        font-semibold
-        shadow-lg
-    ">
 
-        📌 You are pinned by{" "}
-        {pinNotice.username}
+                    {/* =================================
+                        Pin Notice
+                    ================================= */}
 
-    </div>
+                    {pinNotice?.pinned && (
 
-)}
+                        <div className="
+                            absolute
+                            top-4
+                            left-1/2
+                            -translate-x-1/2
+                            z-50
+                            max-w-[85%]
+                            px-4
+                            py-2
+                            rounded-lg
+                            bg-blue-600
+                            text-white
+                            text-xs
+                            sm:text-sm
+                            font-semibold
+                            shadow-lg
+                            text-center
+                            whitespace-nowrap
+                            overflow-hidden
+                            text-ellipsis
+                        ">
+
+                            📌 You are pinned by{" "}
+                            {pinNotice.username}
+
+                        </div>
+
+                    )}
+
 
                     {/* =================================
                         Video Grid
@@ -834,91 +855,462 @@ const handlePinParticipant = (participant) => {
 
                     }
 
+
+                    {/* =================================
+                        Responsive Panel Buttons
+                    ================================= */}
+
+                    <div className="
+                        absolute
+                        bottom-3
+                        left-1/2
+                        -translate-x-1/2
+                        z-50
+                        flex
+                        items-center
+                        gap-2
+                        lg:hidden
+                    ">
+
+                        {/* Participants */}
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePanel(
+                                    activePanel === "participants"
+                                        ? null
+                                        : "participants"
+                                )
+                            }
+                            className="
+                                flex
+                                items-center
+                                justify-center
+                                w-10
+                                h-10
+                                rounded-full
+                                bg-black/70
+                                hover:bg-black/90
+                                text-white
+                                backdrop-blur
+                                transition
+                                shadow-lg
+                            "
+                            title="Participants"
+                        >
+                            <Users size={19} />
+                        </button>
+
+
+                        {/* Chat */}
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePanel(
+                                    activePanel === "chat"
+                                        ? null
+                                        : "chat"
+                                )
+                            }
+                            className="
+                                flex
+                                items-center
+                                justify-center
+                                w-10
+                                h-10
+                                rounded-full
+                                bg-black/70
+                                hover:bg-black/90
+                                text-white
+                                backdrop-blur
+                                transition
+                                shadow-lg
+                            "
+                            title="Chat"
+                        >
+                            <MessageCircle size={19} />
+                        </button>
+
+
+                        {/* Waiting Room - Host only */}
+
+                        {isHost && (
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setActivePanel(
+                                        activePanel === "waiting"
+                                            ? null
+                                            : "waiting"
+                                    )
+                                }
+                                className="
+                                    flex
+                                    items-center
+                                    justify-center
+                                    w-10
+                                    h-10
+                                    rounded-full
+                                    bg-black/70
+                                    hover:bg-black/90
+                                    text-white
+                                    backdrop-blur
+                                    transition
+                                    shadow-lg
+                                "
+                                title="Waiting Room"
+                            >
+                                <Clock3 size={19} />
+                            </button>
+
+                        )}
+
+                    </div>
+
                 </div>
 
 
-              {/* =================================
-    Waiting Room
-================================= */}
+                {/* =================================
+                    Desktop Waiting Room
+                ================================= */}
 
-<div className="
-    hidden
-    xl:block
-    w-64
-    2xl:w-80
-    shrink-0
-    border-l
-    bg-white
-    overflow-y-auto
-">
+                <div className="
+                    hidden
+                    xl:block
+                    w-64
+                    2xl:w-80
+                    shrink-0
+                    border-l
+                    bg-white
+                    overflow-y-auto
+                ">
 
-    <WaitingRoomSidebar
+                    <WaitingRoomSidebar
 
-        waitingUsers={
-            waitingUsers
-        }
+                        waitingUsers={
+                            waitingUsers
+                        }
 
-        approveUser={
-            approveUser
-        }
+                        approveUser={
+                            approveUser
+                        }
 
-        rejectUser={
-            rejectUser
-        }
+                        rejectUser={
+                            rejectUser
+                        }
 
-    />
+                    />
 
-</div>
+                </div>
 
 
-{/* =================================
-    Meeting Chat
-================================= */}
+                {/* =================================
+                    Desktop Meeting Chat
+                ================================= */}
 
-<div className="
-    
-    block
-    w-80
-    border-l
-    border-gray-700
-    overflow-hidden
-">
+                <div className="
+                    hidden
+                    xl:block
+                    w-72
+                    2xl:w-80
+                    shrink-0
+                    border-l
+                    border-gray-700
+                    overflow-hidden
+                ">
 
-    {meetingId ? (
+                    {meetingId ? (
 
-        <ChatPanel
+                        <ChatPanel
 
-            meetingId={
-                meetingId
-            }
+                            meetingId={
+                                meetingId
+                            }
 
-            meetingCode={
-                meetingCode
-            }
+                            meetingCode={
+                                meetingCode
+                            }
 
-        />
+                        />
 
-    ) : (
+                    ) : (
 
-        <div className="
-            h-full
-            bg-gray-900
-            text-gray-400
-            flex
-            items-center
-            justify-center
-            text-sm
-        ">
+                        <div className="
+                            h-full
+                            bg-gray-900
+                            text-gray-400
+                            flex
+                            items-center
+                            justify-center
+                            text-sm
+                        ">
 
-            Loading Chat...
+                            Loading Chat...
 
-        </div>
+                        </div>
 
-    )}
+                    )}
 
-</div>  
+                </div>
+
+
+                {/* =================================
+                    Responsive Drawer Overlay
+                ================================= */}
+
+                {activePanel && (
+
+                    <div
+                        className="
+                            absolute
+                            inset-0
+                            z-[90]
+                            bg-black/50
+                            backdrop-blur-[1px]
+                            xl:hidden
+                        "
+                        onClick={() =>
+                            setActivePanel(null)
+                        }
+                    />
+
+                )}
+
+
+                {/* =================================
+                    Responsive Participant Drawer
+                ================================= */}
+
+                {activePanel === "participants" && (
+
+                    <div className="
+                        absolute
+                        inset-y-0
+                        left-0
+                        z-[100]
+                        w-[min(88vw,22rem)]
+                        bg-gray-900
+                        shadow-2xl
+                        lg:hidden
+                        overflow-hidden
+                    ">
+
+                        <div className="
+                            h-full
+                            relative
+                        ">
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setActivePanel(null)
+                                }
+                                className="
+                                    absolute
+                                    top-3
+                                    right-3
+                                    z-20
+                                    flex
+                                    items-center
+                                    justify-center
+                                    w-9
+                                    h-9
+                                    rounded-full
+                                    bg-black/60
+                                    text-white
+                                    hover:bg-black/80
+                                "
+                                title="Close Participants"
+                            >
+                                <X size={18} />
+                            </button>
+
+                            <ParticipantSidebar
+
+                                participants={participants}
+
+                                kickUser={kickUser}
+
+                                muteUser={muteUser}
+
+                                disableCamera={
+                                    disableCamera
+                                }
+
+                                lockMeeting={
+                                    lockMeeting
+                                }
+
+                                meetingLocked={
+                                    meetingLocked
+                                }
+
+                                isHost={isHost}
+
+                                onPin={
+                                    handlePinParticipant
+                                }
+
+                                pinnedUser={
+                                    pinnedUser
+                                }
+
+                            />
+
+                        </div>
+
+                    </div>
+
+                )}
+
+
+                {/* =================================
+                    Responsive Waiting Room Drawer
+                ================================= */}
+
+                {activePanel === "waiting" && isHost && (
+
+                    <div className="
+                        absolute
+                        inset-y-0
+                        right-0
+                        z-[100]
+                        w-[min(88vw,22rem)]
+                        bg-white
+                        shadow-2xl
+                        xl:hidden
+                        overflow-y-auto
+                    ">
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePanel(null)
+                            }
+                            className="
+                                absolute
+                                top-3
+                                right-3
+                                z-20
+                                flex
+                                items-center
+                                justify-center
+                                w-9
+                                h-9
+                                rounded-full
+                                bg-gray-900
+                                text-white
+                                hover:bg-gray-700
+                            "
+                            title="Close Waiting Room"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <WaitingRoomSidebar
+
+                            waitingUsers={
+                                waitingUsers
+                            }
+
+                            approveUser={
+                                approveUser
+                            }
+
+                            rejectUser={
+                                rejectUser
+                            }
+
+                        />
+
+                    </div>
+
+                )}
+
+
+                {/* =================================
+                    Responsive Chat Drawer
+                ================================= */}
+
+                {activePanel === "chat" && (
+
+                    <div className="
+                        absolute
+                        inset-y-0
+                        right-0
+                        z-[100]
+                        w-[min(92vw,24rem)]
+                        bg-gray-900
+                        shadow-2xl
+                        xl:hidden
+                        overflow-hidden
+                    ">
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePanel(null)
+                            }
+                            className="
+                                absolute
+                                top-3
+                                right-3
+                                z-20
+                                flex
+                                items-center
+                                justify-center
+                                w-9
+                                h-9
+                                rounded-full
+                                bg-black/70
+                                text-white
+                                hover:bg-black/90
+                            "
+                            title="Close Chat"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        {meetingId ? (
+
+                            <ChatPanel
+
+                                meetingId={
+                                    meetingId
+                                }
+
+                                meetingCode={
+                                    meetingCode
+                                }
+
+                            />
+
+                        ) : (
+
+                            <div className="
+                                h-full
+                                bg-gray-900
+                                text-gray-400
+                                flex
+                                items-center
+                                justify-center
+                                text-sm
+                            ">
+
+                                Loading Chat...
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                )}
+
             </div>
-
 
             {/* =================================
                 Meeting Controls

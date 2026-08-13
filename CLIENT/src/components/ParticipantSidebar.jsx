@@ -3,6 +3,8 @@ import { useState } from "react";
 import {
     Lock,
     Unlock,
+    Search,
+    Users,
 } from "lucide-react";
 
 import ParticipantCard from "./ParticipantCard";
@@ -40,148 +42,286 @@ const ParticipantSidebar = ({
     // Participants
     // =====================================
 
-    const users = Object.values(participants).filter(
+    const users = Object.values(
+        participants
+    ).filter(
         (user) =>
             user.username
                 ?.toLowerCase()
-                .includes(search.toLowerCase())
+                .includes(
+                    search.toLowerCase()
+                )
     );
 
 
     return (
 
-        <div className="
-            w-80
-            bg-gray-900
-            h-full
-            p-4
-            border-l
-            border-gray-700
-        ">
+        <div
+            className="
+                flex
+                flex-col
 
+                w-full
+                h-full
+
+                bg-gray-950
+
+                text-white
+
+                overflow-hidden
+            "
+        >
 
             {/* =================================
                 Header
             ================================= */}
 
-            <div className="
-                flex
-                items-center
-                justify-between
-                mb-4
-            ">
+            <div
+                className="
+                    shrink-0
 
-                <h2 className="
-                    text-white
-                    text-xl
-                    font-bold
-                ">
+                    px-4
+                    sm:px-5
 
-                    Participants ({users.length})
+                    pt-4
+                    sm:pt-5
 
-                </h2>
+                    pb-3
 
-            </div>
+                    border-b
+                    border-white/10
+                "
+            >
 
-
-            {/* =================================
-                Lock Meeting
-            ================================= */}
-
-            {isHost && (
-
-                <button
-
-                    type="button"
-
-                    onClick={() => {
-
-                        console.log(
-                            "🔒 LOCK BUTTON CLICKED"
-                        );
-
-                        console.log(
-                            "Current meetingLocked:",
-                            meetingLocked
-                        );
-
-                        console.log(
-                            "lockMeeting function:",
-                            lockMeeting
-                        );
-
-                        lockMeeting(
-                            !meetingLocked
-                        );
-
-                    }}
-
+                <div
                     className="
                         flex
                         items-center
-                        justify-center
-                        w-10
-                        h-10
-                        rounded-lg
-                        bg-red-600
-                        hover:bg-red-700
-                        text-white
-                        cursor-pointer
-                        mb-4
+                        justify-between
+                        gap-3
                     "
-
-                    title={
-                        meetingLocked
-                            ? "Unlock Meeting"
-                            : "Lock Meeting"
-                    }
-
                 >
 
-                    {meetingLocked ? (
+                    <div
+                        className="
+                            flex
+                            items-center
+                            gap-2.5
+                            min-w-0
+                        "
+                    >
 
-                        <Lock size={20} />
+                        <div
+                            className="
+                                shrink-0
 
-                    ) : (
+                                w-9
+                                h-9
 
-                        <Unlock size={20} />
+                                rounded-xl
+
+                                bg-blue-600/15
+
+                                flex
+                                items-center
+                                justify-center
+
+                                text-blue-400
+                            "
+                        >
+
+                            <Users
+                                size={19}
+                            />
+
+                        </div>
+
+
+                        <div
+                            className="
+                                min-w-0
+                            "
+                        >
+
+                            <h2
+                                className="
+                                    text-base
+                                    sm:text-lg
+
+                                    font-bold
+
+                                    truncate
+                                "
+                            >
+                                Participants
+                            </h2>
+
+                            <p
+                                className="
+                                    text-xs
+                                    text-gray-400
+                                "
+                            >
+                                {users.length}{" "}
+                                {users.length === 1
+                                    ? "participant"
+                                    : "participants"}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* =========================
+                        Lock Meeting
+                    ========================= */}
+
+                    {isHost && (
+
+                        <button
+
+                            type="button"
+
+                            onClick={() => {
+
+                                lockMeeting(
+                                    !meetingLocked
+                                );
+
+                            }}
+
+                            className="
+                                shrink-0
+
+                                w-9
+                                h-9
+
+                                sm:w-10
+                                sm:h-10
+
+                                rounded-xl
+
+                                flex
+                                items-center
+                                justify-center
+
+                                text-white
+
+                                bg-red-600/90
+                                hover:bg-red-600
+
+                                active:scale-95
+
+                                transition
+
+                                shadow-lg
+                            "
+
+                            title={
+                                meetingLocked
+                                    ? "Unlock Meeting"
+                                    : "Lock Meeting"
+                            }
+
+                        >
+
+                            {meetingLocked ? (
+
+                                <Lock
+                                    size={18}
+                                />
+
+                            ) : (
+
+                                <Unlock
+                                    size={18}
+                                />
+
+                            )}
+
+                        </button>
 
                     )}
 
-                </button>
-
-            )}
+                </div>
 
 
-            {/* =================================
-                Search
-            ================================= */}
+                {/* =========================
+                    Search
+                ========================= */}
 
-            <input
+                <div
+                    className="
+                        relative
+                        mt-3
+                    "
+                >
 
-                type="text"
+                    <Search
+                        size={17}
+                        className="
+                            absolute
+                            left-3
+                            top-1/2
+                            -translate-y-1/2
 
-                placeholder="Search Participant..."
+                            text-gray-500
 
-                value={search}
+                            pointer-events-none
+                        "
+                    />
 
-                onChange={(e) =>
-                    setSearch(e.target.value)
-                }
+                    <input
 
-                className="
-                    w-full
-                    p-2
-                    rounded-lg
-                    mb-4
-                    bg-gray-800
-                    text-white
-                    outline-none
-                    focus:ring-2
-                    focus:ring-blue-500
-                "
+                        type="text"
 
-            />
+                        placeholder="Search participants..."
+
+                        value={search}
+
+                        onChange={(e) =>
+                            setSearch(
+                                e.target.value
+                            )
+                        }
+
+                        className="
+                            w-full
+
+                            h-10
+                            sm:h-11
+
+                            pl-9
+                            pr-3
+
+                            rounded-xl
+
+                            bg-white/5
+
+                            border
+                            border-white/10
+
+                            text-white
+
+                            text-sm
+
+                            placeholder:text-gray-500
+
+                            outline-none
+
+                            focus:border-blue-500/60
+                            focus:ring-2
+                            focus:ring-blue-500/10
+
+                            transition
+                        "
+
+                    />
+
+                </div>
+
+            </div>
 
 
             {/* =================================
@@ -190,9 +330,18 @@ const ParticipantSidebar = ({
 
             <div
                 className="
-                    space-y-2
+                    flex-1
+                    min-h-0
+
                     overflow-y-auto
-                    h-[80vh]
+                    overflow-x-hidden
+
+                    p-3
+                    sm:p-4
+
+                    space-y-2
+
+                    scrollbar-hide
                 "
             >
 
@@ -202,50 +351,124 @@ const ParticipantSidebar = ({
 
                         users.map((user) => (
 
-                            <ParticipantCard
-
+                            <div
                                 key={user.socketId}
 
-                                participant={user}
+                                className="
+                                    rounded-xl
 
-                                onPin={onPin}
-                                pinnedUser={pinnedUser}
+                                    transition
 
-                                // =========================
-                                // Host Controls
-                                // =========================
+                                    hover:bg-white/[0.03]
+                                "
+                            >
 
-                                isHost={isHost}
+                                <ParticipantCard
 
-                                kickUser={kickUser}
+                                    participant={user}
 
-                                muteUser={muteUser}
+                                    onPin={onPin}
 
-                                disableCamera={
-                                    disableCamera
-                                }
+                                    pinnedUser={
+                                        pinnedUser
+                                    }
 
-                                lockMeeting={
-                                    lockMeeting
-                                }
+                                    // =========================
+                                    // Host Controls
+                                    // =========================
 
-                                meetingLocked={
-                                    meetingLocked
-                                }
+                                    isHost={isHost}
 
-                            />
+                                    kickUser={
+                                        kickUser
+                                    }
+
+                                    muteUser={
+                                        muteUser
+                                    }
+
+                                    disableCamera={
+                                        disableCamera
+                                    }
+
+                                    lockMeeting={
+                                        lockMeeting
+                                    }
+
+                                    meetingLocked={
+                                        meetingLocked
+                                    }
+
+                                />
+
+                            </div>
 
                         ))
 
                     ) : (
 
-                        <div className="
-                            text-center
-                            text-gray-400
-                            mt-10
-                        ">
+                        <div
+                            className="
+                                h-full
+                                min-h-40
 
-                            No Participants Found
+                                flex
+                                flex-col
+                                items-center
+                                justify-center
+
+                                text-center
+
+                                px-6
+                            "
+                        >
+
+                            <div
+                                className="
+                                    w-12
+                                    h-12
+
+                                    rounded-full
+
+                                    bg-white/5
+
+                                    flex
+                                    items-center
+                                    justify-center
+
+                                    text-gray-500
+
+                                    mb-3
+                                "
+                            >
+
+                                <Users
+                                    size={21}
+                                />
+
+                            </div>
+
+
+                            <p
+                                className="
+                                    text-sm
+                                    font-medium
+                                    text-gray-300
+                                "
+                            >
+                                No participants found
+                            </p>
+
+
+                            <p
+                                className="
+                                    mt-1
+                                    text-xs
+                                    text-gray-500
+                                "
+                            >
+                                Try another search
+                            </p>
 
                         </div>
 

@@ -673,40 +673,92 @@ const ChatPanel = ({
 
     return (
 
-        <div className="
-            h-full
-            flex
-            flex-col
-            bg-gray-900
-            text-white
-        ">
+        <div
+            className="
+                h-full
+                min-h-0
+                flex
+                flex-col
+                bg-gray-950
+                text-white
+                overflow-hidden
+            "
+        >
 
             {/* =================================
                 Header
             ================================= */}
 
-            <div className="
-                flex
-                items-center
-                gap-3
-                px-4
-                py-3
-                border-b
-                border-gray-700
-            ">
+            <div
+                className="
+                    shrink-0
 
-                <MessageCircle
-                    size={20}
-                    className="text-blue-400"
-                />
+                    flex
+                    items-center
+                    gap-3
 
-                <h2 className="
-                    font-semibold
-                ">
+                    px-4
+                    sm:px-5
 
-                    Meeting Chat
+                    py-3
+                    sm:py-4
 
-                </h2>
+                    border-b
+                    border-white/10
+
+                    bg-gray-900/90
+                    backdrop-blur-md
+                "
+            >
+
+                <div
+                    className="
+                        w-9
+                        h-9
+
+                        rounded-xl
+
+                        bg-blue-600/15
+
+                        flex
+                        items-center
+                        justify-center
+
+                        text-blue-400
+                    "
+                >
+
+                    <MessageCircle
+                        size={19}
+                    />
+
+                </div>
+
+
+                <div className="min-w-0">
+
+                    <h2
+                        className="
+                            font-semibold
+                            text-sm
+                            sm:text-base
+                            truncate
+                        "
+                    >
+                        Meeting Chat
+                    </h2>
+
+                    <p
+                        className="
+                            text-[10px]
+                            sm:text-xs
+                            text-gray-500
+                        "
+                    >
+                        End-to-end encrypted
+                    </p>
+
+                </div>
 
             </div>
 
@@ -715,34 +767,106 @@ const ChatPanel = ({
                 Messages
             ================================= */}
 
-            <div className="
-                flex-1
-                overflow-y-auto
-                p-4
-                space-y-3
-            ">
+            <div
+                className="
+                    flex-1
+                    min-h-0
+
+                    overflow-y-auto
+                    overflow-x-hidden
+
+                    px-3
+                    sm:px-4
+
+                    py-3
+                    sm:py-4
+
+                    space-y-3
+
+                    scrollbar-hide
+                "
+            >
 
                 {loadingHistory ? (
 
-                    <div className="
-                        text-center
-                        text-gray-400
-                        mt-10
-                    ">
+                    <div
+                        className="
+                            h-full
 
+                            flex
+                            items-center
+                            justify-center
+
+                            text-center
+                            text-gray-500
+
+                            text-sm
+                        "
+                    >
                         Loading chat...
-
                     </div>
 
                 ) : messages.length === 0 ? (
 
-                    <div className="
-                        text-center
-                        text-gray-500
-                        mt-10
-                    ">
+                    <div
+                        className="
+                            h-full
 
-                        No messages yet.
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+
+                            text-center
+
+                            px-6
+                        "
+                    >
+
+                        <div
+                            className="
+                                w-14
+                                h-14
+
+                                rounded-full
+
+                                bg-white/5
+
+                                flex
+                                items-center
+                                justify-center
+
+                                text-gray-500
+
+                                mb-3
+                            "
+                        >
+
+                            <MessageCircle
+                                size={23}
+                            />
+
+                        </div>
+
+                        <p
+                            className="
+                                text-sm
+                                font-medium
+                                text-gray-300
+                            "
+                        >
+                            No messages yet
+                        </p>
+
+                        <p
+                            className="
+                                mt-1
+                                text-xs
+                                text-gray-500
+                            "
+                        >
+                            Start the conversation
+                        </p>
 
                     </div>
 
@@ -755,7 +879,9 @@ const ChatPanel = ({
                                 key={item._id}
                                 className="
                                     flex
-                                    gap-3
+                                    items-end
+                                    gap-2.5
+                                    sm:gap-3
                                 "
                             >
 
@@ -772,44 +898,73 @@ const ChatPanel = ({
                                         "User"
                                     }
                                     className="
+                                        shrink-0
+
                                         w-8
                                         h-8
+
+                                        sm:w-9
+                                        sm:h-9
+
                                         rounded-full
+
                                         object-cover
-                                        flex-shrink-0
+
+                                        ring-1
+                                        ring-white/10
                                     "
                                 />
 
 
-                                <div>
+                                <div
+                                    className="
+                                        min-w-0
+                                        max-w-[82%]
+                                        sm:max-w-[78%]
+                                    "
+                                >
 
-                                    <div className="
-                                        text-xs
-                                        text-gray-400
-                                        mb-1
-                                    ">
-
+                                    <div
+                                        className="
+                                            px-1
+                                            mb-1
+                                            text-[10px]
+                                            sm:text-xs
+                                            text-gray-500
+                                            truncate
+                                        "
+                                    >
                                         {
                                             item.sender
                                                 ?.username ||
                                             "User"
                                         }
-
                                     </div>
 
 
-                                    <div className="
-                                        bg-gray-800
-                                        rounded-xl
-                                        px-3
-                                        py-2
-                                        break-words
-                                    ">
+                                    <div
+                                        className="
+                                            bg-gray-800/90
 
-                                        {
-                                            item.message
-                                        }
+                                            border
+                                            border-white/5
 
+                                            rounded-2xl
+                                            rounded-bl-md
+
+                                            px-3
+                                            py-2
+
+                                            text-sm
+                                            leading-relaxed
+
+                                            break-words
+                                            whitespace-pre-wrap
+
+                                            shadow-sm
+                                        "
+                                    >
+                                        {item.message}
                                     </div>
 
                                 </div>
@@ -828,16 +983,63 @@ const ChatPanel = ({
 
                 {typingUser && (
 
-                    <div className="
-                        text-xs
-                        text-gray-500
-                    ">
+                    <div
+                        className="
+                            flex
+                            items-center
+                            gap-2
 
-                        {
-                            typingUser.username
-                        }
-                        {" "}
-                        is typing...
+                            text-[11px]
+                            sm:text-xs
+
+                            text-gray-500
+                        "
+                    >
+
+                        <span
+                            className="
+                                flex
+                                gap-0.5
+                            "
+                        >
+
+                            <span
+                                className="
+                                    w-1.5
+                                    h-1.5
+                                    rounded-full
+                                    bg-gray-500
+                                    animate-bounce
+                                "
+                            />
+
+                            <span
+                                className="
+                                    w-1.5
+                                    h-1.5
+                                    rounded-full
+                                    bg-gray-500
+                                    animate-bounce
+                                    [animation-delay:120ms]
+                                "
+                            />
+
+                            <span
+                                className="
+                                    w-1.5
+                                    h-1.5
+                                    rounded-full
+                                    bg-gray-500
+                                    animate-bounce
+                                    [animation-delay:240ms]
+                                "
+                            />
+
+                        </span>
+
+                        <span className="truncate">
+                            {typingUser.username} is typing...
+                        </span>
 
                     </div>
 
@@ -845,9 +1047,7 @@ const ChatPanel = ({
 
 
                 <div
-                    ref={
-                        messagesEndRef
-                    }
+                    ref={messagesEndRef}
                 />
 
             </div>
@@ -859,17 +1059,25 @@ const ChatPanel = ({
 
             {!encryptionReady && (
 
-                <div className="
-                    px-4
-                    py-2
-                    text-xs
-                    text-yellow-400
-                    border-t
-                    border-gray-700
-                ">
+                <div
+                    className="
+                        shrink-0
 
+                        px-4
+                        py-2
+
+                        text-[10px]
+                        sm:text-xs
+
+                        text-yellow-400
+
+                        bg-yellow-500/5
+
+                        border-t
+                        border-white/10
+                    "
+                >
                     Securing chat...
-
                 </div>
 
             )}
@@ -884,10 +1092,19 @@ const ChatPanel = ({
                     handleSendMessage
                 }
                 className="
-                    p-3
+                    shrink-0
+
+                    p-2.5
+                    sm:p-3
+
                     border-t
-                    border-gray-700
+                    border-white/10
+
+                    bg-gray-900/90
+                    backdrop-blur-md
+
                     flex
+                    items-center
                     gap-2
                 "
             >
@@ -914,16 +1131,37 @@ const ChatPanel = ({
                     }
 
                     className="
+                        min-w-0
                         flex-1
+
+                        h-10
+                        sm:h-11
+
                         bg-gray-800
+
+                        border
+                        border-white/10
+
                         text-white
+
+                        text-sm
+
                         rounded-xl
-                        px-4
-                        py-3
+
+                        px-3
+                        sm:px-4
+
                         outline-none
+
+                        placeholder:text-gray-500
+
+                        focus:border-blue-500/60
                         focus:ring-2
-                        focus:ring-blue-500
+                        focus:ring-blue-500/10
+
                         disabled:opacity-50
+
+                        transition
                     "
 
                 />
@@ -940,21 +1178,39 @@ const ChatPanel = ({
                     }
 
                     className="
-                        w-12
+                        shrink-0
+
+                        w-10
+                        h-10
+
+                        sm:w-11
+                        sm:h-11
+
                         rounded-xl
+
                         bg-blue-600
+
                         hover:bg-blue-700
+
+                        active:scale-95
+
                         disabled:bg-gray-700
+                        disabled:text-gray-500
                         disabled:cursor-not-allowed
+
                         flex
                         items-center
                         justify-center
+
+                        transition
                     "
+
+                    title="Send message"
 
                 >
 
                     <Send
-                        size={18}
+                        size={17}
                     />
 
                 </button>

@@ -370,9 +370,8 @@ const handleUploadImage = async () => {
     return (
 
         <div className="
-            min-h-screen
-            bg-gray-950
-            p-6
+            min-h-screen bg-gray-950
+            px-4 py-5 sm:px-6 sm:py-8
         ">
 
             <div className="
@@ -385,16 +384,15 @@ const handleUploadImage = async () => {
                 ========================== */}
 
                 <div className="
-                    flex
-                    items-center
-                    justify-between
-                    mb-6
+                    flex flex-col gap-3
+                    sm:flex-row sm:items-center sm:justify-between
+                    mb-5 sm:mb-6
                 ">
 
                     <h1 className="
-                        text-3xl
-                        font-bold
-                        text-white
+                        text-2xl sm:text-3xl
+                        font-bold text-white
+                        tracking-tight
                     ">
 
                         My Profile
@@ -407,15 +405,15 @@ const handleUploadImage = async () => {
                             type="button"
                             onClick={handleEdit}
                             className="
-                                flex
-                                items-center
-                                gap-2
-                                bg-blue-600
-                                hover:bg-blue-700
-                                text-white
-                                px-4
-                                py-2
-                                rounded-lg
+                                flex items-center justify-center gap-2
+                                min-h-10 px-4 sm:px-5
+                                rounded-xl
+                                bg-gradient-to-r from-blue-600 to-indigo-600
+                                hover:from-blue-500 hover:to-indigo-500
+                                text-white font-semibold text-sm
+                                shadow-lg shadow-blue-600/20
+                                border border-blue-400/20
+                                active:scale-[0.98] transition-all duration-200
                             "
                         >
 
@@ -434,11 +432,12 @@ const handleUploadImage = async () => {
                 ========================== */}
 
                 <div className="
-                    bg-gray-900
-                    border
-                    border-gray-800
-                    rounded-2xl
-                    p-6
+                    bg-gray-900/90
+                    border border-white/10
+                    rounded-2xl sm:rounded-3xl
+                    p-4 sm:p-6
+                    shadow-2xl shadow-black/20
+                    backdrop-blur-sm
                 ">
 
                     {/* ======================
@@ -516,21 +515,45 @@ const handleUploadImage = async () => {
 
     <label className="
         mt-4
-        flex
+
+        inline-flex
         items-center
+        justify-center
         gap-2
-        bg-gray-800
-        hover:bg-gray-700
-        text-white
+
+        h-10
         px-4
-        py-2
+
         rounded-lg
+
         cursor-pointer
+
+        bg-blue-600/10
+        hover:bg-blue-600/20
+
+        border
+        border-blue-500/25
+        hover:border-blue-400/40
+
+        text-blue-300
+        hover:text-blue-200
+
+        text-sm
+        font-medium
+
+        active:scale-[0.98]
+
+        transition-all
+        duration-200
     ">
 
-        <Camera size={18} />
+        <Camera
+            size={17}
+        />
 
-        Change Photo
+        <span>
+            Change Photo
+        </span>
 
         <input
             type="file"
@@ -547,8 +570,15 @@ const handleUploadImage = async () => {
 
         <div className="
             flex
-            gap-3
-            mt-3
+            flex-col
+            sm:flex-row
+
+            gap-2.5
+
+            w-full
+            sm:w-auto
+
+            mt-4
         ">
 
             <button
@@ -556,24 +586,70 @@ const handleUploadImage = async () => {
                 onClick={handleUploadImage}
                 disabled={uploadingImage}
                 className="
+                    group
+
+                    w-full
+                    sm:w-auto
+
+                    min-h-11
+                    px-5
+
                     flex
                     items-center
-                    gap-2
-                    bg-green-600
-                    hover:bg-green-700
+                    justify-center
+                    gap-2.5
+
+                    rounded-xl
+
+                    bg-gradient-to-r
+                    from-emerald-600
+                    to-green-600
+
+                    hover:from-emerald-500
+                    hover:to-green-500
+
                     disabled:opacity-50
+                    disabled:cursor-not-allowed
+
                     text-white
-                    px-4
-                    py-2
-                    rounded-lg
+                    text-sm
+                    font-semibold
+
+                    shadow-lg
+                    shadow-green-600/20
+
+                    border
+                    border-green-400/20
+
+                    active:scale-[0.97]
+
+                    transition-all
+                    duration-200
                 "
             >
 
-                <Save size={18} />
+                <span className="
+                    flex
+                    items-center
+                    justify-center
 
-                {uploadingImage
-                    ? "Uploading..."
-                    : "Upload Photo"}
+                    w-7
+                    h-7
+
+                    rounded-lg
+
+                    bg-white/10
+                ">
+
+                    <Save size={16} />
+
+                </span>
+
+                <span>
+                    {uploadingImage
+                        ? "Uploading..."
+                        : "Upload Photo"}
+                </span>
 
             </button>
 
@@ -588,21 +664,65 @@ const handleUploadImage = async () => {
                 }}
                 disabled={uploadingImage}
                 className="
+                    group
+
+                    w-full
+                    sm:w-auto
+
+                    min-h-11
+                    px-5
+
                     flex
                     items-center
-                    gap-2
-                    bg-gray-700
-                    hover:bg-gray-600
-                    text-white
-                    px-4
-                    py-2
-                    rounded-lg
+                    justify-center
+                    gap-2.5
+
+                    rounded-xl
+
+                    bg-white/[0.04]
+                    hover:bg-red-500/10
+
+                    border
+                    border-white/10
+                    hover:border-red-400/30
+
+                    text-gray-300
+                    hover:text-red-300
+
+                    text-sm
+                    font-semibold
+
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+
+                    active:scale-[0.97]
+
+                    transition-all
+                    duration-200
                 "
             >
 
-                <X size={18} />
+                <span className="
+                    flex
+                    items-center
+                    justify-center
 
-                Cancel
+                    w-7
+                    h-7
+
+                    rounded-lg
+
+                    bg-white/5
+                    group-hover:bg-red-500/10
+                ">
+
+                    <X size={16} />
+
+                </span>
+
+                <span>
+                    Cancel
+                </span>
 
             </button>
 
@@ -750,16 +870,14 @@ const handleUploadImage = async () => {
                                     type="submit"
                                     disabled={saving}
                                     className="
-                                        flex
-                                        items-center
-                                        gap-2
-                                        bg-green-600
-                                        hover:bg-green-700
-                                        disabled:opacity-50
-                                        text-white
-                                        px-5
-                                        py-2
-                                        rounded-lg
+                                        flex items-center justify-center gap-2
+                                        min-h-11 px-5 rounded-xl
+                                        bg-gradient-to-r from-emerald-600 to-green-600
+                                        hover:from-emerald-500 hover:to-green-500
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        text-white text-sm font-semibold
+                                        shadow-lg shadow-green-600/20
+                                        active:scale-[0.98] transition-all duration-200
                                     "
                                 >
 
@@ -776,15 +894,12 @@ const handleUploadImage = async () => {
                                     onClick={handleCancel}
                                     disabled={saving}
                                     className="
-                                        flex
-                                        items-center
-                                        gap-2
-                                        bg-gray-700
-                                        hover:bg-gray-600
-                                        text-white
-                                        px-5
-                                        py-2
-                                        rounded-lg
+                                        flex items-center justify-center gap-2
+                                        min-h-11 px-5 rounded-xl
+                                        bg-white/5 hover:bg-white/10
+                                        border border-white/10
+                                        text-white text-sm font-semibold
+                                        active:scale-[0.98] transition-all duration-200
                                     "
                                 >
 

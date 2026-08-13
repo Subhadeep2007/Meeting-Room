@@ -284,21 +284,27 @@ const Register = () => {
 
                     </div>
 
-                    <p className="text-xs text-gray-300">
+                    <p className="text-xs text-gray-400 leading-5">
+    <i className="text-gray-300 not-italic">
+        Password must contain:
+    </i>
+    <br />
 
-                        Password must contain:
-                        <br />
-                        • Minimum 8 characters
-                        <br />
-                        • One Uppercase letter (A-Z)
-                        <br />
-                        • One Lowercase letter (a-z)
-                        <br />
-                        • One Number (0-9)
-                        <br />
-                        • One Special Character (@$!%*?&#)
+    • Minimum 8 characters
+    <br />
 
-                    </p>
+    • One uppercase letter (A-Z)
+    <br />
+
+    • One lowercase letter (a-z)
+    <br />
+
+    • One number (0-9)
+    <br />
+
+    • One special character (@$!%*?&#)
+
+</p>
 
                     {/* Confirm Password */}
 

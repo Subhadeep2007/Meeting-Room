@@ -1,5 +1,6 @@
 import VideoPlayer from "./VideoPlayer";
 
+
 const VideoGrid = ({
     localStream,
     remoteStreams,
@@ -13,6 +14,7 @@ const VideoGrid = ({
 }) => {
 
     const totalUsers = remoteStreams.length + 1;
+
 
     // =====================================
     // Pinned User
@@ -33,7 +35,7 @@ const VideoGrid = ({
 
 
     // =====================================
-    // Normal Grid
+    // Responsive Grid
     // =====================================
 
     let gridClass = "";
@@ -42,25 +44,76 @@ const VideoGrid = ({
 
         gridClass = "grid-cols-1";
 
+    } else if (totalUsers === 2) {
+
+        gridClass = "grid-cols-1 sm:grid-cols-2";
+
+    } else if (totalUsers <= 4) {
+
+        gridClass = "grid-cols-1 sm:grid-cols-2";
+
+    } else if (totalUsers <= 6) {
+
+        gridClass = "grid-cols-2 md:grid-cols-3";
+
+    } else if (totalUsers <= 9) {
+
+        gridClass = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3";
+
+    } else {
+
+        gridClass = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
+
     }
 
-    else if (totalUsers <= 4) {
 
-        gridClass = "grid-cols-2";
+    // =====================================
+    // Helper
+    // =====================================
 
-    }
+    const videoProps = (user, isLocal = false) => {
 
-    else if (totalUsers <= 9) {
+        const socketId = isLocal
+            ? mySocketId
+            : user.socketId;
 
-        gridClass = "grid-cols-3";
+        const participant =
+            participants[socketId];
 
-    }
+        return {
 
-    else {
+            stream: isLocal
+                ? localStream
+                : user.stream,
 
-        gridClass = "grid-cols-4";
+            username: isLocal
+    ? username
+    : participant?.username ||
+      user.username ||
+      "Participant",
+            isLocal,
 
-    }
+            cameraEnabled: isLocal
+                ? cameraEnabled
+                : participant?.cameraEnabled ?? true,
+
+            microphoneEnabled: isLocal
+                ? microphoneEnabled
+                : participant?.microphoneEnabled ?? true,
+
+            handRaised:
+                participant?.handRaised ?? false,
+
+            isSpeaking:
+                participant?.isSpeaking ?? false,
+
+            connectionState: isLocal
+                ? connectionState
+                : "connected",
+
+        };
+
+    };
 
 
     // =====================================
@@ -71,107 +124,133 @@ const VideoGrid = ({
 
         return (
 
-            <div className="
-                flex
-                flex-col
-                gap-3
-                w-full
-                h-full
-                p-4
-            ">
+            <div
+                className="
+                    flex
+                    flex-col
+
+                    w-full
+                    h-full
+                    min-h-0
+
+                    p-2
+                    sm:p-3
+                    md:p-4
+
+                    gap-2
+                    sm:gap-3
+                "
+            >
 
                 {/* =========================
                     Pinned Video
                 ========================= */}
 
-                <div className="
-                    flex-1
-                    min-h-0
-                    w-full
-                ">
+                <div
+                    className="
+                        relative
+
+                        flex-1
+                        min-h-0
+                        w-full
+
+                        rounded-xl
+                        sm:rounded-2xl
+
+                        overflow-hidden
+
+                        bg-gray-950
+
+                        ring-1
+                        ring-white/10
+
+                        shadow-2xl
+                    "
+                >
+
+                    {/* Pinned Badge */}
+
+                    <div
+                        className="
+                            absolute
+                            top-2
+                            left-2
+                            sm:top-3
+                            sm:left-3
+
+                            z-20
+
+                            flex
+                            items-center
+                            gap-1.5
+
+                            px-2.5
+                            py-1
+
+                            rounded-full
+
+                            bg-black/65
+                            backdrop-blur-md
+
+                            text-white
+                            text-[10px]
+                            sm:text-xs
+
+                            font-medium
+
+                            border
+                            border-white/10
+                        "
+                    >
+
+                        <span>
+                            📌
+                        </span>
+
+                        <span>
+                            Pinned
+                        </span>
+
+                    </div>
+
 
                     {
-
                         isLocalPinned ? (
 
                             <VideoPlayer
-
-                                stream={localStream}
-
-                                username={username}
-
-                                isLocal={true}
-
-                                cameraEnabled={
-                                    cameraEnabled
-                                }
-
-                                microphoneEnabled={
-                                    microphoneEnabled
-                                }
-
-                                handRaised={
-                                    participants[
-                                        mySocketId
-                                    ]?.handRaised ?? false
-                                }
-
-                                isSpeaking={
-                                    participants[
-                                        mySocketId
-                                    ]?.isSpeaking ?? false
-                                }
-
-                                connectionState={
-                                    connectionState
-                                }
-
+                                {...videoProps(
+                                    null,
+                                    true
+                                )}
                             />
 
                         ) : pinnedRemoteUser ? (
 
                             <VideoPlayer
-
-                                stream={
-                                    pinnedRemoteUser.stream
-                                }
-
-                                username={
-                                    pinnedRemoteUser.username
-                                }
-
-                                isLocal={false}
-
-                                cameraEnabled={
-                                    participants[
-                                        pinnedRemoteUser.socketId
-                                    ]?.cameraEnabled ?? true
-                                }
-
-                                microphoneEnabled={
-                                    participants[
-                                        pinnedRemoteUser.socketId
-                                    ]?.microphoneEnabled ?? true
-                                }
-
-                                handRaised={
-                                    participants[
-                                        pinnedRemoteUser.socketId
-                                    ]?.handRaised ?? false
-                                }
-
-                                isSpeaking={
-                                    participants[
-                                        pinnedRemoteUser.socketId
-                                    ]?.isSpeaking ?? false
-                                }
-
-                                connectionState="connected"
-
+                                {...videoProps(
+                                    pinnedRemoteUser
+                                )}
                             />
 
-                        ) : null
+                        ) : (
 
+                            <div
+                                className="
+                                    h-full
+                                    w-full
+
+                                    flex
+                                    items-center
+                                    justify-center
+
+                                    text-gray-400
+                                    text-sm
+                                "
+                            >
+                                Participant unavailable
+                            </div>
+
+                        )
                     }
 
                 </div>
@@ -181,52 +260,69 @@ const VideoGrid = ({
                     Remaining Participants
                 ========================= */}
 
-                <div className="
-                    grid
-                    grid-cols-4
-                    gap-2
-                    h-32
-                    shrink-0
-                    overflow-x-auto
-                ">
+                <div
+                    className="
+                        shrink-0
+
+                        w-full
+
+                        h-24
+                        sm:h-28
+                        md:h-32
+
+                        flex
+                        gap-2
+
+                        overflow-x-auto
+                        overflow-y-hidden
+
+                        snap-x
+                        snap-mandatory
+
+                        pb-1
+
+                        scrollbar-hide
+                    "
+                >
 
                     {/* Local User */}
 
                     {!isLocalPinned && (
 
-                        <VideoPlayer
+                        <div
+                            className="
+                                relative
 
-                            stream={localStream}
+                                shrink-0
 
-                            username={username}
+                                w-32
+                                sm:w-40
+                                md:w-44
 
-                            isLocal={true}
+                                h-full
 
-                            cameraEnabled={
-                                cameraEnabled
-                            }
+                                snap-start
 
-                            microphoneEnabled={
-                                microphoneEnabled
-                            }
+                                rounded-lg
+                                sm:rounded-xl
 
-                            handRaised={
-                                participants[
-                                    mySocketId
-                                ]?.handRaised ?? false
-                            }
+                                overflow-hidden
 
-                            isSpeaking={
-                                participants[
-                                    mySocketId
-                                ]?.isSpeaking ?? false
-                            }
+                                bg-gray-950
 
-                            connectionState={
-                                connectionState
-                            }
+                                ring-1
+                                ring-white/10
+                            "
+                        >
 
-                        />
+                            <VideoPlayer
+                                {...videoProps(
+                                    null,
+                                    true
+                                )}
+                            />
+
+                        </div>
 
                     )}
 
@@ -239,50 +335,50 @@ const VideoGrid = ({
                             user.socketId ===
                             pinnedUser?.socketId
                         ) {
+
                             return null;
+
                         }
+
 
                         return (
 
-                            <VideoPlayer
-
-                                key={user.socketId}
-
-                                stream={user.stream}
-
-                                username={
-                                    user.username
+                            <div
+                                key={
+                                    user.socketId
                                 }
+                                className="
+                                    relative
 
-                                isLocal={false}
+                                    shrink-0
 
-                                cameraEnabled={
-                                    participants[
-                                        user.socketId
-                                    ]?.cameraEnabled ?? true
-                                }
+                                    w-32
+                                    sm:w-40
+                                    md:w-44
 
-                                microphoneEnabled={
-                                    participants[
-                                        user.socketId
-                                    ]?.microphoneEnabled ?? true
-                                }
+                                    h-full
 
-                                handRaised={
-                                    participants[
-                                        user.socketId
-                                    ]?.handRaised ?? false
-                                }
+                                    snap-start
 
-                                isSpeaking={
-                                    participants[
-                                        user.socketId
-                                    ]?.isSpeaking ?? false
-                                }
+                                    rounded-lg
+                                    sm:rounded-xl
 
-                                connectionState="connected"
+                                    overflow-hidden
 
-                            />
+                                    bg-gray-950
+
+                                    ring-1
+                                    ring-white/10
+                                "
+                            >
+
+                                <VideoPlayer
+                                    {...videoProps(
+                                        user
+                                    )}
+                                />
+
+                            </div>
 
                         );
 
@@ -306,11 +402,28 @@ const VideoGrid = ({
         <div
             className={`
                 grid
+
                 ${gridClass}
-                gap-4
+
+                gap-2
+                sm:gap-3
+                md:gap-4
+
                 w-full
                 h-full
-                p-4
+
+                min-h-0
+
+                p-2
+                sm:p-3
+                md:p-4
+
+                auto-rows-fr
+
+                overflow-y-auto
+                overflow-x-hidden
+
+                content-center
             `}
         >
 
@@ -318,35 +431,41 @@ const VideoGrid = ({
                 Local User
             ========================= */}
 
-            <VideoPlayer
+            <div
+                className="
+                    relative
 
-                stream={localStream}
+                    min-h-[160px]
+                    sm:min-h-[190px]
+                    md:min-h-[220px]
 
-                username={username}
+                    rounded-xl
+                    sm:rounded-2xl
 
-                isLocal={true}
+                    overflow-hidden
 
-                cameraEnabled={cameraEnabled}
+                    bg-gray-950
 
-                microphoneEnabled={microphoneEnabled}
+                    ring-1
+                    ring-white/10
 
-                handRaised={
-                    participants[
-                        mySocketId
-                    ]?.handRaised ?? false
-                }
+                    shadow-lg
 
-                isSpeaking={
-                    participants[
-                        mySocketId
-                    ]?.isSpeaking ?? false
-                }
+                    transition
+                    duration-200
 
-                connectionState={
-                    connectionState
-                }
+                    hover:ring-white/20
+                "
+            >
 
-            />
+                <VideoPlayer
+                    {...videoProps(
+                        null,
+                        true
+                    )}
+                />
+
+            </div>
 
 
             {/* =========================
@@ -355,43 +474,41 @@ const VideoGrid = ({
 
             {remoteStreams.map((user) => (
 
-                <VideoPlayer
-
+                <div
                     key={user.socketId}
+                    className="
+                        relative
 
-                    stream={user.stream}
+                        min-h-[160px]
+                        sm:min-h-[190px]
+                        md:min-h-[220px]
 
-                    username={user.username}
+                        rounded-xl
+                        sm:rounded-2xl
 
-                    isLocal={false}
+                        overflow-hidden
 
-                    cameraEnabled={
-                        participants[
-                            user.socketId
-                        ]?.cameraEnabled ?? true
-                    }
+                        bg-gray-950
 
-                    microphoneEnabled={
-                        participants[
-                            user.socketId
-                        ]?.microphoneEnabled ?? true
-                    }
+                        ring-1
+                        ring-white/10
 
-                    handRaised={
-                        participants[
-                            user.socketId
-                        ]?.handRaised ?? false
-                    }
+                        shadow-lg
 
-                    isSpeaking={
-                        participants[
-                            user.socketId
-                        ]?.isSpeaking ?? false
-                    }
+                        transition
+                        duration-200
 
-                    connectionState="connected"
+                        hover:ring-white/20
+                    "
+                >
 
-                />
+                    <VideoPlayer
+                        {...videoProps(
+                            user
+                        )}
+                    />
+
+                </div>
 
             ))}
 
@@ -400,5 +517,6 @@ const VideoGrid = ({
     );
 
 };
+
 
 export default VideoGrid;

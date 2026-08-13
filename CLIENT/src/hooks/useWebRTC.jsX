@@ -2483,53 +2483,108 @@ socket.off(
 
 useEffect(() => {
 
-    socket.on("force-mute", () => {
+    // ========================================
+    // Force Mute
+    // ========================================
+
+    const handleForceMute = () => {
+
+        console.log(
+            "🔇 FORCE MUTE RECEIVED"
+        );
 
         handleToggleMicrophone(false);
 
-    });
+    };
 
-    socket.on("force-camera-off", () => {
+
+    // ========================================
+    // Force Camera Off
+    // ========================================
+
+    const handleForceCameraOff = () => {
+
+        console.log(
+            "📷 FORCE CAMERA OFF RECEIVED"
+        );
 
         handleToggleCamera(false);
 
-    });
+    };
 
-   socket.on(
-    "meeting-lock-status",
-    ({ locked }) => {
+
+    // ========================================
+    // Meeting Lock
+    // ========================================
+
+    const handleMeetingLockStatus = ({
+        locked,
+    }) => {
 
         console.log(
             "🔐 Meeting Lock Status:",
             locked
         );
 
-        setMeetingLocked(locked);
+        setMeetingLocked(
+            locked
+        );
 
-        // If meeting is unlocked
         if (!locked) {
-            setIsWaiting(false);
+
+            setIsWaiting(
+                false
+            );
+
         }
-
-    }
-);
-
-
-    
-    return () => {
-
-        socket.off("force-mute");
-
-        socket.off("force-camera-off");
-
-        socket.off("meeting-lock-status");
-
-       
 
     };
 
-}, []);
 
+    // ========================================
+    // Register Events
+    // ========================================
+
+    socket.on(
+        "force-mute",
+        handleForceMute
+    );
+
+    socket.on(
+        "force-camera-off",
+        handleForceCameraOff
+    );
+
+    socket.on(
+        "meeting-lock-status",
+        handleMeetingLockStatus
+    );
+
+
+    // ========================================
+    // Cleanup
+    // ========================================
+
+    return () => {
+
+        socket.off(
+            "force-mute",
+            handleForceMute
+        );
+
+        socket.off(
+            "force-camera-off",
+            handleForceCameraOff
+        );
+
+        socket.off(
+            "meeting-lock-status",
+            handleMeetingLockStatus
+        );
+
+    };
+
+}, [localStream]);
 
 // ========================================
 // Toggle Camera

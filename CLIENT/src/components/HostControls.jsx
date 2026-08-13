@@ -6,6 +6,7 @@ import {
     Unlock,
 } from "lucide-react";
 
+
 const HostControls = ({
     participant,
 
@@ -23,13 +24,23 @@ const HostControls = ({
 
     return (
 
-        <div className="flex items-center gap-2">
+        <div
+            className="
+                flex
+                items-center
+                justify-end
+
+                gap-1
+                sm:gap-1.5
+            "
+        >
 
             {/* ==========================
                 Kick User
             ========================== */}
 
             <button
+
                 type="button"
 
                 onClick={() =>
@@ -39,19 +50,42 @@ const HostControls = ({
                 }
 
                 className="
-                    p-2
+                    w-8
+                    h-8
+
+                    sm:w-9
+                    sm:h-9
+
+                    shrink-0
+
                     rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
                     text-red-400
-                    hover:bg-red-500/20
+
+                    bg-white/5
+
+                    hover:bg-red-500/15
                     hover:text-red-300
-                    transition
+
+                    active:scale-95
+
+                    transition-all
                 "
 
                 title="Kick User"
 
+                aria-label="Kick User"
+
             >
 
-                <UserX size={18} />
+                <UserX
+                    size={16}
+                    className="sm:w-[18px] sm:h-[18px]"
+                />
 
             </button>
 
@@ -61,6 +95,7 @@ const HostControls = ({
             ========================== */}
 
             <button
+
                 type="button"
 
                 onClick={() =>
@@ -70,19 +105,42 @@ const HostControls = ({
                 }
 
                 className="
-                    p-2
+                    w-8
+                    h-8
+
+                    sm:w-9
+                    sm:h-9
+
+                    shrink-0
+
                     rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
                     text-yellow-400
-                    hover:bg-yellow-500/20
+
+                    bg-white/5
+
+                    hover:bg-yellow-500/15
                     hover:text-yellow-300
-                    transition
+
+                    active:scale-95
+
+                    transition-all
                 "
 
                 title="Mute User"
 
+                aria-label="Mute User"
+
             >
 
-                <MicOff size={18} />
+                <MicOff
+                    size={16}
+                    className="sm:w-[18px] sm:h-[18px]"
+                />
 
             </button>
 
@@ -92,6 +150,7 @@ const HostControls = ({
             ========================== */}
 
             <button
+
                 type="button"
 
                 onClick={() =>
@@ -101,19 +160,42 @@ const HostControls = ({
                 }
 
                 className="
-                    p-2
+                    w-8
+                    h-8
+
+                    sm:w-9
+                    sm:h-9
+
+                    shrink-0
+
                     rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
                     text-blue-400
-                    hover:bg-blue-500/20
+
+                    bg-white/5
+
+                    hover:bg-blue-500/15
                     hover:text-blue-300
-                    transition
+
+                    active:scale-95
+
+                    transition-all
                 "
 
                 title="Disable Camera"
 
+                aria-label="Disable Camera"
+
             >
 
-                <VideoOff size={18} />
+                <VideoOff
+                    size={16}
+                    className="sm:w-[18px] sm:h-[18px]"
+                />
 
             </button>
 
@@ -122,43 +204,13 @@ const HostControls = ({
                 Lock / Unlock Meeting
             ========================== */}
 
-            <button
-                type="button"
-
-                onClick={onLock}
-
-                className="
-                    p-2
-                    rounded-lg
-                    text-white
-                    hover:bg-gray-700
-                    transition
-                "
-
-                title={
-                    meetingLocked
-                        ? "Unlock Meeting"
-                        : "Lock Meeting"
-                }
-
-            >
-
-                {meetingLocked ? (
-
-                    <Unlock size={18} />
-
-                ) : (
-
-                    <Lock size={18} />
-
-                )}
-
-            </button>
+           
 
         </div>
 
     );
 
 };
+
 
 export default HostControls;

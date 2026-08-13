@@ -35,21 +35,43 @@ const ParticipantCard = ({
 
 }) => {
 
+    const isPinned =
+        pinnedUser?.socketId ===
+        participant.socketId;
+
+
     return (
 
         <div
             className={`
+                group
+
                 flex
                 items-center
                 justify-between
-                p-3
-                rounded-lg
-                transition
+
+                gap-2
+
+                w-full
+
+                p-2.5
+                sm:p-3
+
+                rounded-xl
+
+                bg-white/[0.02]
+
+                border
+
+                transition-all
+                duration-200
 
                 ${
                     participant.isSpeaking
-                        ? "border-2 border-green-500 bg-green-900"
-                        : "hover:bg-gray-700"
+                        ? "border-green-500/70 bg-green-500/10 shadow-lg shadow-green-500/5"
+                        : isPinned
+                            ? "border-blue-500/60 bg-blue-500/10"
+                            : "border-transparent hover:border-white/10 hover:bg-white/[0.04]"
                 }
             `}
         >
@@ -58,44 +80,168 @@ const ParticipantCard = ({
                 Left Section
             =========================== */}
 
-            <div className="flex items-center gap-3">
+            <div
+                className="
+                    flex
+                    items-center
+                    gap-2.5
 
-                <img
-                    src={
-                        participant.profilePicture?.url ||
-                        "/default-avatar.png"
-                    }
-                    alt={participant.username}
+                    min-w-0
+                    flex-1
+                "
+            >
+
+                {/* Avatar */}
+
+                <div
                     className="
-                        w-10
-                        h-10
-                        rounded-full
-                        object-cover
+                        relative
+                        shrink-0
                     "
-                />
+                >
+
+                    <img
+                        src={
+                            participant.profilePicture?.url ||
+                            "/default-avatar.png"
+                        }
+                        alt={participant.username}
+                        className="
+                            w-9
+                            h-9
+
+                            sm:w-10
+                            sm:h-10
+
+                            rounded-full
+
+                            object-cover
+
+                            ring-1
+                            ring-white/10
+                        "
+                    />
 
 
-                <div>
+                    {/* Speaking Indicator */}
 
-                    <div className="
-                        font-semibold
-                        text-white
-                    ">
+                    {participant.isSpeaking && (
 
-                        {participant.username}
+                        <span
+                            className="
+                                absolute
+                                -right-0.5
+                                -bottom-0.5
+
+                                w-2.5
+                                h-2.5
+
+                                rounded-full
+
+                                bg-green-400
+
+                                ring-2
+                                ring-gray-950
+
+                                animate-pulse
+                            "
+                        />
+
+                    )}
+
+                </div>
+
+
+                {/* User Information */}
+
+                <div
+                    className="
+                        min-w-0
+                        flex-1
+                    "
+                >
+
+                    <div
+                        className="
+                            flex
+                            items-center
+                            gap-1.5
+
+                            min-w-0
+                        "
+                    >
+
+                        <span
+                            className="
+                                font-semibold
+
+                                text-sm
+                                sm:text-sm
+
+                                text-white
+
+                                truncate
+                            "
+                        >
+                            {participant.username}
+                        </span>
+
+
+                        {participant.isHost && (
+
+                            <Crown
+                                size={14}
+                                className="
+                                    shrink-0
+                                    text-yellow-400
+                                "
+                            />
+
+                        )}
 
                     </div>
 
 
-                    <div className="
-                        text-xs
-                        text-gray-400
-                    ">
+                    <div
+                        className="
+                            mt-0.5
 
-                        {participant.isHost
-                            ? "Host 👑"
-                            : "Participant"
-                        }
+                            flex
+                            items-center
+                            gap-1.5
+
+                            text-[10px]
+                            sm:text-xs
+
+                            text-gray-500
+                        "
+                    >
+
+                        <span>
+                            {participant.isHost
+                                ? "Host"
+                                : "Participant"}
+                        </span>
+
+
+                        {isPinned && (
+
+                            <>
+                                <span>
+                                    •
+                                </span>
+
+                                <span
+                                    className="
+                                        text-blue-400
+                                        font-medium
+                                    "
+                                >
+                                    Pinned
+                                </span>
+                            </>
+
+                        )}
 
                     </div>
 
@@ -108,146 +254,232 @@ const ParticipantCard = ({
                 Right Section
             =========================== */}
 
-            <div className="
-                flex
-                items-center
-                gap-2
-            ">
+            <div
+                className="
+                    flex
+                    items-center
+                    justify-end
+
+                    gap-1
+                    sm:gap-1.5
+
+                    shrink-0
+                "
+            >
 
                 {/* ==========================
-                    Camera
+                    Camera Status
                 ========================== */}
 
-                {
-                    participant.cameraEnabled
+                <div
+                    className="
+                        w-7
+                        h-7
 
-                        ? (
-                            <Video
-                                size={18}
-                                className="text-green-400"
-                            />
-                        )
+                        sm:w-8
+                        sm:h-8
 
-                        : (
-                            <VideoOff
-                                size={18}
-                                className="text-red-500"
-                            />
-                        )
-                }
+                        rounded-lg
+
+                        bg-white/5
+
+                        flex
+                        items-center
+                        justify-center
+                    "
+                    title={
+                        participant.cameraEnabled
+                            ? "Camera on"
+                            : "Camera off"
+                    }
+                >
+
+                    {participant.cameraEnabled ? (
+
+                        <Video
+                            size={15}
+                            className="
+                                text-green-400
+                            "
+                        />
+
+                    ) : (
+
+                        <VideoOff
+                            size={15}
+                            className="
+                                text-red-400
+                            "
+                        />
+
+                    )}
+
+                </div>
 
 
                 {/* ==========================
-                    Microphone
+                    Microphone Status
                 ========================== */}
 
-                {
-                    participant.microphoneEnabled
+                <div
+                    className="
+                        w-7
+                        h-7
 
-                        ? (
-                            <Mic
-                                size={18}
-                                className="text-green-400"
-                            />
-                        )
+                        sm:w-8
+                        sm:h-8
 
-                        : (
-                            <MicOff
-                                size={18}
-                                className="text-red-500"
-                            />
-                        )
-                }
+                        rounded-lg
+
+                        bg-white/5
+
+                        flex
+                        items-center
+                        justify-center
+                    "
+                    title={
+                        participant.microphoneEnabled
+                            ? "Microphone on"
+                            : "Microphone muted"
+                    }
+                >
+
+                    {participant.microphoneEnabled ? (
+
+                        <Mic
+                            size={15}
+                            className="
+                                text-green-400
+                            "
+                        />
+
+                    ) : (
+
+                        <MicOff
+                            size={15}
+                            className="
+                                text-red-400
+                            "
+                        />
+
+                    )}
+
+                </div>
 
 
                 {/* ==========================
                     Hand Raised
                 ========================== */}
 
-                {
-                    participant.handRaised && (
+                {participant.handRaised && (
+
+                    <div
+                        className="
+                            w-7
+                            h-7
+
+                            sm:w-8
+                            sm:h-8
+
+                            rounded-lg
+
+                            bg-yellow-400/10
+
+                            flex
+                            items-center
+                            justify-center
+
+                            text-yellow-400
+                        "
+                        title="Hand raised"
+                    >
 
                         <Hand
-                            size={18}
-                            className="text-yellow-400"
+                            size={15}
                         />
 
-                    )
-                }
+                    </div>
 
-
-                {/* ==========================
-                    Host Badge
-                ========================== */}
-
-                {
-                    participant.isHost && (
-
-                        <Crown
-                            size={18}
-                            className="text-yellow-400"
-                        />
-
-                    )
-                }
+                )}
 
 
                 {/* ==========================
                     Pin Participant
                 ========================== */}
 
-              {
-    onPin && (
+                {onPin && (
 
-        <button
+                    <button
 
-            type="button"
+                        type="button"
 
-            onClick={() => {
+                        onClick={() => {
 
-                if (
-                    pinnedUser?.socketId ===
-                    participant.socketId
-                ) {
+                            if (isPinned) {
 
-                    // Unpin
-                    onPin(null);
+                                // Unpin
+                                onPin(null);
 
-                } else {
+                            } else {
 
-                    // Pin
-                    onPin(participant);
+                                // Pin
+                                onPin(participant);
 
-                }
+                            }
 
-            }}
+                        }}
 
-            className="
-                p-1.5
-                rounded-lg
-                text-blue-400
-                hover:bg-blue-500/20
-                hover:text-blue-300
-                transition
-            "
+                        className={`
+                            w-8
+                            h-8
 
-            title={
-                pinnedUser?.socketId ===
-                participant.socketId
+                            sm:w-9
+                            sm:h-9
 
-                    ? "Unpin Participant"
+                            rounded-lg
 
-                    : "Pin Participant"
-            }
+                            flex
+                            items-center
+                            justify-center
 
-        >
+                            active:scale-95
 
-            <Pin size={18} />
+                            transition-all
 
-        </button>
+                            ${
+                                isPinned
+                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                                    : "bg-white/5 text-blue-400 hover:bg-blue-500/15 hover:text-blue-300"
+                            }
+                        `}
 
-    )
-}
+                        title={
+                            isPinned
+                                ? "Unpin Participant"
+                                : "Pin Participant"
+                        }
+
+                        aria-label={
+                            isPinned
+                                ? "Unpin Participant"
+                                : "Pin Participant"
+                        }
+
+                    >
+
+                        <Pin
+                            size={16}
+                            className={
+                                isPinned
+                                    ? "fill-current"
+                                    : ""
+                            }
+                        />
+
+                    </button>
+
+                )}
+
 
                 {/* ==========================
                     Host Controls
@@ -259,17 +491,25 @@ const ParticipantCard = ({
 
                         <HostControls
 
-                            participant={participant}
+                            participant={
+                                participant
+                            }
 
-                            onKick={kickUser}
+                            onKick={
+                                kickUser
+                            }
 
-                            onMute={muteUser}
+                            onMute={
+                                muteUser
+                            }
 
                             onDisableCamera={
                                 disableCamera
                             }
 
-                            onLock={lockMeeting}
+                            onLock={
+                                lockMeeting
+                            }
 
                             meetingLocked={
                                 meetingLocked

@@ -1,5 +1,4 @@
 import {
-
     Mic,
     MicOff,
     Video,
@@ -9,8 +8,8 @@ import {
     Hand,
     Smile,
     Settings,
-
 } from "lucide-react";
+
 
 const Controls = ({
 
@@ -25,7 +24,9 @@ const Controls = ({
     onScreenShare,
 
     onLeave,
-     onEndMeeting,
+
+    onEndMeeting,
+
     isHost,
 
     onRaiseHand,
@@ -37,7 +38,48 @@ const Controls = ({
     return (
 
         <div
-            className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 rounded-full px-6 py-3 flex items-center gap-4 shadow-xl"
+            className="
+                fixed
+                z-50
+
+                bottom-2
+                sm:bottom-4
+                md:bottom-5
+
+                left-1/2
+                -translate-x-1/2
+
+                w-[calc(100%-16px)]
+                sm:w-auto
+                max-w-[calc(100%-16px)]
+
+                bg-gray-900/95
+                backdrop-blur-md
+
+                rounded-2xl
+                sm:rounded-full
+
+                px-2
+                sm:px-4
+                md:px-6
+
+                py-2
+                sm:py-2.5
+                md:py-3
+
+                flex
+                items-center
+                justify-center
+
+                gap-1.5
+                sm:gap-2.5
+                md:gap-4
+
+                shadow-xl
+
+                overflow-x-auto
+                scrollbar-hide
+            "
         >
 
             {/* ==========================
@@ -46,27 +88,69 @@ const Controls = ({
 
             <button
 
-                onClick={onToggleMicrophone}
+                type="button"
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                onClick={
+                    onToggleMicrophone
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title={
+                    microphoneEnabled
+                        ? "Turn microphone off"
+                        : "Turn microphone on"
+                }
 
             >
 
                 {
-
                     microphoneEnabled
 
                         ?
 
-                        <Mic color="white"/>
+                        <Mic
+                            size={18}
+                            className="
+                                sm:w-5
+                                sm:h-5
+                                text-white
+                            "
+                        />
 
                         :
 
-                        <MicOff color="red"/>
-
+                        <MicOff
+                            size={18}
+                            className="
+                                sm:w-5
+                                sm:h-5
+                                text-red-400
+                            "
+                        />
                 }
 
             </button>
+
 
             {/* ==========================
                 Camera
@@ -74,27 +158,69 @@ const Controls = ({
 
             <button
 
-                onClick={onToggleCamera}
+                type="button"
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                onClick={
+                    onToggleCamera
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title={
+                    cameraEnabled
+                        ? "Turn camera off"
+                        : "Turn camera on"
+                }
 
             >
 
                 {
-
                     cameraEnabled
 
                         ?
 
-                        <Video color="white"/>
+                        <Video
+                            size={18}
+                            className="
+                                sm:w-5
+                                sm:h-5
+                                text-white
+                            "
+                        />
 
                         :
 
-                        <VideoOff color="red"/>
-
+                        <VideoOff
+                            size={18}
+                            className="
+                                sm:w-5
+                                sm:h-5
+                                text-red-400
+                            "
+                        />
                 }
 
             </button>
+
 
             {/* ==========================
                 Screen Share
@@ -102,15 +228,48 @@ const Controls = ({
 
             <button
 
-                onClick={onScreenShare}
+                type="button"
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                onClick={
+                    onScreenShare
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title="Share screen"
 
             >
 
-                <MonitorUp color="white"/>
+                <MonitorUp
+                    size={18}
+                    className="
+                        sm:w-5
+                        sm:h-5
+                        text-white
+                    "
+                />
 
             </button>
+
 
             {/* ==========================
                 Raise Hand
@@ -118,15 +277,48 @@ const Controls = ({
 
             <button
 
-                onClick={onRaiseHand}
+                type="button"
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                onClick={
+                    onRaiseHand
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title="Raise hand"
 
             >
 
-                <Hand color="white"/>
+                <Hand
+                    size={18}
+                    className="
+                        sm:w-5
+                        sm:h-5
+                        text-white
+                    "
+                />
 
             </button>
+
 
             {/* ==========================
                 Emoji Reaction
@@ -134,15 +326,48 @@ const Controls = ({
 
             <button
 
-                onClick={onReaction}
+                type="button"
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                onClick={
+                    onReaction
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title="Reaction"
 
             >
 
-                <Smile color="white"/>
+                <Smile
+                    size={18}
+                    className="
+                        sm:w-5
+                        sm:h-5
+                        text-white
+                    "
+                />
 
             </button>
+
 
             {/* ==========================
                 Settings
@@ -150,13 +375,44 @@ const Controls = ({
 
             <button
 
-                className="p-3 rounded-full bg-gray-700 hover:bg-gray-600"
+                type="button"
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-gray-700
+                    hover:bg-gray-600
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title="Settings"
 
             >
 
-                <Settings color="white"/>
+                <Settings
+                    size={18}
+                    className="
+                        sm:w-5
+                        sm:h-5
+                        text-white
+                    "
+                />
 
             </button>
+
 
             {/* ==========================
                 Leave
@@ -164,42 +420,108 @@ const Controls = ({
 
             <button
 
-                onClick={onLeave}
+                type="button"
 
-                className="p-3 rounded-full bg-red-600 hover:bg-red-700"
+                onClick={
+                    onLeave
+                }
+
+                className="
+                    shrink-0
+
+                    p-2
+                    sm:p-2.5
+                    md:p-3
+
+                    rounded-full
+
+                    bg-red-600
+                    hover:bg-red-700
+
+                    active:scale-95
+
+                    transition
+
+                    flex
+                    items-center
+                    justify-center
+                "
+
+                title="Leave meeting"
 
             >
 
-                <PhoneOff color="white"/>
+                <PhoneOff
+                    size={18}
+                    className="
+                        sm:w-5
+                        sm:h-5
+                        text-white
+                    "
+                />
 
             </button>
 
 
+            {/* ==========================
+                End Meeting - Host Only
+            ========================== */}
 
             {
-    isHost && (
+                isHost && (
 
-        <button
+                    <button
 
-            onClick={onEndMeeting}
+                        type="button"
 
-            className="p-3 rounded-full bg-red-800 hover:bg-red-900"
+                        onClick={
+                            onEndMeeting
+                        }
 
-            title="End Meeting"
+                        className="
+                            shrink-0
 
-        >
+                            p-2
+                            sm:p-2.5
+                            md:p-3
 
-            <PhoneOff color="white" />
+                            rounded-full
 
-        </button>
+                            bg-red-800
+                            hover:bg-red-900
 
-    )
-}
+                            active:scale-95
+
+                            transition
+
+                            flex
+                            items-center
+                            justify-center
+                        "
+
+                        title="End Meeting"
+
+                    >
+
+                        <PhoneOff
+                            size={18}
+                            className="
+                                sm:w-5
+                                sm:h-5
+                                text-white
+                            "
+                        />
+
+                    </button>
+
+                )
+            }
 
         </div>
 
     );
 
 };
+
 
 export default Controls;

@@ -3,10 +3,6 @@ import { useEffect, useState } from "react";
 import {
     Camera,
     Mic,
-    Bell,
-    MessageSquare,
-    Moon,
-    CircleUserRound,
     Save,
 } from "lucide-react";
 
@@ -27,14 +23,6 @@ const Settings = () => {
         cameraEnabled: true,
 
         microphoneEnabled: true,
-
-        meetingNotifications: true,
-
-        chatNotifications: true,
-
-        darkMode: false,
-
-        showOnlineStatus: true,
 
     });
 
@@ -307,186 +295,114 @@ const Settings = () => {
     // UI
     // =====================================
 
+
     return (
 
-        <div className="
-            min-h-screen
-            bg-gray-950
-            p-6
-        ">
+        <div
+            className="
+                min-h-screen
+                bg-gray-950
 
-            <div className="
-                max-w-3xl
-                mx-auto
-            ">
+                p-4
+                sm:p-6
+                lg:p-8
+            "
+        >
+
+            <div
+                className="
+                    max-w-3xl
+                    mx-auto
+                "
+            >
 
                 {/* ==========================
                     Header
                 ========================== */}
 
-                <div className="mb-8">
+                <div
+                    className="
+                        mb-6
+                        sm:mb-8
+                    "
+                >
 
-                    <h1 className="
-                        text-3xl
-                        font-bold
-                        text-white
-                    ">
+                    <h1
+                        className="
+                            text-2xl
+                            sm:text-3xl
 
+                            font-bold
+
+                            text-white
+                        "
+                    >
                         Settings
-
                     </h1>
 
-                    <p className="
-                        text-gray-400
-                        mt-2
-                    ">
+                    <p
+                        className="
+                            mt-2
 
-                        Manage your meeting preferences
+                            text-sm
+                            sm:text-base
 
+                            text-gray-400
+                        "
+                    >
+                        Choose your microphone and camera state
+                        before joining a meeting.
                     </p>
 
                 </div>
 
 
                 {/* ==========================
-                    Meeting Settings
+                    Meeting Preferences
                 ========================== */}
 
-                <div className="mb-8">
+                <div>
 
-                    <h2 className="
-                        text-xl
-                        font-semibold
-                        text-white
-                        mb-4
-                    ">
+                    <h2
+                        className="
+                            mb-3
+                            sm:mb-4
 
+                            text-lg
+                            sm:text-xl
+
+                            font-semibold
+
+                            text-white
+                        "
+                    >
                         Meeting Preferences
-
                     </h2>
 
-                    <div className="space-y-3">
+
+                    <div
+                        className="
+                            space-y-3
+                        "
+                    >
 
                         <SettingItem
-                            icon={<Camera size={20} />}
-                            title="Camera"
-                            description="Turn your camera on by default when joining a meeting."
+                            icon={
+                                <Camera size={20} />
+                            }
+                            title="Turn off camera before joining"
+                            description="Join new meetings with your camera turned off."
                             settingKey="cameraEnabled"
                         />
 
+
                         <SettingItem
-                            icon={<Mic size={20} />}
-                            title="Microphone"
-                            description="Turn your microphone on by default when joining a meeting."
+                            icon={
+                                <Mic size={20} />
+                            }
+                            title="Turn off microphone before joining"
+                            description="Join new meetings with your microphone turned off."
                             settingKey="microphoneEnabled"
-                        />
-
-                    </div>
-
-                </div>
-
-
-                {/* ==========================
-                    Notification Settings
-                ========================== */}
-
-                <div className="mb-8">
-
-                    <h2 className="
-                        text-xl
-                        font-semibold
-                        text-white
-                        mb-4
-                    ">
-
-                        Notifications
-
-                    </h2>
-
-                    <div className="space-y-3">
-
-                        <SettingItem
-                            icon={<Bell size={20} />}
-                            title="Meeting Notifications"
-                            description="Receive notifications about meetings and meeting activity."
-                            settingKey="meetingNotifications"
-                        />
-
-                        <SettingItem
-                            icon={
-                                <MessageSquare
-                                    size={20}
-                                />
-                            }
-                            title="Chat Notifications"
-                            description="Receive notifications when you get new messages."
-                            settingKey="chatNotifications"
-                        />
-
-                    </div>
-
-                </div>
-
-
-                {/* ==========================
-                    Appearance
-                ========================== */}
-
-                <div className="mb-8">
-
-                    <h2 className="
-                        text-xl
-                        font-semibold
-                        text-white
-                        mb-4
-                    ">
-
-                        Appearance
-
-                    </h2>
-
-                    <div className="space-y-3">
-
-                        <SettingItem
-                            icon={<Moon size={20} />}
-                            title="Dark Mode"
-                            description="Use dark appearance throughout the application."
-                            settingKey="darkMode"
-                        />
-
-                    </div>
-
-                </div>
-
-
-                {/* ==========================
-                    Privacy
-                ========================== */}
-
-                <div className="mb-8">
-
-                    <h2 className="
-                        text-xl
-                        font-semibold
-                        text-white
-                        mb-4
-                    ">
-
-                        Privacy
-
-                    </h2>
-
-                    <div className="space-y-3">
-
-                        <SettingItem
-                            icon={
-                                <CircleUserRound
-                                    size={20}
-                                />
-                            }
-                            title="Show Online Status"
-                            description="Allow other users to see when you are online."
-                            settingKey="showOnlineStatus"
                         />
 
                     </div>
@@ -498,36 +414,63 @@ const Settings = () => {
                     Save Button
                 ========================== */}
 
-                <div className="
-                    flex
-                    justify-end
-                ">
+                <div
+                    className="
+                        flex
+                        justify-end
+
+                        mt-6
+                        sm:mt-8
+                    "
+                >
 
                     <button
+
                         type="button"
+
                         onClick={handleSave}
+
                         disabled={saving}
+
                         className="
+                            w-full
+                            sm:w-auto
+
                             flex
                             items-center
+                            justify-center
                             gap-2
+
                             bg-blue-600
                             hover:bg-blue-700
+
+                            active:scale-[0.98]
+
                             disabled:opacity-50
+                            disabled:cursor-not-allowed
+
                             text-white
                             font-semibold
+
                             px-6
                             py-3
+
                             rounded-xl
+
+                            shadow-lg
+                            shadow-blue-600/10
+
                             transition
                         "
                     >
 
                         <Save size={19} />
 
-                        {saving
-                            ? "Saving..."
-                            : "Save Changes"}
+                        {
+                            saving
+                                ? "Saving..."
+                                : "Save Changes"
+                        }
 
                     </button>
 
@@ -538,6 +481,7 @@ const Settings = () => {
         </div>
 
     );
+    
 
 };
 

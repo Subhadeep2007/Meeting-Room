@@ -919,85 +919,156 @@ const registerSignalingEvents = (io, socket) => {
     socket.on(
         "disable-camera",
         async({
-                meetingId,
-                targetSocketId,
-                targetUserId,
-            },
-            callback
-        ) => {
+            meetingCode,
+            targetSocketId,
+            targetUserId,
+        }, callback) => {
 
             try {
 
-                const meeting = await getMeeting(meetingId);
+                // =====================================
+                // Find Meeting
+                // =====================================
 
-                // Host Permission
-                if (!verifyHostPermission(meeting, socket.user._id)) {
+                const meeting =
+                    await Meeting.findOne({
+                        meetingCode,
+                    });
+
+
+                // =====================================
+                // Meeting Check
+                // =====================================
+
+                if (!meeting) {
 
                     if (callback) {
+
+                        return callback({
+                            success: false,
+                            message: "Meeting not found.",
+                        });
+
+                    }
+
+                    return;
+                }
+
+
+                // =====================================
+                // Host Permission
+                // =====================================
+
+                if (!verifyHostPermission(
+                        meeting,
+                        socket.user._id
+                    )) {
+
+                    if (callback) {
+
                         return callback({
                             success: false,
                             message: "Unauthorized",
                         });
+
                     }
 
                     return;
                 }
 
+
+                // =====================================
                 // Participant Exists
-                if (!participantExists(meeting, targetUserId)) {
+                // =====================================
+
+                if (!participantExists(
+                        meeting,
+                        targetUserId
+                    )) {
 
                     if (callback) {
+
                         return callback({
                             success: false,
                             message: "Participant not found.",
                         });
+
                     }
 
                     return;
                 }
 
+
+                // =====================================
                 // Cannot Disable Host Camera
-                if (!cannotKickHost(meeting, targetUserId)) {
+                // =====================================
+
+                if (!cannotKickHost(
+                        meeting,
+                        targetUserId
+                    )) {
 
                     if (callback) {
+
                         return callback({
                             success: false,
                             message: "Host camera cannot be disabled.",
                         });
+
                     }
 
                     return;
                 }
 
-                // Disable Camera
-                io.to(targetSocketId).emit("force-camera-off", {
-                    success: true,
-                    message: "Host disabled your camera.",
-                });
+
+                // =====================================
+                // FORCE CAMERA OFF
+                // =====================================
+
+                io.to(
+                    targetSocketId
+                ).emit(
+                    "force-camera-off", {
+                        success: true,
+                        message: "Host disabled your camera.",
+                    }
+                );
+
+
+                // =====================================
+                // Host Callback
+                // =====================================
 
                 if (callback) {
+
                     return callback({
                         success: true,
                         message: "Participant camera disabled successfully.",
                     });
+
                 }
 
             } catch (error) {
 
-                console.error("Disable Camera Error:", error);
+                console.error(
+                    "Disable Camera Error:",
+                    error
+                );
+
 
                 if (callback) {
+
                     return callback({
                         success: false,
                         message: error.message,
                     });
+
                 }
 
             }
 
         }
     );
-
 
     // =======================================
     // Lock / Unlock Meeting
