@@ -1699,7 +1699,7 @@ handRaised:false,
 
 isSpeaking:false,
 
-isHost:false,
+isHost: user.isHost ?? false,
 
 isCoHost:false,
 

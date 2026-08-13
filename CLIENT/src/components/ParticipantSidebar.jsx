@@ -367,7 +367,7 @@ const ParticipantSidebar = ({
 
                                     participant={user}
 
-                                    onPin={onPin}
+                                   onPin={isHost ? onPin : undefined}
 
                                     pinnedUser={
                                         pinnedUser

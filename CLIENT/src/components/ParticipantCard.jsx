@@ -407,7 +407,7 @@ const ParticipantCard = ({
                     Pin Participant
                 ========================== */}
 
-                {onPin && (
+                {isHost && !participant.isHost && onPin && (
 
                     <button
 
