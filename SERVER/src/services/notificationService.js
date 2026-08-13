@@ -17,6 +17,7 @@ export const NotificationType = {
     HOST_ACTION: "HOST_ACTION",
 
     WAITING_ROOM: "WAITING_ROOM",
+    REACTION: "REACTION",
 
 };
 

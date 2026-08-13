@@ -5,7 +5,14 @@ const WaitingRoomSidebar = ({
     waitingUsers,
     approveUser,
     rejectUser,
+     isHost,
 }) => {
+
+     if (!isHost) {
+
+        return null;
+
+    }
 
     return (
 

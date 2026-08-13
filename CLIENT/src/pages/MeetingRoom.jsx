@@ -977,35 +977,42 @@ const handlePinParticipant = (participant) => {
                     Desktop Waiting Room
                 ================================= */}
 
-                <div className="
-                    hidden
-                    xl:block
-                    w-64
-                    2xl:w-80
-                    shrink-0
-                    border-l
-                    bg-white
-                    overflow-y-auto
-                ">
+               {isHost && (
 
-                    <WaitingRoomSidebar
+    <div className="
+        hidden
+        xl:block
+        w-64
+        2xl:w-80
+        shrink-0
+        border-l
+        bg-white
+        overflow-y-auto
+    ">
 
-                        waitingUsers={
-                            waitingUsers
-                        }
+        <WaitingRoomSidebar
 
-                        approveUser={
-                            approveUser
-                        }
+            waitingUsers={
+                waitingUsers
+            }
 
-                        rejectUser={
-                            rejectUser
-                        }
+            approveUser={
+                approveUser
+            }
 
-                    />
+            rejectUser={
+                rejectUser
+            }
 
-                </div>
+            isHost={
+                isHost
+            }
 
+        />
+
+    </div>
+
+)}
 
                 {/* =================================
                     Desktop Meeting Chat
@@ -1184,7 +1191,7 @@ const handlePinParticipant = (participant) => {
                         xl:hidden
                         overflow-y-auto
                     ">
-
+{isHost && (
                         <button
                             type="button"
                             onClick={() =>
@@ -1209,6 +1216,7 @@ const handlePinParticipant = (participant) => {
                         >
                             <X size={18} />
                         </button>
+                        )}
 
                         <WaitingRoomSidebar
 

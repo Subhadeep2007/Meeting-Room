@@ -120,6 +120,15 @@ const useNotification = () => {
                     break;
 
 
+                case "REACTION":
+
+    infoToast(
+        notification.message
+    );
+
+    break;
+
+
                 default:
 
                     infoToast(

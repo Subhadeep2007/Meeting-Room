@@ -6,8 +6,7 @@ import {
     PhoneOff,
     MonitorUp,
     Hand,
-    Smile,
-    Settings,
+   
 } from "lucide-react";
 
 
@@ -42,9 +41,9 @@ const Controls = ({
                 fixed
                 z-50
 
-                bottom-2
-                sm:bottom-4
-                md:bottom-5
+                bottom-20
+                sm:bottom
+                md:bottom
 
                 left-1/2
                 -translate-x-1/2
@@ -320,98 +319,10 @@ const Controls = ({
             </button>
 
 
-            {/* ==========================
-                Emoji Reaction
-            ========================== */}
-
-            <button
-
-                type="button"
-
-                onClick={
-                    onReaction
-                }
-
-                className="
-                    shrink-0
-
-                    p-2
-                    sm:p-2.5
-                    md:p-3
-
-                    rounded-full
-
-                    bg-gray-700
-                    hover:bg-gray-600
-
-                    active:scale-95
-
-                    transition
-
-                    flex
-                    items-center
-                    justify-center
-                "
-
-                title="Reaction"
-
-            >
-
-                <Smile
-                    size={18}
-                    className="
-                        sm:w-5
-                        sm:h-5
-                        text-white
-                    "
-                />
-
-            </button>
+            
 
 
-            {/* ==========================
-                Settings
-            ========================== */}
-
-            <button
-
-                type="button"
-
-                className="
-                    shrink-0
-
-                    p-2
-                    sm:p-2.5
-                    md:p-3
-
-                    rounded-full
-
-                    bg-gray-700
-                    hover:bg-gray-600
-
-                    active:scale-95
-
-                    transition
-
-                    flex
-                    items-center
-                    justify-center
-                "
-
-                title="Settings"
-
-            >
-
-                <Settings
-                    size={18}
-                    className="
-                        sm:w-5
-                        sm:h-5
-                        text-white
-                    "
-                />
-
-            </button>
+            
 
 
             {/* ==========================

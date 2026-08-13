@@ -410,12 +410,15 @@ const registerSignalingEvents = (io, socket) => {
 
         ({ meetingCode, emoji }) => {
 
+            // ======================================
+            // Reaction UI
+            // ======================================
+
             io.to(meetingCode).emit(
 
                 "reaction-received",
 
                 {
-
                     socketId: socket.id,
 
                     userId: socket.user._id,
@@ -425,15 +428,47 @@ const registerSignalingEvents = (io, socket) => {
                     emoji,
 
                     createdAt: Date.now(),
-
                 }
+
+            );
+
+
+            // ======================================
+            // Reaction Notification
+            // ======================================
+
+            const notification = createNotification(
+
+                NotificationType.REACTION,
+
+                "New Reaction",
+
+                `${socket.user.username} reacted ${emoji}`,
+
+                {
+                    socketId: socket.id,
+
+                    userId: socket.user._id,
+
+                    username: socket.user.username,
+
+                    emoji,
+                }
+
+            );
+
+
+            io.to(meetingCode).emit(
+
+                "notification",
+
+                notification
 
             );
 
         }
 
     );
-
 
     // ======================================
     // Speaking Status
@@ -554,6 +589,40 @@ const registerSignalingEvents = (io, socket) => {
                     message: "You were removed by Host.",
                 });
 
+                // ======================================
+                // Host Action Notification
+                // ======================================
+
+                const notification = createNotification(
+
+                    NotificationType.HOST_ACTION,
+
+                    "Participant Removed",
+
+                    `${socket.user.username} removed a participant from the meeting.`,
+
+                    {
+                        action: "KICK_USER",
+
+                        hostSocketId: socket.id,
+
+                        hostUserId: socket.user._id,
+
+                        targetSocketId,
+
+                        targetUserId,
+                    }
+
+                );
+
+                io.to(meetingCode).emit(
+
+                    "notification",
+
+                    notification
+
+                );
+
                 if (callback) {
                     return callback({
                         success: true,
@@ -643,6 +712,41 @@ const registerSignalingEvents = (io, socket) => {
                     success: true,
                     message: "Host muted your microphone.",
                 });
+
+
+                // ======================================
+                // Host Action Notification
+                // ======================================
+
+                const notification = createNotification(
+
+                    NotificationType.HOST_ACTION,
+
+                    "Microphone Muted",
+
+                    `${socket.user.username} muted a participant.`,
+
+                    {
+                        action: "MUTE_USER",
+
+                        hostSocketId: socket.id,
+
+                        hostUserId: socket.user._id,
+
+                        targetSocketId,
+
+                        targetUserId,
+                    }
+
+                );
+
+                io.to(meetingCode).emit(
+
+                    "notification",
+
+                    notification
+
+                );
 
                 if (callback) {
                     return callback({
@@ -1034,7 +1138,39 @@ const registerSignalingEvents = (io, socket) => {
                     }
                 );
 
+                // ======================================
+                // Host Action Notification
+                // ======================================
 
+                const notification = createNotification(
+
+                    NotificationType.HOST_ACTION,
+
+                    "Camera Disabled",
+
+                    `${socket.user.username} disabled a participant's camera.`,
+
+                    {
+                        action: "DISABLE_CAMERA",
+
+                        hostSocketId: socket.id,
+
+                        hostUserId: socket.user._id,
+
+                        targetSocketId,
+
+                        targetUserId,
+                    }
+
+                );
+
+                io.to(meetingCode).emit(
+
+                    "notification",
+
+                    notification
+
+                );
                 // =====================================
                 // Host Callback
                 // =====================================
@@ -1122,7 +1258,38 @@ const registerSignalingEvents = (io, socket) => {
                             "Meeting has been locked by the Host." : "Meeting has been unlocked by the Host.",
                     }
                 );
+                // ======================================
+                // Lock / Unlock Notification
+                // ======================================
 
+                const notification = createNotification(
+
+                    NotificationType.HOST_ACTION,
+
+                    locked ?
+                    "Meeting Locked" :
+                    "Meeting Unlocked",
+
+                    locked ?
+                    "The Host locked the meeting." :
+                    "The Host unlocked the meeting.",
+
+                    {
+                        action: locked ?
+                            "LOCK_MEETING" : "UNLOCK_MEETING",
+
+                        hostUserId: socket.user._id,
+                    }
+
+                );
+
+                io.to(meeting.meetingCode).emit(
+
+                    "notification",
+
+                    notification
+
+                );
                 // ===================================
                 // Acknowledge Host
                 // ===================================
@@ -1469,6 +1636,38 @@ const registerSignalingEvents = (io, socket) => {
 
                 );
 
+                // ======================================
+                // Waiting Room Notification
+                // ======================================
+
+                const notification = createNotification(
+
+                    NotificationType.WAITING_ROOM,
+
+                    "Waiting Room",
+
+                    `${socket.user.username} is waiting to join the meeting.`,
+
+                    {
+                        action: "WAITING_ROOM_JOIN",
+
+                        userId: socket.user._id,
+
+                        socketId: socket.id,
+
+                        username: socket.user.username,
+                    }
+
+                );
+
+                io.to(meeting.meetingCode).emit(
+
+                    "notification",
+
+                    notification
+
+                );
+
                 if (callback) {
 
                     return callback({
@@ -1603,6 +1802,29 @@ const registerSignalingEvents = (io, socket) => {
                     userId,
 
                 });
+
+                const notification = createNotification(
+
+                    NotificationType.WAITING_ROOM,
+
+                    "Participant Rejected",
+
+                    "A waiting participant was rejected by the Host.",
+
+                    {
+                        action: "REJECT_USER",
+
+                        hostUserId: socket.user._id,
+
+                        userId,
+                    }
+
+                );
+
+                io.to(meeting.meetingCode).emit(
+                    "notification",
+                    notification
+                );
                 if (callback) {
 
                     return callback({
