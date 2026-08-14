@@ -556,52 +556,6 @@ const handlePinParticipant = (participant) => {
             ">
 
                 {/* =================================
-                    Desktop Participant Sidebar
-                ================================= */}
-
-                <div className="
-                    hidden
-                    lg:block
-                    w-56
-                    xl:w-72
-                    shrink-0
-                    border-r
-                    bg-white
-                    overflow-y-auto
-                ">
-
-                    <ParticipantSidebar
-
-                        participants={participants}
-
-                        kickUser={kickUser}
-
-                        muteUser={muteUser}
-
-                        disableCamera={
-                            disableCamera
-                        }
-
-                        lockMeeting={
-                            lockMeeting
-                        }
-
-                        meetingLocked={
-                            meetingLocked
-                        }
-
-                        isHost={isHost}
-
-                        onPin={handlePinParticipant}
-
-                        pinnedUser={pinnedUser}
-
-                    />
-
-                </div>
-
-
-                {/* =================================
                     Video Area
                 ================================= */}
 
@@ -873,7 +827,7 @@ const handlePinParticipant = (participant) => {
                         flex
                         items-center
                         gap-2
-                        lg:hidden
+                        sm:gap-3
                     ">
 
                         {/* Participants */}
@@ -1013,142 +967,6 @@ const handlePinParticipant = (participant) => {
                
 
                 {/* =================================
-                    Desktop Waiting Room
-                ================================= */}
-
-               {isHost && (
-
-    <div className="
-        hidden
-        xl:block
-        w-64
-        2xl:w-80
-        shrink-0
-        border-l
-        bg-white
-        overflow-y-auto
-    ">
-
-        <WaitingRoomSidebar
-
-            waitingUsers={
-                waitingUsers
-            }
-
-            approveUser={
-                approveUser
-            }
-
-            rejectUser={
-                rejectUser
-            }
-
-            isHost={
-                isHost
-            }
-
-        />
-
-    </div>
-
-)}
-
-                {/* =================================
-                    Desktop Meeting Chat
-                ================================= */}
-
-                <div className="
-                    hidden
-                    xl:block
-                    w-72
-                    2xl:w-80
-                    shrink-0
-                    border-l
-                    border-gray-700
-                    overflow-hidden
-                ">
-
-                    {meetingId ? (
-
-                        <ChatPanel
-
-                            meetingId={
-                                meetingId
-                            }
-
-                            meetingCode={
-                                meetingCode
-                            }
-
-                        />
-
-                    ) : (
-
-                        <div className="
-                            h-full
-                            bg-gray-900
-                            text-gray-400
-                            flex
-                            items-center
-                            justify-center
-                            text-sm
-                        ">
-
-                            Loading Chat...
-
-                        </div>
-
-                    )}
-
-                </div>
-
-
-
-                {/* =================================
-    Desktop Meeting Files
-================================= */}
-
-<div className="
-    hidden
-    xl:block
-    w-72
-    2xl:w-80
-    shrink-0
-    border-l
-    border-gray-700
-    overflow-hidden
-">
-
-    <FilePanel
-
-        files={files}
-
-        uploadMeetingFile={
-            uploadMeetingFile
-        }
-
-        deleteMeetingFile={
-            deleteMeetingFile
-        }
-
-        uploadProgress={
-            uploadProgress
-        }
-
-        isUploadingFile={
-            isUploadingFile
-        }
-
-        currentUserId={
-            participants[mySocketId]?.userId
-        }
-
-    />
-
-</div>
-
-
-                {/* =================================
                     Responsive Drawer Overlay
                 ================================= */}
 
@@ -1161,7 +979,6 @@ const handlePinParticipant = (participant) => {
                             z-[90]
                             bg-black/50
                             backdrop-blur-[1px]
-                            xl:hidden
                         "
                         onClick={() =>
                             setActivePanel(null)
@@ -1182,10 +999,10 @@ const handlePinParticipant = (participant) => {
                         inset-y-0
                         left-0
                         z-[100]
-                        w-[min(88vw,22rem)]
+                        w-[min(88vw,24rem)]
+                        max-w-[24rem]
                         bg-gray-900
                         shadow-2xl
-                        lg:hidden
                         overflow-hidden
                     ">
 
@@ -1269,13 +1086,12 @@ const handlePinParticipant = (participant) => {
                         inset-y-0
                         right-0
                         z-[100]
-                        w-[min(88vw,22rem)]
+                        w-[min(88vw,24rem)]
+                        max-w-[24rem]
                         bg-white
                         shadow-2xl
-                        xl:hidden
                         overflow-y-auto
                     ">
-{isHost && (
                         <button
                             type="button"
                             onClick={() =>
@@ -1300,7 +1116,6 @@ const handlePinParticipant = (participant) => {
                         >
                             <X size={18} />
                         </button>
-                        )}
 
                         <WaitingRoomSidebar
 
@@ -1314,6 +1129,10 @@ const handlePinParticipant = (participant) => {
 
                             rejectUser={
                                 rejectUser
+                            }
+
+                            isHost={
+                                isHost
                             }
 
                         />
@@ -1334,10 +1153,10 @@ const handlePinParticipant = (participant) => {
                         inset-y-0
                         right-0
                         z-[100]
-                        w-[min(92vw,24rem)]
+                        w-[min(92vw,26rem)]
+                        max-w-[26rem]
                         bg-gray-900
                         shadow-2xl
-                        xl:hidden
                         overflow-hidden
                     ">
 
@@ -1397,6 +1216,82 @@ const handlePinParticipant = (participant) => {
                             </div>
 
                         )}
+
+                    </div>
+
+                )}
+
+
+                {/* =================================
+                    Responsive Files Drawer
+                ================================= */}
+
+                {activePanel === "files" && (
+
+                    <div className="
+                        absolute
+                        inset-y-0
+                        right-0
+                        z-[100]
+                        w-[min(92vw,26rem)]
+                        max-w-[26rem]
+                        bg-gray-900
+                        shadow-2xl
+                        overflow-hidden
+                    ">
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActivePanel(null)
+                            }
+                            className="
+                                absolute
+                                top-3
+                                right-3
+                                z-20
+                                flex
+                                items-center
+                                justify-center
+                                w-9
+                                h-9
+                                rounded-full
+                                bg-black/70
+                                text-white
+                                hover:bg-black/90
+                            "
+                            title="Close Files"
+                        >
+
+                            <X size={18} />
+
+                        </button>
+
+                        <FilePanel
+
+                            files={files}
+
+                            uploadMeetingFile={
+                                uploadMeetingFile
+                            }
+
+                            deleteMeetingFile={
+                                deleteMeetingFile
+                            }
+
+                            uploadProgress={
+                                uploadProgress
+                            }
+
+                            isUploadingFile={
+                                isUploadingFile
+                            }
+
+                            currentUserId={
+                                participants[mySocketId]?.userId
+                            }
+
+                        />
 
                     </div>
 
