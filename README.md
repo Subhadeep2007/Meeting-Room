@@ -747,7 +747,7 @@ Production deployment and monitoring
 
 👨‍💻 Author
 
-Subhadeep Gorai
+Subhadeep 
 
 B.Tech CSE (AI)
 
