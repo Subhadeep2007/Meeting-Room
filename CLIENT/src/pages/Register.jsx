@@ -4,6 +4,7 @@ import { Eye, EyeOff, UserPlus, Video } from "lucide-react";
 
 import api from "../services/api";
 import { successToast, errorToast } from "../utils/toast";
+import api2 from "../services/api2";
 
 const Register = () => {
 
@@ -108,7 +109,7 @@ const Register = () => {
 
     setLoading(true);
 
-    const { data } = await api.post(
+    const { data } = await api2.post(
         "/auth/register",
         {
             name: formData.name,
