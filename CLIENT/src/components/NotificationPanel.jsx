@@ -8,10 +8,11 @@ const NotificationPanel = ({
 
         <div
             className="
-                absolute
-                right-0
-                top-full
-                mt-3
+               absolute
+        left-1/2
+        top-full
+        mt-3
+        -translate-x-1/2
 
                 w-[calc(100vw-1rem)]
                 sm:w-[24rem]
