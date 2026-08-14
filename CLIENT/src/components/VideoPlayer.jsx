@@ -86,6 +86,9 @@ const VideoPlayer = ({
                 autoPlay
                 playsInline
                 muted={isLocal}
+                style={{
+    transform: isLocal ? "scaleX(-1)" : "none",
+}}
                 className={`
                     absolute
                     inset-0
