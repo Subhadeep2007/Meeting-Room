@@ -33,6 +33,7 @@ const app = express();
 
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    "https://meeting-room-1-zi4z.onrender.com",
 
 ];
 
