@@ -2,20 +2,23 @@ import express from "express";
 
 import authMiddleware from "../middleware/authMiddleware.js";
 
-import upload from "../middleware/uploadMiddleware.js";
+import fileUpload from "../middleware/fileUploadMiddleware.js";
 
 import {
     uploadFile,
     getFile,
     deleteFile,
-    renameFile,
     downloadFile,
-    fileHistory,
     recentFiles,
-
 } from "../controllers/fileController.js";
 
+
 const router = express.Router();
+
+
+// ======================================
+// Upload File
+// ======================================
 
 router.post(
 
@@ -23,60 +26,71 @@ router.post(
 
     authMiddleware,
 
-    upload.single("file"),
+    fileUpload.single("file"),
 
     uploadFile
 
 );
 
 
-router.get(
-    "/:fileId",
-    authMiddleware,
-    getFile
-);
-router.delete(
-    "/:fileId",
-    authMiddleware,
-    deleteFile
-);
-router.put(
-
-    "/rename/:fileId",
-
-    authMiddleware,
-
-    renameFile
-
-);
+// ======================================
+// Download
+// ======================================
 
 router.get(
 
-    "/recent/:meetingId",
-
-    authMiddleware,
-
-    getFile
-
-);
-router.get(
     "/download/:fileId",
+
     authMiddleware,
+
     downloadFile
+
 );
-router.get(
-    "/history/:fileId",
-    authMiddleware,
-    fileHistory
-);
+
+
+// ======================================
+// Meeting File History
+// ======================================
 
 router.get(
 
-    "/recent/:meetingId",
+    "/recent/:meetingCode",
 
     authMiddleware,
 
     recentFiles
 
 );
+
+
+// ======================================
+// Get Single File
+// ======================================
+
+router.get(
+
+    "/:fileId",
+
+    authMiddleware,
+
+    getFile
+
+);
+
+
+// ======================================
+// Delete Own File
+// ======================================
+
+router.delete(
+
+    "/:fileId",
+
+    authMiddleware,
+
+    deleteFile
+
+);
+
+
 export default router;

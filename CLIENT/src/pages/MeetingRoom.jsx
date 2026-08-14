@@ -24,7 +24,7 @@ import ParticipantSidebar from "../components/ParticipantSidebar";
 import WaitingRoomSidebar from "../components/WaitingRoomSidebar";
 import ChatPanel from "../components/ChatPanel";
 import Navbar from "../layout/Navbar.jsx";
-
+import FilePanel from "../components/FilePanel.jsx";
 
 const MeetingRoom = () => {
 
@@ -121,7 +121,11 @@ const [
         startScreenShare,
 
         stopScreenShare,
-
+ files,
+    uploadMeetingFile,
+    deleteMeetingFile,
+    uploadProgress,
+    isUploadingFile,
 
         handleRaiseHand,
 
@@ -968,10 +972,45 @@ const handlePinParticipant = (participant) => {
 
                         )}
 
+
+                         {/* Files */}
+
+<button
+    type="button"
+    onClick={() =>
+        setActivePanel(
+            activePanel === "files"
+                ? null
+                : "files"
+        )
+    }
+    className="
+        flex
+        items-center
+        justify-center
+        w-10
+        h-10
+        rounded-full
+        bg-black/70
+        hover:bg-black/90
+        text-white
+        backdrop-blur
+        transition
+        shadow-lg
+    "
+    title="Files"
+>
+    📁
+</button>
+
+
                     </div>
 
                 </div>
 
+
+
+               
 
                 {/* =================================
                     Desktop Waiting Room
@@ -1062,6 +1101,51 @@ const handlePinParticipant = (participant) => {
                     )}
 
                 </div>
+
+
+
+                {/* =================================
+    Desktop Meeting Files
+================================= */}
+
+<div className="
+    hidden
+    xl:block
+    w-72
+    2xl:w-80
+    shrink-0
+    border-l
+    border-gray-700
+    overflow-hidden
+">
+
+    <FilePanel
+
+        files={files}
+
+        uploadMeetingFile={
+            uploadMeetingFile
+        }
+
+        deleteMeetingFile={
+            deleteMeetingFile
+        }
+
+        uploadProgress={
+            uploadProgress
+        }
+
+        isUploadingFile={
+            isUploadingFile
+        }
+
+        currentUserId={
+            participants[mySocketId]?.userId
+        }
+
+    />
+
+</div>
 
 
                 {/* =================================

@@ -5,6 +5,11 @@ import socket, {
     connectSocket,
     disconnectSocket,
 } from "../services/socket";
+import {
+    uploadFile,
+    getMeetingFiles,
+    deleteFile,
+} from "../services/fileService.jsx";
 
 import {
     getLocalStream,
@@ -24,7 +29,6 @@ import {
     receiveEncryptedMeetingKey,
     removeMeetingKey,
 } from "../services/chatEncryptionManager.jsx";
-
 import {
     importPublicKey,
 } from "../services/clientEncryption.jsx";
@@ -56,7 +60,15 @@ const useWebRTC = (meetingCode) => {
 
 
         const [participants, setParticipants] = useState({});
+       
         const [reactions, setReactions] = useState([]);
+       const [files, setFiles] = useState([]);
+
+const [uploadProgress, setUploadProgress] =
+    useState(0);
+
+const [isUploadingFile, setIsUploadingFile] =
+    useState(false);
         const [waitingUsers, setWaitingUsers] = useState([]);
         const [meetingLocked, setMeetingLocked] = useState(false);
         const [isWaiting, setIsWaiting] = useState(false);
@@ -2293,14 +2305,29 @@ useEffect(() => {
         // Join Actual Meeting Room
         // =====================================
 
-        socket.emit(
-            "join-room",
-            {
-                meetingCode:
-                    approvedMeetingCode ||
-                    meetingCode,
-            }
-        );
+        // =====================================
+// Join Actual Meeting Room
+// =====================================
+
+const approvedCode =
+    approvedMeetingCode || meetingCode;
+
+// =====================================
+// Join Actual Meeting Room
+// =====================================
+
+socket.emit(
+    "join-room",
+    {
+        meetingCode: approvedCode,
+    }
+);
+
+// =====================================
+// Load Existing Meeting Files
+// =====================================
+
+loadMeetingFiles(approvedCode);
 
     };
 
@@ -3073,6 +3100,264 @@ const sendReaction = (emoji) => {
 
 };
 
+
+// ======================================
+// Load Meeting Files
+// ======================================
+
+const loadMeetingFiles = async (
+    code = meetingCode
+) => {
+
+    try {
+
+        if (!code) {
+            return;
+        }
+
+        const response =
+            await getMeetingFiles(code);
+
+        if (
+            response?.success
+        ) {
+
+            setFiles(
+                response.data || []
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to load meeting files:",
+            error.response?.data ||
+            error.message ||
+            error
+        );
+
+    }
+
+};
+
+
+// ======================================
+// Upload Meeting File
+// ======================================
+
+const uploadMeetingFile = async (file) => {
+
+    if (!file) {
+        return;
+    }
+
+    try {
+
+        setIsUploadingFile(true);
+
+        setUploadProgress(0);
+
+        const response = await uploadFile(
+
+            meetingCode,
+
+            file,
+
+            (progress) => {
+
+                setUploadProgress(
+                    progress
+                );
+
+            }
+
+        );
+
+        console.log(
+            "✅ File Uploaded:",
+            response
+        );
+
+        return response;
+
+    } catch (error) {
+
+        console.error(
+            "❌ File Upload Error:",
+            error.response?.data ||
+            error.message ||
+            error
+        );
+
+        throw error;
+
+    } finally {
+
+        setIsUploadingFile(false);
+
+        setUploadProgress(0);
+
+    }
+
+};
+// ======================================
+// Load Existing Meeting Files
+// ======================================
+
+useEffect(() => {
+
+    if (!meetingCode) {
+        return;
+    }
+
+    loadMeetingFiles();
+
+}, [meetingCode]);
+// ======================================
+// Delete Meeting File
+// ======================================
+
+const deleteMeetingFile = async (fileId) => {
+
+    if (!fileId) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await deleteFile(fileId);
+
+        console.log(
+            "🗑️ File Delete Response:",
+            response
+        );
+
+        return response;
+
+    } catch (error) {
+
+        console.error(
+            "❌ File Delete Error:",
+            error.response?.data ||
+            error.message ||
+            error
+        );
+
+        throw error;
+
+    }
+
+};
+
+
+// ======================================
+// File Uploaded
+// ======================================
+
+useEffect(() => {
+
+    const handleFileUploaded = (
+        file
+    ) => {
+
+        console.log(
+            "📁 NEW FILE:",
+            file
+        );
+
+
+        setFiles((prev) => {
+
+            // =================================
+            // Prevent Duplicate File
+            // =================================
+
+            const exists =
+                prev.some(
+                    (item) =>
+                        item._id === file._id
+                );
+
+
+            if (exists) {
+
+                return prev;
+
+            }
+
+
+            return [
+
+                ...prev,
+
+                file,
+
+            ];
+
+        });
+
+    };
+
+
+    socket.on(
+        "file-uploaded",
+        handleFileUploaded
+    );
+
+
+    return () => {
+
+        socket.off(
+            "file-uploaded",
+            handleFileUploaded
+        );
+
+    };
+
+}, []);// ======================================
+// File Deleted
+// ======================================
+
+useEffect(() => {
+
+    const handleFileDeleted = ({
+        fileId,
+    }) => {
+
+        console.log(
+            "🗑️ FILE DELETED:",
+            fileId
+        );
+
+
+        setFiles((prev) =>
+            prev.filter(
+                (file) =>
+                    file._id !== fileId
+            )
+        );
+
+    };
+
+
+    socket.on(
+        "file-deleted",
+        handleFileDeleted
+    );
+
+
+    return () => {
+
+        socket.off(
+            "file-deleted",
+            handleFileDeleted
+        );
+
+    };
+
+}, []);
 const stopScreenShare = async () => {
 
     const cameraStream =
@@ -3284,6 +3569,18 @@ return {
 
     participants,
 mySocketId,
+
+files,
+
+uploadProgress,
+
+isUploadingFile,
+
+loadMeetingFiles,
+
+uploadMeetingFile,
+
+deleteMeetingFile,
 
     connectionState,
 

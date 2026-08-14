@@ -11,6 +11,7 @@ export const NotificationType = {
     NEW_MESSAGE: "NEW_MESSAGE",
 
     FILE_UPLOADED: "FILE_UPLOADED",
+    FILE_DELETED: "FILE_DELETED",
 
     RAISE_HAND: "RAISE_HAND",
 

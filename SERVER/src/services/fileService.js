@@ -1,53 +1,134 @@
 import cloudinary from "../config/cloudinary.js";
+
 import File from "../models/fileModel.js";
+
 import Meeting from "../models/meetingModel.js";
-import FileActivity from "../models/fileActivityModel.js";
+
+
+// ======================================
+// Find Meeting By Code
+// ======================================
+
+const findMeetingByCode = async(
+    meetingCode
+) => {
+
+    if (!meetingCode) {
+
+        throw new Error(
+            "Meeting code is required"
+        );
+
+    }
+
+    const meeting =
+        await Meeting.findOne({
+
+            meetingCode: meetingCode.toUpperCase(),
+
+        });
+
+
+    if (!meeting) {
+
+        throw new Error(
+            "Meeting not found"
+        );
+
+    }
+
+
+    return meeting;
+
+};
+
+
+// ======================================
+// Check Meeting Participant
+// ======================================
+
+const checkParticipant = (
+    meeting,
+    userId
+) => {
+
+    return meeting.participants.some(
+        (participant) =>
+        participant.equals(userId)
+    );
+
+};
+
+
+// ======================================
+// Upload File
+// ======================================
 
 export const uploadFileService = async({
-    meetingId,
+    meetingCode,
     uploadedBy,
     file,
 }) => {
 
     // ======================================
-    // Check Meeting
+    // Find Meeting
     // ======================================
 
-    const meeting = await Meeting.findById(meetingId);
+    const meeting =
+        await findMeetingByCode(
+            meetingCode
+        );
 
-    if (!meeting) {
-        throw new Error("Meeting not found");
-    }
 
     // ======================================
     // Check Meeting Active
     // ======================================
 
-    if (!meeting.isActive) {
-        throw new Error("Meeting has ended");
+    // ======================================
+    // Check Meeting Status
+    // ======================================
+
+    if (meeting.status === "ended") {
+
+        throw new Error(
+            "Meeting has ended"
+        );
+
     }
+
 
     // ======================================
     // Check Participant
     // ======================================
 
-    const isParticipant = meeting.participants.some(
-        participant => participant.equals(uploadedBy)
-    );
+    const isParticipant =
+        checkParticipant(
+            meeting,
+            uploadedBy
+        );
+
 
     if (!isParticipant) {
+
         throw new Error(
             "You are not a participant of this meeting"
         );
+
     }
 
+
     // ======================================
-    // File Validation
+    // Check File
     // ======================================
 
     if (!file) {
-        throw new Error("Please upload a file");
+
+        throw new Error(
+            "Please upload a file"
+        );
+
     }
+
 
     // ======================================
     // Detect File Type
@@ -55,50 +136,80 @@ export const uploadFileService = async({
 
     let fileType = "other";
 
-    if (file.mimetype.startsWith("image/")) {
+
+    if (
+        file.mimetype.startsWith("image/")
+    ) {
+
         fileType = "image";
-    } else if (file.mimetype.startsWith("video/")) {
+
+    } else if (
+        file.mimetype.startsWith("video/")
+    ) {
+
         fileType = "video";
-    } else if (file.mimetype.startsWith("audio/")) {
+
+    } else if (
+        file.mimetype.startsWith("audio/")
+    ) {
+
         fileType = "audio";
+
     } else if (
-        file.mimetype === "application/pdf"
+        file.mimetype ===
+        "application/pdf"
     ) {
+
         fileType = "pdf";
+
     } else if (
+
         file.mimetype.includes("document") ||
+
         file.mimetype.includes("word") ||
+
         file.mimetype.includes("sheet") ||
+
         file.mimetype.includes("presentation")
+
     ) {
+
         fileType = "document";
+
     }
 
+
     // ======================================
-    // Save Database
+    // Save File
     // ======================================
 
-    const savedFile = await File.create({
+    const savedFile =
+        await File.create({
 
-        meeting: meetingId,
+            meeting: meeting._id,
 
-        uploadedBy,
+            uploadedBy,
 
-        fileName: file.filename,
+            fileName: file.filename,
 
-        originalName: file.originalname,
+            originalName: file.originalname,
 
-        url: file.path,
+            url: file.path,
 
-        public_id: file.filename,
+            public_id: file.filename,
 
-        mimeType: file.mimetype,
+            mimeType: file.mimetype,
 
-        fileSize: file.size,
+            fileSize: file.size,
 
-        fileType,
+            fileType,
 
-    });
+        });
+
+
+    // ======================================
+    // Populate Uploader
+    // ======================================
 
     await savedFile.populate({
 
@@ -108,291 +219,226 @@ export const uploadFileService = async({
 
     });
 
+
     return savedFile;
 
 };
 
 
+// ======================================
+// Get Single File
+// ======================================
 
 export const getFileService = async({
     fileId,
     userId,
 }) => {
 
-    // ===============================
+    // ======================================
     // Find File
-    // ===============================
+    // ======================================
 
-    const file = await File.findById(fileId)
-        .populate(
+    const file =
+        await File.findById(
+            fileId
+        ).populate(
             "uploadedBy",
             "name username profilePicture"
         );
 
+
     if (!file) {
-        throw new Error("File not found");
+
+        throw new Error(
+            "File not found"
+        );
+
     }
 
-    // ===============================
-    // Soft Delete Check
-    // ===============================
+
+    // ======================================
+    // Deleted File Check
+    // ======================================
 
     if (file.isDeleted) {
-        throw new Error("File has been deleted");
+
+        throw new Error(
+            "File has been deleted"
+        );
+
     }
 
-    // ===============================
-    // Meeting Check
-    // ===============================
 
-    const meeting = await Meeting.findById(file.meeting);
+    // ======================================
+    // Find Meeting
+    // ======================================
+
+    const meeting =
+        await Meeting.findById(
+            file.meeting
+        );
+
 
     if (!meeting) {
-        throw new Error("Meeting not found");
+
+        throw new Error(
+            "Meeting not found"
+        );
+
     }
 
-    // ===============================
-    // Participant Check
-    // ===============================
 
-    const isParticipant = meeting.participants.some(
-        participant => participant.equals(userId)
-    );
+    // ======================================
+    // Participant Access
+    // ======================================
+
+    const isParticipant =
+        checkParticipant(
+            meeting,
+            userId
+        );
+
 
     if (!isParticipant) {
+
         throw new Error(
             "You are not authorized to access this file"
         );
+
     }
+
 
     return file;
 
 };
 
+
+// ======================================
+// Delete File
+// ======================================
 
 export const deleteFileService = async({
     fileId,
     userId,
 }) => {
 
-    // ===========================
+    // ======================================
     // Find File
-    // ===========================
+    // ======================================
 
-    const file = await File.findById(fileId);
+    const file =
+        await File.findById(
+            fileId
+        );
+
 
     if (!file) {
-        throw new Error("File not found");
+
+        throw new Error(
+            "File not found"
+        );
+
     }
+
+
+    // ======================================
+    // Already Deleted
+    // ======================================
 
     if (file.isDeleted) {
-        throw new Error("File already deleted");
+
+        throw new Error(
+            "File already deleted"
+        );
+
     }
 
-    // ===========================
-    // Find Meeting
-    // ===========================
 
-    const meeting = await Meeting.findById(file.meeting);
-
-    if (!meeting) {
-        throw new Error("Meeting not found");
-    }
-
-    // ===========================
-    // Permission Check
-    // Owner OR Meeting Creator
-    // ===========================
+    // ======================================
+    // Owner Check
+    // ======================================
 
     const isOwner =
-        file.uploadedBy.toString() === userId.toString();
+        file.uploadedBy.toString() ===
+        userId.toString();
 
-    const isMeetingOwner =
-        meeting.host.toString() === userId.toString();
 
-    if (!isOwner && !isMeetingOwner) {
+    if (!isOwner) {
+
         throw new Error(
-            "You are not allowed to delete this file"
+            "Only the file owner can delete this file"
         );
+
     }
 
-    // ===========================
-    // Delete From Cloudinary
-    // ===========================
 
-    await cloudinary.uploader.destroy(file.public_id);
+    // ======================================
+    // Delete Cloudinary File
+    // ======================================
 
-    // ===========================
+    await cloudinary.uploader.destroy(
+        file.public_id
+    );
+
+
+    // ======================================
     // Soft Delete
-    // ===========================
+    // ======================================
 
     file.isDeleted = true;
 
     await file.save();
 
+
     return file;
 
 };
 
 
+// ======================================
+// Get All Meeting Files
+// ======================================
 
-export const renameFileService = async({
+export const getRecentFiles = async(
+    meetingCode
+) => {
 
-    fileId,
+    // ======================================
+    // Find Meeting
+    // ======================================
 
-    userId,
-
-    newName,
-
-}) => {
-
-    const file = await File.findById(fileId);
-
-    if (!file) {
-
-        throw new Error("File not found");
-
-    }
-
-    if (file.isDeleted) {
-
-        throw new Error("File already deleted");
-
-    }
-
-    const meeting = await Meeting.findById(file.meeting);
-
-    const isOwner =
-        file.uploadedBy.toString() === userId.toString();
-
-    const isMeetingHost =
-        meeting.host.toString() === userId.toString();
-
-    if (!isOwner && !isMeetingHost) {
-
-        throw new Error(
-            "You are not allowed to rename this file"
+    const meeting =
+        await findMeetingByCode(
+            meetingCode
         );
 
-    }
 
-    file.originalName = newName;
-
-    await file.save();
-
-    return file;
-
-};
-
-export const increaseDownloadCount = async(fileId) => {
-
-    const file =
-
-        await File.findById(fileId);
-
-    if (!file) {
-
-        throw new Error("File not found");
-
-    }
-
-    file.downloadCount++;
-
-    file.lastDownloadedAt = new Date();
-
-    await file.save();
-
-    return file;
-
-};
-export const getRecentFiles = async(meetingId) => {
+    // ======================================
+    // Get Files
+    // ======================================
 
     const files =
-
         await File.find({
 
-            meeting: meetingId,
+            meeting: meeting._id,
 
             isDeleted: false,
 
         })
+        .sort({
 
-    .sort({
+            createdAt: 1,
 
-        createdAt: -1
+        })
+        .populate(
 
-    })
+            "uploadedBy",
 
-    .limit(20)
+            "name username profilePicture"
 
-    .populate(
+        );
 
-        "uploadedBy",
-
-        "name username profilePicture"
-
-    );
 
     return files;
-
-};
-
-
-export const logFileActivity = async({
-
-    fileId,
-
-    userId,
-
-    action,
-
-    ipAddress,
-
-    userAgent,
-
-}) => {
-
-    await FileActivity.create({
-
-        file: fileId,
-
-        user: userId,
-
-        action,
-
-        ipAddress,
-
-        userAgent,
-
-    });
-
-};
-
-
-// ======================================
-// File History
-// ======================================
-
-export const getFileHistory = async(fileId) => {
-
-    return await FileActivity.find({
-
-        file: fileId,
-
-    })
-
-    .populate(
-
-        "user",
-
-        "name username profilePicture"
-
-    )
-
-    .sort({
-
-        createdAt: -1,
-
-    });
 
 };

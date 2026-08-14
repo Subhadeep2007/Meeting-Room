@@ -1,8 +1,14 @@
 import httpStatus from "http-status";
-import { uploadFileService, getFileService, deleteFileService, renameFileService, increaseDownloadCount, getRecentFiles } from "../services/fileService.js";
+
+import {
+    uploadFileService,
+    getFileService,
+    deleteFileService,
+    getRecentFiles,
+} from "../services/fileService.js";
+
 import { getIO } from "../socket/socketManager.js";
-import { logFileActivity } from "../services/fileService.js";
-import { getFileHistory } from "../services/fileService.js";
+
 import Meeting from "../models/meetingModel.js";
 
 import {
@@ -11,33 +17,60 @@ import {
 } from "../services/notificationService.js";
 
 
+// ======================================
+// Upload File
+// ======================================
+
 export const uploadFile = async(req, res) => {
 
     try {
 
-        const { meetingId } = req.body;
+        const {
+            meetingCode,
+        } = req.body;
 
-        const uploadedBy = req.user._id;
 
-        const file = req.file;
+        const uploadedBy =
+            req.user._id;
 
-        const savedFile = await uploadFileService({
 
-            meetingId,
-            uploadedBy,
-            file,
+        const file =
+            req.file;
 
-        });
 
         // ======================================
-        // Get Meeting
+        // Upload Service
         // ======================================
 
-        const meeting = await Meeting.findById(meetingId);
+        const savedFile =
+            await uploadFileService({
+
+                meetingCode,
+
+                uploadedBy,
+
+                file,
+
+            });
+
+
+        // ======================================
+        // Find Meeting
+        // ======================================
+
+        const meeting =
+            await Meeting.findOne({
+
+                meetingCode: meetingCode.toUpperCase(),
+
+            });
+
 
         if (!meeting) {
 
-            return res.status(httpStatus.NOT_FOUND).json({
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
 
                 success: false,
 
@@ -47,13 +80,18 @@ export const uploadFile = async(req, res) => {
 
         }
 
+
         // ======================================
-        // Socket Broadcast
+        // Socket
         // ======================================
 
-        const io = getIO();
+        const io =
+            getIO();
 
-        io.to(meeting.meetingCode).emit(
+
+        io.to(
+            meeting.meetingCode
+        ).emit(
 
             "file-uploaded",
 
@@ -61,29 +99,38 @@ export const uploadFile = async(req, res) => {
 
         );
 
+
         // ======================================
         // Notification
         // ======================================
 
-        const notification = createNotification(
+        const notification =
+            createNotification(
 
-            NotificationType.FILE_UPLOADED,
+                NotificationType.FILE_UPLOADED,
 
-            "File Uploaded",
+                "File Uploaded",
 
-            `${req.user.username} uploaded "${savedFile.originalName}".`,
+                `${req.user.username} uploaded "${savedFile.originalName}".`,
 
-            {
+                {
 
-                meetingId,
+                    meetingCode,
 
-                fileId: savedFile._id,
+                    fileId: savedFile._id,
 
-            }
+                    userId: req.user._id,
 
-        );
+                    username: req.user.username,
 
-        io.to(meeting.meetingCode).emit(
+                }
+
+            );
+
+
+        io.to(
+            meeting.meetingCode
+        ).emit(
 
             "notification",
 
@@ -91,45 +138,76 @@ export const uploadFile = async(req, res) => {
 
         );
 
-        return res.status(httpStatus.CREATED).json({
+
+        // ======================================
+        // Response
+        // ======================================
+
+        return res.status(
+            httpStatus.CREATED
+        ).json({
 
             success: true,
+
             message: "File uploaded successfully",
+
             data: savedFile,
 
         });
 
+
     } catch (error) {
 
-        return res.status(httpStatus.BAD_REQUEST).json({
+        console.error(
+            "Upload File Error:",
+            error
+        );
+
+
+        return res.status(
+            httpStatus.BAD_REQUEST
+        ).json({
 
             success: false,
+
             message: error.message,
 
         });
 
     }
 
-
 };
 
 
+// ======================================
+// Get Single File
+// ======================================
 
-export const getFile = async(req, res) => {
+export const getFile = async(
+    req,
+    res
+) => {
 
     try {
 
-        const { fileId } = req.params;
-
-        const file = await getFileService({
-
+        const {
             fileId,
+        } = req.params;
 
-            userId: req.user._id,
 
-        });
+        const file =
+            await getFileService({
 
-        return res.status(200).json({
+                fileId,
+
+                userId: req.user._id,
+
+            });
+
+
+        return res.status(
+            httpStatus.OK
+        ).json({
 
             success: true,
 
@@ -137,9 +215,18 @@ export const getFile = async(req, res) => {
 
         });
 
+
     } catch (error) {
 
-        return res.status(404).json({
+        console.error(
+            "Get File Error:",
+            error
+        );
+
+
+        return res.status(
+            httpStatus.BAD_REQUEST
+        ).json({
 
             success: false,
 
@@ -151,29 +238,52 @@ export const getFile = async(req, res) => {
 
 };
 
-export const deleteFile = async(req, res) => {
+
+// ======================================
+// Delete File
+// ======================================
+
+export const deleteFile = async(
+    req,
+    res
+) => {
 
     try {
 
-        const { fileId } = req.params;
-
-        const file = await deleteFileService({
-
+        const {
             fileId,
+        } = req.params;
 
-            userId: req.user._id,
 
-        });
+        // ======================================
+        // Delete Service
+        // ======================================
 
-        // =====================================
-        // Get Meeting
-        // =====================================
+        const file =
+            await deleteFileService({
 
-        const meeting = await Meeting.findById(file.meeting);
+                fileId,
+
+                userId: req.user._id,
+
+            });
+
+
+        // ======================================
+        // Find Meeting
+        // ======================================
+
+        const meeting =
+            await Meeting.findById(
+                file.meeting
+            );
+
 
         if (!meeting) {
 
-            return res.status(httpStatus.NOT_FOUND).json({
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
 
                 success: false,
 
@@ -183,13 +293,18 @@ export const deleteFile = async(req, res) => {
 
         }
 
-        const io = getIO();
 
-        // =====================================
-        // Socket Broadcast
-        // =====================================
+        // ======================================
+        // Socket
+        // ======================================
 
-        io.to(meeting.meetingCode).emit(
+        const io =
+            getIO();
+
+
+        io.to(
+            meeting.meetingCode
+        ).emit(
 
             "file-deleted",
 
@@ -201,29 +316,38 @@ export const deleteFile = async(req, res) => {
 
         );
 
-        // =====================================
+
+        // ======================================
         // Notification
-        // =====================================
+        // ======================================
 
-        const notification = createNotification(
+        const notification =
+            createNotification(
 
-            NotificationType.FILE_UPLOADED,
+                NotificationType.FILE_DELETED,
 
-            "File Deleted",
+                "File Deleted",
 
-            `${req.user.username} deleted "${file.originalName}".`,
+                `${req.user.username} deleted "${file.originalName}".`,
 
-            {
+                {
 
-                meetingId: meeting._id,
+                    meetingCode: meeting.meetingCode,
 
-                fileId: file._id,
+                    fileId: file._id,
 
-            }
+                    userId: req.user._id,
 
-        );
+                    username: req.user.username,
 
-        io.to(meeting.meetingCode).emit(
+                }
+
+            );
+
+
+        io.to(
+            meeting.meetingCode
+        ).emit(
 
             "notification",
 
@@ -231,7 +355,14 @@ export const deleteFile = async(req, res) => {
 
         );
 
-        return res.status(httpStatus.OK).json({
+
+        // ======================================
+        // Response
+        // ======================================
+
+        return res.status(
+            httpStatus.OK
+        ).json({
 
             success: true,
 
@@ -239,11 +370,18 @@ export const deleteFile = async(req, res) => {
 
         });
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Delete File Error:",
+            error
+        );
 
-        return res.status(httpStatus.BAD_REQUEST).json({
+
+        return res.status(
+            httpStatus.BAD_REQUEST
+        ).json({
 
             success: false,
 
@@ -256,33 +394,101 @@ export const deleteFile = async(req, res) => {
 };
 
 
-export const renameFile = async(req, res) => {
+// ======================================
+// Download / Access File
+// ======================================
+
+export const downloadFile = async(
+    req,
+    res
+) => {
 
     try {
 
-        const { fileId } = req.params;
-
-        const { newName } = req.body;
-
-        const file = await renameFileService({
-
+        const {
             fileId,
+        } = req.params;
 
-            userId: req.user._id,
 
-            newName,
+        // ======================================
+        // Access Check
+        // ======================================
+
+        const file =
+            await getFileService({
+
+                fileId,
+
+                userId: req.user._id,
+
+            });
+
+
+        // ======================================
+        // Redirect To Cloudinary
+        // ======================================
+
+        return res.redirect(
+            file.url
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Download File Error:",
+            error
+        );
+
+
+        return res.status(
+            httpStatus.BAD_REQUEST
+        ).json({
+
+            success: false,
+
+            message: error.message,
 
         });
 
-        // =====================================
-        // Get Meeting
-        // =====================================
+    }
 
-        const meeting = await Meeting.findById(file.meeting);
+};
+
+
+// ======================================
+// Get Meeting Files
+// ======================================
+
+export const recentFiles = async(
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            meetingCode,
+        } = req.params;
+
+
+        // ======================================
+        // Find Meeting
+        // ======================================
+
+        const meeting =
+            await Meeting.findOne({
+
+                meetingCode: meetingCode.toUpperCase(),
+
+            });
+
 
         if (!meeting) {
 
-            return res.status(httpStatus.NOT_FOUND).json({
+            return res.status(
+                httpStatus.NOT_FOUND
+            ).json({
 
                 success: false,
 
@@ -292,163 +498,52 @@ export const renameFile = async(req, res) => {
 
         }
 
-        const io = getIO();
 
-        // =====================================
-        // Socket Broadcast
-        // =====================================
+        // ======================================
+        // Check Participant
+        // ======================================
 
-        io.to(meeting.meetingCode).emit(
+        const isParticipant =
+            meeting.participants.some(
+                (participant) =>
+                participant.equals(
+                    req.user._id
+                )
+            );
 
-            "file-renamed",
 
-            file
+        if (!isParticipant) {
 
-        );
+            return res.status(
+                httpStatus.FORBIDDEN
+            ).json({
 
-        // =====================================
-        // Notification
-        // =====================================
+                success: false,
 
-        const notification = createNotification(
+                message: "You are not authorized to access these files",
 
-            NotificationType.FILE_UPLOADED,
+            });
 
-            "File Renamed",
+        }
 
-            `${req.user.username} renamed file to "${file.originalName}".`,
 
-            {
+        // ======================================
+        // Get Files
+        // ======================================
 
-                meetingId: meeting._id,
+        const files =
+            await getRecentFiles(
+                meetingCode
+            );
 
-                fileId: file._id,
 
-            }
+        // ======================================
+        // Response
+        // ======================================
 
-        );
-
-        io.to(meeting.meetingCode).emit(
-
-            "notification",
-
-            notification
-
-        );
-
-        return res.status(httpStatus.OK).json({
-
-            success: true,
-
-            message: "File renamed successfully",
-
-            data: file,
-
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        return res.status(httpStatus.BAD_REQUEST).json({
-
-            success: false,
-
-            message: error.message,
-
-        });
-
-    }
-
-};
-
-
-export const downloadFile = async(req, res) => {
-
-    try {
-
-        const { fileId } = req.params;
-
-        const file = await getFileService({
-
-            fileId,
-
-            userId: req.user._id,
-
-        });
-
-        await increaseDownloadCount(fileId);
-
-        await logFileActivity({
-
-            fileId,
-
-            userId: req.user._id,
-
-            action: "DOWNLOAD",
-
-            ipAddress: req.ip,
-
-            userAgent: req.headers["user-agent"],
-
-        });
-
-        return res.redirect(file.url);
-
-    } catch (error) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message,
-
-        });
-
-    }
-
-};
-
-
-
-export const fileHistory = async(req, res) => {
-
-    try {
-
-        const history = await getFileHistory(
-            req.params.fileId
-        );
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: history,
-
-        });
-
-    } catch (error) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message,
-
-        });
-
-    }
-
-};
-export const recentFiles = async(req, res) => {
-
-    try {
-
-        const { meetingId } = req.params;
-
-        const files = await getRecentFiles(meetingId);
-
-        return res.status(httpStatus.OK).json({
+        return res.status(
+            httpStatus.OK
+        ).json({
 
             success: true,
 
@@ -456,11 +551,18 @@ export const recentFiles = async(req, res) => {
 
         });
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Recent Files Error:",
+            error
+        );
 
-        return res.status(httpStatus.BAD_REQUEST).json({
+
+        return res.status(
+            httpStatus.BAD_REQUEST
+        ).json({
 
             success: false,
 
