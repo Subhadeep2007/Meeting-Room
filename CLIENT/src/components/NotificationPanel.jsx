@@ -14,7 +14,7 @@ const NotificationPanel = ({
         mt-3
         -translate-x-1/2
 
-                w-[calc(100vw-2.5rem)]
+                w-[calc(100vw-6.5rem)]
                 sm:w-[24rem]
 
                 max-w-[24rem]
