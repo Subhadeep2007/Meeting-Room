@@ -9,7 +9,7 @@ import {
 
     verifyEmailOTP,
     resendEmailOTP,
-} from "../controllers/authController.js";
+} from "../controllers/authcontroller.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
 
