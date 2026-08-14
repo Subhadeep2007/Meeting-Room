@@ -24,6 +24,11 @@ const VideoPlayer = ({
 
     const videoRef = useRef(null);
 
+    const profileImageUrl =
+    typeof profilePicture === "string"
+        ? profilePicture
+        : profilePicture?.url || null;
+
 
     // =====================================
     // Attach Stream
@@ -159,16 +164,15 @@ const VideoPlayer = ({
                         "
                     >
 
-                         {profilePicture ? (
-        <img
-            src={profilePicture}
-            alt={username || "User"}
-            className="w-full h-full object-cover"
-        />
-    ) : (
-        username?.charAt(0)?.toUpperCase() || "U"
-    )}
-
+                         {profileImageUrl ? (
+    <img
+        src={profileImageUrl}
+        alt={username || "User"}
+        className="w-full h-full object-cover"
+    />
+) : (
+    username?.charAt(0)?.toUpperCase() || "U"
+)}
                     </div>
 
                     <span
