@@ -248,9 +248,15 @@ export const getMyMeetings = async(req, res) => {
             })
             .sort({ createdAt: -1 })
             .populate(
-                "participants",
+                "host",
                 "name username profilePicture"
-            );
+            )
+
+        // Participant details
+        .populate(
+            "participants",
+            "name username profilePicture"
+        );
 
         return res.status(httpStatus.OK).json({
 

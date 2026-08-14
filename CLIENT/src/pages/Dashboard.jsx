@@ -695,9 +695,184 @@ const totalParticipants = meetings.reduce(
     <span className="text-red-600 font-semibold ml-2">
         Ended
     </span>
+
+
+
+
+
+
+    
 }
 
                                 </p>
+
+
+                                {/* ==============================
+    Host
+============================== */}
+
+<div className="mt-4">
+
+    <p className="text-sm font-semibold text-gray-700 mb-2">
+        Host
+    </p>
+
+    {meeting.host && (
+
+        <div className="flex items-center gap-3">
+
+            {meeting.host.profilePicture?.url ? (
+
+                <img
+                    src={meeting.host.profilePicture.url}
+                    alt={meeting.host.username || "Host"}
+                    className="
+                        w-10
+                        h-10
+                        rounded-full
+                        object-cover
+                        border
+                        border-gray-200
+                    "
+                />
+
+            ) : (
+
+                <div
+                    className="
+                        w-10
+                        h-10
+                        rounded-full
+                        bg-blue-600
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        font-semibold
+                    "
+                >
+                    {meeting.host.username
+                        ?.charAt(0)
+                        ?.toUpperCase() || "U"}
+                </div>
+
+            )}
+
+            <div>
+
+                <p className="font-semibold text-gray-800">
+                    {meeting.host.username || meeting.host.name}
+                </p>
+
+                <p className="text-xs text-gray-500">
+                    Host
+                </p>
+
+            </div>
+
+        </div>
+
+    )}
+
+</div>
+
+
+{/* ==============================
+    Participants
+============================== */}
+
+<div className="mt-4">
+
+    <p className="text-sm font-semibold text-gray-700 mb-2">
+        Participants
+    </p>
+
+    {meeting.participants?.length > 0 ? (
+
+        <div className="flex flex-wrap gap-3">
+
+            {meeting.participants.map((participant) => (
+
+                <div
+                    key={participant._id}
+                    className="
+                        flex
+                        items-center
+                        gap-2
+                        bg-gray-100
+                        rounded-full
+                        px-2
+                        py-1.5
+                    "
+                >
+
+                    {participant.profilePicture?.url ? (
+
+                        <img
+                            src={participant.profilePicture.url}
+                            alt={
+                                participant.username ||
+                                "Participant"
+                            }
+                            className="
+                                w-8
+                                h-8
+                                rounded-full
+                                object-cover
+                            "
+                        />
+
+                    ) : (
+
+                        <div
+                            className="
+                                w-8
+                                h-8
+                                rounded-full
+                                bg-purple-600
+                                text-white
+                                flex
+                                items-center
+                                justify-center
+                                text-xs
+                                font-semibold
+                            "
+                        >
+                            {participant.username
+                                ?.charAt(0)
+                                ?.toUpperCase() || "U"}
+                        </div>
+
+                    )}
+
+                    <span
+                        className="
+                            text-sm
+                            font-medium
+                            text-gray-700
+                            max-w-[120px]
+                            truncate
+                        "
+                    >
+                        {participant.username ||
+                            participant.name}
+                    </span>
+
+                </div>
+
+            ))}
+
+        </div>
+
+    ) : (
+
+        <p className="text-sm text-gray-400">
+            No participants yet
+        </p>
+
+    )}
+
+</div>
 
                             </div>
 
