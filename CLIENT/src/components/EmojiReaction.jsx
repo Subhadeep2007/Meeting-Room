@@ -18,14 +18,13 @@ const EmojiReaction = ({ onSelect }) => {
         setIsOpen(false);
     };
 
-   return (
+    return (
     <div
         className="
-            fixed
-            top-1/2
-            right-8
-            -translate-y-1/2
-            z-[9999]
+           fixed
+top-[62%]
+right-8
+z-[9999]
         "
     >
 
@@ -107,5 +106,6 @@ const EmojiReaction = ({ onSelect }) => {
 
     </div>
 );
+};
 
 export default EmojiReaction;
