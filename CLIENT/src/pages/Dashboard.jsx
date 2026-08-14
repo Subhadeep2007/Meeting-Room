@@ -635,289 +635,319 @@ const totalParticipants = meetings.reduce(
                     filteredMeetings.map((meeting) => (
 
                         <div
-
                             key={meeting._id}
-
-                            className="flex justify-between items-center border-b last:border-b-0 py-5"
-
+                            className="
+                                border-b last:border-b-0
+                                py-5
+                                flex flex-col
+                                lg:flex-row
+                                lg:justify-between
+                                lg:items-center
+                                gap-5
+                            "
                         >
 
-                            {/* Left */}
+                            {/* ==============================
+                                Meeting Information
+                            ============================== */}
 
-                            <div>
+                            <div className="flex-1 min-w-0">
 
-                                <h3 className="text-xl font-semibold">
-
+                                <h3 className="text-xl font-semibold text-gray-900 truncate">
                                     {meeting.title}
-
                                 </h3>
 
-                                <p className="text-gray-500 mt-1">
+                                <div className="flex flex-wrap items-center gap-2 mt-3">
 
-                                    Meeting Code :
+                                    <div className="bg-gray-100 rounded-lg px-3 py-1.5">
+                                        <span className="text-xs text-gray-500">
+                                            Code
+                                        </span>
+                                        <span className="ml-1 font-semibold text-gray-800 text-sm">
+                                            {meeting.meetingCode}
+                                        </span>
+                                    </div>
 
-                                    <span className="font-semibold ml-2">
+                                    <div className="bg-blue-50 rounded-lg px-3 py-1.5">
+                                        <span className="text-xs text-blue-500">
+                                            Participants
+                                        </span>
+                                        <span className="ml-1 font-semibold text-blue-700 text-sm">
+                                            {
+                                                liveParticipantCounts[meeting.meetingCode]
+                                                ?? meeting.participants.length
+                                            }
+                                        </span>
+                                    </div>
 
-                                        {meeting.meetingCode}
+                                    {meeting.status === "live" ? (
+                                        <span
+                                            className="
+                                                inline-flex
+                                                items-center
+                                                gap-1.5
+                                                bg-green-50
+                                                text-green-600
+                                                px-3
+                                                py-1.5
+                                                rounded-lg
+                                                text-sm
+                                                font-semibold
+                                            "
+                                        >
+                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            Live
+                                        </span>
+                                    ) : (
+                                        <span
+                                            className="
+                                                inline-flex
+                                                items-center
+                                                gap-1.5
+                                                bg-red-50
+                                                text-red-600
+                                                px-3
+                                                py-1.5
+                                                rounded-lg
+                                                text-sm
+                                                font-semibold
+                                            "
+                                        >
+                                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                            Ended
+                                        </span>
+                                    )}
 
-                                    </span>
-
-                                </p>
-
-                               <p className="text-gray-500 mt-1">
-
-    Participants :
-
-    <span className="font-semibold ml-2">
-
-        {
-            liveParticipantCounts[meeting.meetingCode]
-            ?? meeting.participants.length
-        }
-
-    </span>
-
-</p>
-
-                                <p className="text-gray-500 mt-1">
-
-                                    Status :
-
-                                    {
-    meeting.status === "live" ?
-
-    <span className="text-green-600 font-semibold ml-2">
-        Live
-    </span>
-
-    :
-
-    <span className="text-red-600 font-semibold ml-2">
-        Ended
-    </span>
-
-
-
-
-
-
-    
-}
-
-                                </p>
-
+                                </div>
 
                                 {/* ==============================
-    Host
-============================== */}
+                                    Host
+                                ============================== */}
 
-<div className="mt-4">
+                                <div className="mt-5">
 
-    <p className="text-sm font-semibold text-gray-700 mb-2">
-        Host
-    </p>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                        Host
+                                    </p>
 
-    {meeting.host && (
+                                    {meeting.host && (
 
-        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3">
 
-            {meeting.host.profilePicture?.url ? (
+                                            {meeting.host.profilePicture?.url ? (
 
-                <img
-                    src={meeting.host.profilePicture.url}
-                    alt={meeting.host.username || "Host"}
-                    className="
-                        w-10
-                        h-10
-                        rounded-full
-                        object-cover
-                        border
-                        border-gray-200
-                    "
-                />
+                                                <img
+                                                    src={meeting.host.profilePicture.url}
+                                                    alt={meeting.host.username || "Host"}
+                                                    className="
+                                                        w-10
+                                                        h-10
+                                                        rounded-full
+                                                        object-cover
+                                                        border
+                                                        border-gray-200
+                                                    "
+                                                />
 
-            ) : (
+                                            ) : (
 
-                <div
-                    className="
-                        w-10
-                        h-10
-                        rounded-full
-                        bg-blue-600
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        font-semibold
-                    "
-                >
-                    {meeting.host.username
-                        ?.charAt(0)
-                        ?.toUpperCase() || "U"}
-                </div>
+                                                <div
+                                                    className="
+                                                        w-10
+                                                        h-10
+                                                        rounded-full
+                                                        bg-blue-600
+                                                        text-white
+                                                        flex
+                                                        items-center
+                                                        justify-center
+                                                        font-semibold
+                                                    "
+                                                >
+                                                    {meeting.host.username
+                                                        ?.charAt(0)
+                                                        ?.toUpperCase() || "U"}
+                                                </div>
 
-            )}
+                                            )}
 
-            <div>
+                                            <div className="min-w-0">
 
-                <p className="font-semibold text-gray-800">
-                    {meeting.host.username || meeting.host.name}
-                </p>
+                                                <p className="font-semibold text-gray-800 truncate">
+                                                    {meeting.host.username || meeting.host.name}
+                                                </p>
 
-                <p className="text-xs text-gray-500">
-                    Host
-                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Host
+                                                </p>
 
-            </div>
+                                            </div>
 
-        </div>
+                                        </div>
 
-    )}
+                                    )}
 
-</div>
+                                </div>
 
+                                {/* ==============================
+                                    Participants
+                                ============================== */}
 
-{/* ==============================
-    Participants
-============================== */}
+                                <div className="mt-5">
 
-<div className="mt-4">
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                                        Participants
+                                    </p>
 
-    <p className="text-sm font-semibold text-gray-700 mb-2">
-        Participants
-    </p>
+                                    {meeting.participants?.length > 0 ? (
 
-    {meeting.participants?.length > 0 ? (
+                                        <div className="flex flex-wrap gap-2">
 
-        <div className="flex flex-wrap gap-3">
+                                            {meeting.participants.map((participant) => (
 
-            {meeting.participants.map((participant) => (
+                                                <div
+                                                    key={participant._id}
+                                                    className="
+                                                        flex
+                                                        items-center
+                                                        gap-2
+                                                        bg-gray-100
+                                                        rounded-full
+                                                        px-2
+                                                        py-1.5
+                                                        max-w-[160px]
+                                                    "
+                                                >
 
-                <div
-                    key={participant._id}
-                    className="
-                        flex
-                        items-center
-                        gap-2
-                        bg-gray-100
-                        rounded-full
-                        px-2
-                        py-1.5
-                    "
-                >
+                                                    {participant.profilePicture?.url ? (
 
-                    {participant.profilePicture?.url ? (
+                                                        <img
+                                                            src={participant.profilePicture.url}
+                                                            alt={
+                                                                participant.username ||
+                                                                "Participant"
+                                                            }
+                                                            className="
+                                                                w-8
+                                                                h-8
+                                                                rounded-full
+                                                                object-cover
+                                                                flex-shrink-0
+                                                            "
+                                                        />
 
-                        <img
-                            src={participant.profilePicture.url}
-                            alt={
-                                participant.username ||
-                                "Participant"
-                            }
-                            className="
-                                w-8
-                                h-8
-                                rounded-full
-                                object-cover
-                            "
-                        />
+                                                    ) : (
 
-                    ) : (
+                                                        <div
+                                                            className="
+                                                                w-8
+                                                                h-8
+                                                                rounded-full
+                                                                bg-purple-600
+                                                                text-white
+                                                                flex
+                                                                items-center
+                                                                justify-center
+                                                                text-xs
+                                                                font-semibold
+                                                                flex-shrink-0
+                                                            "
+                                                        >
+                                                            {participant.username
+                                                                ?.charAt(0)
+                                                                ?.toUpperCase() || "U"}
+                                                        </div>
 
-                        <div
-                            className="
-                                w-8
-                                h-8
-                                rounded-full
-                                bg-purple-600
-                                text-white
-                                flex
-                                items-center
-                                justify-center
-                                text-xs
-                                font-semibold
-                            "
-                        >
-                            {participant.username
-                                ?.charAt(0)
-                                ?.toUpperCase() || "U"}
-                        </div>
+                                                    )}
 
-                    )}
+                                                    <span
+                                                        className="
+                                                            text-sm
+                                                            font-medium
+                                                            text-gray-700
+                                                            truncate
+                                                        "
+                                                    >
+                                                        {participant.username ||
+                                                            participant.name}
+                                                    </span>
 
-                    <span
-                        className="
-                            text-sm
-                            font-medium
-                            text-gray-700
-                            max-w-[120px]
-                            truncate
-                        "
-                    >
-                        {participant.username ||
-                            participant.name}
-                    </span>
+                                                </div>
 
-                </div>
+                                            ))}
 
-            ))}
+                                        </div>
 
-        </div>
+                                    ) : (
 
-    ) : (
+                                        <p className="text-sm text-gray-400">
+                                            No participants yet
+                                        </p>
 
-        <p className="text-sm text-gray-400">
-            No participants yet
-        </p>
+                                    )}
 
-    )}
-
-</div>
+                                </div>
 
                             </div>
 
-                            {/* Right */}
+                            {/* ==============================
+                                Action Buttons
+                            ============================== */}
 
-                            <div className="flex gap-3">
+                            <div
+                                className="
+                                    flex
+                                    gap-3
+                                    w-full
+                                    lg:w-auto
+                                    lg:flex-shrink-0
+                                "
+                            >
 
                                 <button
-
                                     onClick={() =>
-
                                         navigate(
-
                                             `/meeting/${meeting.meetingCode}`
-
                                         )
-
                                     }
-
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
-
+                                    className="
+                                        flex-1
+                                        lg:flex-none
+                                        bg-blue-600
+                                        hover:bg-blue-700
+                                        active:scale-95
+                                        transition
+                                        text-white
+                                        px-5
+                                        py-2.5
+                                        rounded-xl
+                                        font-medium
+                                    "
                                 >
-
                                     Join
-
                                 </button>
 
                                 <button
-
                                     onClick={() =>
-
                                         handleDeleteMeeting(
-
                                             meeting._id
-
                                         )
-
                                     }
-
-                                    className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
-
+                                    className="
+                                        flex-1
+                                        lg:flex-none
+                                        bg-red-600
+                                        hover:bg-red-700
+                                        active:scale-95
+                                        transition
+                                        text-white
+                                        px-5
+                                        py-2.5
+                                        rounded-xl
+                                        font-medium
+                                    "
                                 >
-
                                     Delete
-
                                 </button>
 
                             </div>
