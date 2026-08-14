@@ -11,13 +11,10 @@ import httpStatus from "http-status";
 // ==============================
 // Socket
 // ==============================
-
 import { initializeSocket } from "./socket/socketManager.js";
-
 // ==============================
 // Routes
 // ==============================
-
 import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
