@@ -18,82 +18,94 @@ const EmojiReaction = ({ onSelect }) => {
         setIsOpen(false);
     };
 
-    return (
-        <>
-            {/* Emoji Button */}
-            <button
-                type="button"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen((prev) => !prev);
-                }}
+   return (
+    <div
+        className="
+            fixed
+            top-1/2
+            right-8
+            -translate-y-1/2
+            z-[9999]
+        "
+    >
+
+        {/* Emoji Button */}
+        <button
+            type="button"
+            onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen((prev) => !prev);
+            }}
+            className="
+                w-11
+                h-11
+                rounded-full
+                bg-black/80
+                hover:bg-black
+                text-white
+                flex
+                items-center
+                justify-center
+                shadow-xl
+                border
+                border-white/10
+                cursor-pointer
+            "
+        >
+            <span className="text-2xl">
+                😄
+            </span>
+        </button>
+
+        {/* Emoji Panel */}
+        {isOpen && (
+            <div
+                onClick={(e) => e.stopPropagation()}
                 className="
-                    w-11
-                    h-11
-                    rounded-full
-                    bg-black/80
-                    hover:bg-black
-                    text-white
+                    absolute
+                    top-full
+                    right-0
+                    mt-3
                     flex
                     items-center
-                    justify-center
-                    shadow-xl
+                    gap-1
+                    p-2
+                    rounded-2xl
+                    bg-gray-900
                     border
-                    border-white/10
-                    cursor-pointer
+                    border-gray-700
+                    shadow-2xl
+                    whitespace-nowrap
                 "
             >
-                <span className="text-2xl">
-                    😄
-                </span>
-            </button>
 
-            {/* Emoji Panel */}
-            {isOpen && (
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="
-                        fixed
-                        top-20
-                        right-5
-                        z-[9999]
-                        flex
-                        items-center
-                        gap-1
-                        p-2
-                        rounded-2xl
-                        bg-gray-900
-                        border
-                        border-gray-700
-                        shadow-2xl
-                    "
-                >
-                    {emojis.map((emoji) => (
-                        <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => handleSelect(emoji)}
-                            className="
-                                w-10
-                                h-10
-                                rounded-xl
-                                flex
-                                items-center
-                                justify-center
-                                text-2xl
-                                hover:bg-white/10
-                                hover:scale-125
-                                transition
-                                cursor-pointer
-                            "
-                        >
-                            {emoji}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </>
-    );
-};
+                {emojis.map((emoji) => (
+                    <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => handleSelect(emoji)}
+                        className="
+                            w-10
+                            h-10
+                            rounded-xl
+                            flex
+                            items-center
+                            justify-center
+                            text-2xl
+                            hover:bg-white/10
+                            hover:scale-125
+                            transition
+                            cursor-pointer
+                        "
+                    >
+                        {emoji}
+                    </button>
+                ))}
+
+            </div>
+        )}
+
+    </div>
+);
 
 export default EmojiReaction;
