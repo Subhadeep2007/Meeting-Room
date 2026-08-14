@@ -93,6 +93,11 @@ const VideoGrid = ({
       "Participant",
             isLocal,
 
+
+            profilePicture: isLocal
+    ? null
+    : participant?.profilePicture || null,
+
             cameraEnabled: isLocal
                 ? cameraEnabled
                 : participant?.cameraEnabled ?? true,
