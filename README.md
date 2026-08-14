@@ -597,7 +597,7 @@ PORT=8000
 
 ATLASDB_URL=your_mongodb_connection_string
 
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=https://meeting-room-1-zi4z.onrender.com
 
 CLOUD_NAME=your_cloudinary_cloud_name
 CLOUD_KEY=your_cloudinary_api_key
@@ -632,8 +632,7 @@ configuration.
 npm run dev
 
 The backend normally runs on:
-
-http://localhost:8000
+https://meeting-room-ovql.onrender.com
 
 5. Install frontend dependencies
 
