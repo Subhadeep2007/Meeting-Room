@@ -13,6 +13,7 @@ import {
 const VideoPlayer = ({
     stream,
     username,
+    profilePicture,
     isLocal = false,
     cameraEnabled = true,
     microphoneEnabled = true,
@@ -158,7 +159,15 @@ const VideoPlayer = ({
                         "
                     >
 
-                        {username?.charAt(0)?.toUpperCase() || "U"}
+                         {profilePicture ? (
+        <img
+            src={profilePicture}
+            alt={username || "User"}
+            className="w-full h-full object-cover"
+        />
+    ) : (
+        username?.charAt(0)?.toUpperCase() || "U"
+    )}
 
                     </div>
 
