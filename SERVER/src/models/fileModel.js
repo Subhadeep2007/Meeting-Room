@@ -17,7 +17,7 @@ const fileSchema = new mongoose.Schema({
 
     fileName: {
         type: String,
-        required: true,
+        required: true
     },
 
     originalName: {
