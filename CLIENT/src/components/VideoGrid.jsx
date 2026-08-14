@@ -94,9 +94,9 @@ const VideoGrid = ({
             isLocal,
 
 
-            profilePicture: isLocal
-    ? null
-    : participant?.profilePicture || null,
+           profilePicture: isLocal
+    ? participants[mySocketId]?.profilePicture || null
+    : participants[user.socketId]?.profilePicture || null,
 
             cameraEnabled: isLocal
                 ? cameraEnabled
