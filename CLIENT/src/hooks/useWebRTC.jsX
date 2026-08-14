@@ -1,10 +1,10 @@
 import { io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-import api from "../services/api";
+import api from "../services/api.jsx";
 import socket, {
     connectSocket,
     disconnectSocket,
-} from "../services/socket";
+} from "../services/socket.jsx";
 import {
     uploadFile,
     getMeetingFiles,
@@ -17,7 +17,7 @@ import {
     stopLocalStream,
     toggleCamera,
     toggleMicrophone,
-} from "../utils/mediaDevices";
+} from "../utils/mediaDevices.jsx";
 
 
 import {
@@ -33,7 +33,7 @@ import {
     importPublicKey,
 } from "../services/clientEncryption.jsx";
 
-import { createPeerConnection } from "../utils/peerConnection";
+import { createPeerConnection } from "../utils/peerConnection.jsx";
 
 // ========================================
 // Hook

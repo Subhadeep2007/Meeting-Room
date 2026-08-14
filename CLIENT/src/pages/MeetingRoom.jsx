@@ -14,7 +14,7 @@ import {
 
 import { useNavigate, useParams } from "react-router-dom";
 
-import useWebRTC from "../hooks/useWebRTC";
+import useWebRTC from "../hooks/useWebRTC.jsx";
 
 import VideoGrid from "../components/VideoGrid";
 import Controls from "../components/Controls";
