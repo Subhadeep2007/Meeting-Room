@@ -14,102 +14,85 @@ const EmojiReaction = ({ onSelect }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleSelect = (emoji) => {
-
         onSelect(emoji);
-
         setIsOpen(false);
     };
 
     return (
-        <div className="relative">
-
+        <>
             {/* Emoji Button */}
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen((prev) => !prev);
+                }}
                 className="
-                    w-10
-                    h-10
-                    sm:w-11
-                    sm:h-11
+                    w-11
+                    h-11
                     rounded-full
-                    bg-black/70
-                    hover:bg-black/90
+                    bg-black/80
+                    hover:bg-black
                     text-white
                     flex
                     items-center
                     justify-center
-                    backdrop-blur
-                    shadow-lg
-                    transition
-                    hover:scale-105
+                    shadow-xl
+                    border
+                    border-white/10
+                    cursor-pointer
                 "
-                title="Reactions"
             >
-                <span className="text-xl sm:text-2xl">
+                <span className="text-2xl">
                     😄
                 </span>
             </button>
 
-
             {/* Emoji Panel */}
             {isOpen && (
-
                 <div
+                    onClick={(e) => e.stopPropagation()}
                     className="
-                        absolute
-                        right-0
-                        bottom-12
-                        sm:bottom-14
+                        fixed
+                        top-20
+                        right-5
+                        z-[9999]
                         flex
                         items-center
                         gap-1
-                        sm:gap-2
-                        px-2
-                        py-2
+                        p-2
                         rounded-2xl
-                        bg-gray-900/95
+                        bg-gray-900
                         border
                         border-gray-700
                         shadow-2xl
-                        backdrop-blur
-                        z-[100]
                     "
                 >
-
                     {emojis.map((emoji) => (
-
                         <button
                             key={emoji}
                             type="button"
                             onClick={() => handleSelect(emoji)}
                             className="
-                                w-9
-                                h-9
-                                sm:w-10
-                                sm:h-10
+                                w-10
+                                h-10
+                                rounded-xl
                                 flex
                                 items-center
                                 justify-center
-                                rounded-xl
+                                text-2xl
                                 hover:bg-white/10
                                 hover:scale-125
                                 transition
-                                text-xl
-                                sm:text-2xl
+                                cursor-pointer
                             "
-                            title={`React ${emoji}`}
                         >
                             {emoji}
                         </button>
-
                     ))}
-
                 </div>
-
             )}
-
-        </div>
+        </>
     );
 };
 
