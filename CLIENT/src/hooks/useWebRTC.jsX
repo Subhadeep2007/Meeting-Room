@@ -296,7 +296,100 @@ useEffect(() => {
 }, [meetingCode]);
 
 
+// ========================================
+// GLOBAL USER ONLINE / OFFLINE STATUS
+// ========================================
 
+useEffect(() => {
+
+    const handleUserOnline = ({ userId }) => {
+
+        setParticipants((prev) => {
+
+            const updated = { ...prev };
+
+            Object.keys(updated).forEach((socketId) => {
+
+                if (
+                    updated[socketId].userId?.toString() ===
+                    userId?.toString()
+                ) {
+
+                    updated[socketId] = {
+                        ...updated[socketId],
+                        isOnline: true,
+                    };
+
+                }
+
+            });
+
+            return updated;
+
+        });
+
+    };
+
+
+    const handleUserOffline = ({
+        userId,
+        lastSeen,
+    }) => {
+
+        setParticipants((prev) => {
+
+            const updated = { ...prev };
+
+            Object.keys(updated).forEach((socketId) => {
+
+                if (
+                    updated[socketId].userId?.toString() ===
+                    userId?.toString()
+                ) {
+
+                    updated[socketId] = {
+                        ...updated[socketId],
+                        isOnline: false,
+                        lastSeen,
+                    };
+
+                }
+
+            });
+
+            return updated;
+
+        });
+
+    };
+
+
+    socket.on(
+        "user-online",
+        handleUserOnline
+    );
+
+    socket.on(
+        "user-offline",
+        handleUserOffline
+    );
+
+
+    return () => {
+
+        socket.off(
+            "user-online",
+            handleUserOnline
+        );
+
+        socket.off(
+            "user-offline",
+            handleUserOffline
+        );
+
+    };
+
+}, []);
 
 // ========================================
 // HOST RECEIVES PARTICIPANT PUBLIC KEY

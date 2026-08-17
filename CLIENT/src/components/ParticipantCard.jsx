@@ -148,6 +148,34 @@ const ParticipantCard = ({
                         />
 
                     )}
+                    {/* Online Status */}
+
+<span
+    className={`
+        absolute
+        right-0
+        bottom-0
+
+        w-3
+        h-3
+
+        rounded-full
+
+        ring-2
+        ring-gray-950
+
+        ${
+            participant.isOnline
+                ? "bg-green-500"
+                : "bg-gray-500"
+        }
+    `}
+    title={
+        participant.isOnline
+            ? "Online"
+            : "Offline"
+    }
+/>
 
                 </div>
 

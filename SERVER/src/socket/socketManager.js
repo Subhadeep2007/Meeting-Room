@@ -74,11 +74,7 @@ export const initializeSocket = (server) => {
 
                 if (showOnlineStatus) {
 
-                    await User.findByIdAndUpdate(
-                        userId, {
-                            isOnline: true,
-                        }
-                    );
+
 
                     io.emit("user-online", {
 
