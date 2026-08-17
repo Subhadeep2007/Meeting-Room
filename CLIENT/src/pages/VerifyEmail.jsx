@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MailCheck } from "lucide-react";
 
-import api from "../services/api";
+import api2 from "../services/api2";
 import {
     successToast,
     errorToast,
@@ -68,7 +68,7 @@ const VerifyEmail = () => {
             setLoading(true);
 
             const { data } =
-                await api.post(
+                await api2.post(
                     "/auth/verify-email",
                     {
                         email,
@@ -119,7 +119,7 @@ const handleResendOTP = async () => {
 
         setResending(true);
 
-        const { data } = await api.post(
+        const { data } = await api2.post(
             "/auth/resend-otp",
             {
                 email,

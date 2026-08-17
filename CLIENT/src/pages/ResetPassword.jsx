@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Eye, EyeOff, Lock, Video } from "lucide-react";
 
-import api from "../services/api";
+import api2 from "../services/api2";
 import {
     successToast,
     errorToast,
@@ -44,7 +44,7 @@ const ResetPassword = () => {
 
             setLoading(true);
 
-            const { data } = await api.put(
+            const { data } = await api2.put(
 
                 `/auth/reset-password/${token}`,
 

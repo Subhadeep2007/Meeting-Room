@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, Send, Video } from "lucide-react";
 
-import api from "../services/api";
+import api2 from "../services/api2";
 import {
     successToast,
     errorToast,
@@ -28,7 +28,7 @@ const ForgotPassword = () => {
 
             setLoading(true);
 
-            const { data } = await api.post(
+            const { data } = await api2.post(
 
                 "/auth/forgot-password",
 
