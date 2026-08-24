@@ -150,7 +150,156 @@ export const createMessage = async({
     };
 };
 
+// ==========================================
+// EDIT MESSAGE
+// ==========================================
 
+export const editMessage = async({
+    messageId,
+    userId,
+    encryptedMessage,
+    iv,
+}) => {
+
+    if (!messageId ||
+        !mongoose.Types.ObjectId.isValid(messageId)
+    ) {
+        throw new Error("Invalid message ID");
+    }
+
+    if (!encryptedMessage || !iv) {
+        throw new Error(
+            "Encrypted message data is required"
+        );
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+        throw new Error("Message not found");
+    }
+
+    // Only sender can edit
+    if (
+        message.sender.toString() !==
+        userId.toString()
+    ) {
+        throw new Error(
+            "You can only edit your own message"
+        );
+    }
+
+    // Deleted message cannot be edited
+    if (message.isDeletedForEveryone) {
+        throw new Error(
+            "Deleted message cannot be edited"
+        );
+    }
+
+    message.encryptedMessage = encryptedMessage;
+    message.iv = iv;
+
+    message.isEdited = true;
+    message.editedAt = new Date();
+
+    await message.save();
+
+    const meeting = await Meeting.findById(
+        message.meeting
+    );
+
+    return {
+        message,
+        meetingCode: meeting.meetingCode,
+    };
+};
+
+
+// ==========================================
+// DELETE MESSAGE FOR ME
+// ==========================================
+
+export const deleteMessageForMe = async({
+    messageId,
+    userId,
+}) => {
+
+    if (!messageId ||
+        !mongoose.Types.ObjectId.isValid(messageId)
+    ) {
+        throw new Error("Invalid message ID");
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+        throw new Error("Message not found");
+    }
+
+    // Prevent duplicate user IDs
+    const alreadyDeleted =
+        message.deletedFor.some(
+            (id) =>
+            id.toString() === userId.toString()
+        );
+
+    if (!alreadyDeleted) {
+
+        message.deletedFor.push(userId);
+
+        await message.save();
+
+    }
+
+    return message;
+};
+
+
+// ==========================================
+// DELETE MESSAGE FOR EVERYONE
+// ==========================================
+
+export const deleteMessageForEveryone = async({
+    messageId,
+    userId,
+}) => {
+
+    if (!messageId ||
+        !mongoose.Types.ObjectId.isValid(messageId)
+    ) {
+        throw new Error("Invalid message ID");
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+        throw new Error("Message not found");
+    }
+
+    // Only sender can delete for everyone
+    if (
+        message.sender.toString() !==
+        userId.toString()
+    ) {
+        throw new Error(
+            "You can only delete your own message"
+        );
+    }
+
+    message.isDeletedForEveryone = true;
+    message.deletedAt = new Date();
+
+    await message.save();
+
+    const meeting = await Meeting.findById(
+        message.meeting
+    );
+
+    return {
+        message,
+        meetingCode: meeting.meetingCode,
+    };
+};
 // ==========================================
 // GET MESSAGE HISTORY
 // ==========================================

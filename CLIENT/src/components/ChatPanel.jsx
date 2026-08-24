@@ -7,6 +7,9 @@ import {
 import {
     Send,
     MessageCircle,
+    MoreVertical,
+    Pencil,
+    Trash2,
 } from "lucide-react";
 
 import api from "../services/api";
@@ -66,7 +69,30 @@ const ChatPanel = ({
         setTypingUser,
     ] = useState(null);
 
+const [
+    currentUserId,
+    setCurrentUserId,
+] = useState("");
 
+const [
+    openMenuId,
+    setOpenMenuId,
+] = useState(null);
+
+const [
+    editingMessageId,
+    setEditingMessageId,
+] = useState(null);
+
+const [
+    editingText,
+    setEditingText,
+] = useState("");
+
+const [
+    editingSending,
+    setEditingSending,
+] = useState(false);
     // ==========================================
     // Ref
     // ==========================================
@@ -142,7 +168,39 @@ const ChatPanel = ({
 
 }, [meetingCode]);
 
+// ==========================================
+// GET CURRENT USER
+// ==========================================
 
+useEffect(() => {
+
+    const getCurrentUser = async () => {
+
+        try {
+
+            const { data } =
+                await api.get(
+                    "/auth/current-user"
+                );
+
+            setCurrentUserId(
+                data.user?._id || ""
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Current User Error:",
+                error
+            );
+
+        }
+
+    };
+
+    getCurrentUser();
+
+}, []);
     // ==========================================
     // Load Chat History
     // ==========================================
@@ -397,7 +455,144 @@ const ChatPanel = ({
         };
 
     }, [meetingCode]);
+// ==========================================
+// EDIT / DELETE MESSAGE EVENTS
+// ==========================================
 
+useEffect(() => {
+
+    // ======================================
+    // MESSAGE EDITED
+    // ======================================
+
+    const handleMessageEdited = async (
+        updatedMessage
+    ) => {
+
+        try {
+
+            const meetingKey =
+                await getMeetingKey(
+                    meetingCode
+                );
+
+            if (!meetingKey) {
+
+                return;
+
+            }
+
+            const message =
+                await decryptMessage(
+
+                    updatedMessage.encryptedMessage,
+
+                    updatedMessage.iv,
+
+                    meetingKey
+
+                );
+
+            setMessages((prev) =>
+
+                prev.map((item) =>
+
+                    item._id ===
+                    updatedMessage._id
+
+                        ? {
+
+                            ...updatedMessage,
+
+                            message,
+
+                        }
+
+                        : item
+
+                )
+
+            );
+
+            setEditingMessageId(null);
+            setEditingText("");
+            setOpenMenuId(null);
+
+        } catch (error) {
+
+            console.error(
+                "Edited Message Decryption Error:",
+                error
+            );
+
+        }
+
+    };
+
+
+    // ======================================
+    // MESSAGE DELETED FOR EVERYONE
+    // ======================================
+
+    const handleMessageDeletedForEveryone = ({
+        messageId,
+    }) => {
+
+        setMessages((prev) =>
+
+            prev.map((item) =>
+
+                item._id === messageId
+
+                    ? {
+
+                        ...item,
+
+                        isDeletedForEveryone:
+                            true,
+
+                        message:
+                            "This message was deleted",
+
+                    }
+
+                    : item
+
+            )
+
+        );
+
+        setOpenMenuId(null);
+
+    };
+
+
+    socket.on(
+        "message-edited",
+        handleMessageEdited
+    );
+
+    socket.on(
+        "message-deleted-for-everyone",
+        handleMessageDeletedForEveryone
+    );
+
+
+    return () => {
+
+        socket.off(
+            "message-edited",
+            handleMessageEdited
+        );
+
+        socket.off(
+            "message-deleted-for-everyone",
+            handleMessageDeletedForEveryone
+        );
+
+    };
+
+}, [meetingCode]);
 
     // ==========================================
     // Typing
@@ -466,7 +661,183 @@ const ChatPanel = ({
 
     }, [messages]);
 
+// ==========================================
+// EDIT MESSAGE
+// ==========================================
 
+const handleEditMessage = async () => {
+
+    const text =
+        editingText.trim();
+
+    if (!text) {
+
+        return;
+
+    }
+
+    try {
+
+        setEditingSending(true);
+
+        const meetingKey =
+            await getMeetingKey(
+                meetingCode
+            );
+
+        if (!meetingKey) {
+
+            return;
+
+        }
+
+        const encrypted =
+            await encryptMessage(
+                text,
+                meetingKey
+            );
+
+        socket.emit(
+
+            "edit-message",
+
+            {
+
+                messageId:
+                    editingMessageId,
+
+                encryptedMessage:
+                    encrypted.encryptedMessage,
+
+                iv:
+                    encrypted.iv,
+
+            },
+
+            (response) => {
+
+                if (!response?.success) {
+
+                    console.error(
+                        "Edit Message Failed:",
+                        response?.message
+                    );
+
+                }
+
+            }
+
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Edit Message Error:",
+            error
+        );
+
+    } finally {
+
+        setEditingSending(false);
+
+    }
+
+};
+// ==========================================
+// DELETE MESSAGE FOR ME
+// ==========================================
+
+const handleDeleteForMe = (
+    messageId
+) => {
+
+    socket.emit(
+
+        "delete-message-for-me",
+
+        {
+            messageId,
+        },
+
+        (response) => {
+
+            if (!response?.success) {
+
+                console.error(
+                    "Delete For Me Failed:",
+                    response?.message
+                );
+
+                return;
+
+            }
+
+            setMessages((prev) =>
+
+                prev.filter(
+                    (item) =>
+                        item._id !== messageId
+                )
+
+            );
+
+            setOpenMenuId(null);
+
+        }
+
+    );
+
+};
+// ==========================================
+// DELETE MESSAGE FOR EVERYONE
+// ==========================================
+
+const handleDeleteForEveryone = (
+    messageId
+) => {
+
+    socket.emit(
+
+        "delete-message-for-everyone",
+
+        {
+            messageId,
+        },
+
+        (response) => {
+
+            if (!response?.success) {
+
+                console.error(
+                    "Delete For Everyone Failed:",
+                    response?.message
+                );
+
+            }
+
+        }
+
+    );
+
+};
+
+// ==========================================
+// START EDIT
+// ==========================================
+
+const startEditing = (item) => {
+
+    setEditingMessageId(
+        item._id
+    );
+
+    setEditingText(
+        item.message
+    );
+
+    setOpenMenuId(null);
+
+};
     // ==========================================
     // Send Message
     // ==========================================
@@ -942,30 +1313,273 @@ const ChatPanel = ({
                                     </div>
 
 
-                                    <div
-                                        className="
-                                            bg-gray-800/90
+                                    <div className="relative">
 
-                                            border
-                                            border-white/5
+    {/* =====================================
+        Message Bubble
+    ===================================== */}
 
-                                            rounded-2xl
-                                            rounded-bl-md
+    <div
+        className="
+            bg-gray-800/90
+            border
+            border-white/5
+            rounded-2xl
+            rounded-bl-md
+            px-3
+            py-2
+            text-sm
+            leading-relaxed
+            break-words
+            whitespace-pre-wrap
+            shadow-sm
+        "
+    >
 
-                                            px-3
-                                            py-2
+        {item.isDeletedForEveryone ? (
 
-                                            text-sm
-                                            leading-relaxed
+            <span className="text-gray-500 italic">
+                This message was deleted
+            </span>
 
-                                            break-words
-                                            whitespace-pre-wrap
+        ) : editingMessageId === item._id ? (
 
-                                            shadow-sm
-                                        "
-                                    >
-                                        {item.message}
-                                    </div>
+            <div className="space-y-2">
+
+                <input
+                    type="text"
+                    value={editingText}
+                    onChange={(e) =>
+                        setEditingText(e.target.value)
+                    }
+                    className="
+                        w-full
+                        bg-gray-700
+                        border
+                        border-white/10
+                        rounded-lg
+                        px-2
+                        py-1.5
+                        text-white
+                        outline-none
+                    "
+                    autoFocus
+                />
+
+                <div className="flex gap-2">
+
+                    <button
+                        type="button"
+                        onClick={handleEditMessage}
+                        disabled={
+                            editingSending ||
+                            !editingText.trim()
+                        }
+                        className="
+                            px-3
+                            py-1
+                            rounded-lg
+                            bg-blue-600
+                            text-white
+                            text-xs
+                            disabled:opacity-50
+                        "
+                    >
+                        Save
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+
+                            setEditingMessageId(null);
+                            setEditingText("");
+
+                        }}
+                        className="
+                            px-3
+                            py-1
+                            rounded-lg
+                            bg-gray-700
+                            text-gray-300
+                            text-xs
+                        "
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </div>
+
+        ) : (
+
+            <>
+                {item.message}
+
+                {item.isEdited && (
+
+                    <span
+                        className="
+                            ml-2
+                            text-[10px]
+                            text-gray-500
+                        "
+                    >
+                        edited
+                    </span>
+
+                )}
+
+            </>
+
+        )}
+
+    </div>
+
+
+    {/* =====================================
+        Message Menu
+    ===================================== */}
+
+    {!item.isDeletedForEveryone && (
+
+        <div className="absolute -right-8 top-1">
+
+            <button
+                type="button"
+                onClick={() =>
+                    setOpenMenuId(
+                        openMenuId === item._id
+                            ? null
+                            : item._id
+                    )
+                }
+                className="
+                    w-6
+                    h-6
+                    rounded-full
+                    flex
+                    items-center
+                    justify-center
+                    text-gray-500
+                    hover:text-white
+                    hover:bg-white/10
+                "
+            >
+                <MoreVertical size={15} />
+            </button>
+
+
+            {openMenuId === item._id && (
+
+                <div
+                    className="
+                        absolute
+                        right-0
+                        top-7
+                        w-44
+                        bg-gray-900
+                        border
+                        border-gray-700
+                        rounded-xl
+                        shadow-2xl
+                        p-1
+                        z-50
+                    "
+                >
+
+                    {item.sender?._id ===
+                        currentUserId && (
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                startEditing(item)
+                            }
+                            className="
+                                w-full
+                                flex
+                                items-center
+                                gap-2
+                                px-3
+                                py-2
+                                rounded-lg
+                                text-sm
+                                text-gray-200
+                                hover:bg-white/10
+                            "
+                        >
+                            <Pencil size={15} />
+                            Edit
+                        </button>
+
+                    )}
+
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            handleDeleteForMe(
+                                item._id
+                            )
+                        }
+                        className="
+                            w-full
+                            flex
+                            items-center
+                            gap-2
+                            px-3
+                            py-2
+                            rounded-lg
+                            text-sm
+                            text-gray-200
+                            hover:bg-white/10
+                        "
+                    >
+                        <Trash2 size={15} />
+                        Delete for me
+                    </button>
+
+
+                    {item.sender?._id ===
+                        currentUserId && (
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                handleDeleteForEveryone(
+                                    item._id
+                                )
+                            }
+                            className="
+                                w-full
+                                flex
+                                items-center
+                                gap-2
+                                px-3
+                                py-2
+                                rounded-lg
+                                text-sm
+                                text-red-400
+                                hover:bg-red-500/10
+                            "
+                        >
+                            <Trash2 size={15} />
+                            Delete for everyone
+                        </button>
+
+                    )}
+
+                </div>
+
+            )}
+
+        </div>
+
+    )}
+
+</div>
 
                                 </div>
 

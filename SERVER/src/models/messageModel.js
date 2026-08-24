@@ -77,6 +77,60 @@ const messageSchema = new mongoose.Schema({
 
         },
 
+        // ==========================================
+        // EDIT MESSAGE
+        // ==========================================
+
+        isEdited: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
+        editedAt: {
+
+            type: Date,
+
+            default: null,
+
+        },
+
+
+        // ==========================================
+        // DELETE FOR EVERYONE
+        // ==========================================
+
+        isDeletedForEveryone: {
+
+            type: Boolean,
+
+            default: false,
+
+        },
+
+        deletedAt: {
+
+            type: Date,
+
+            default: null,
+
+        },
+
+
+        // ==========================================
+        // DELETE FOR ME
+        // ==========================================
+
+        deletedFor: [{
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+        }],
+
     },
 
     {

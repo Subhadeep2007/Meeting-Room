@@ -1,5 +1,8 @@
 import {
     createMessage,
+    editMessage,
+    deleteMessageForMe,
+    deleteMessageForEveryone,
 } from "../services/messageService.js";
 
 
@@ -11,7 +14,6 @@ const registerChatEvents = (
     io,
     socket
 ) => {
-
 
     // ==========================================
     // SEND MESSAGE
@@ -170,6 +172,311 @@ const registerChatEvents = (
 
 
     // ==========================================
+    // EDIT MESSAGE
+    // ==========================================
+
+    socket.on(
+        "edit-message",
+        async(
+            data,
+            callback
+        ) => {
+
+            try {
+
+                const {
+
+                    messageId,
+
+                    encryptedMessage,
+
+                    iv,
+
+                } = data || {};
+
+
+                // ==========================================
+                // Edit Message
+                // ==========================================
+
+                const result =
+                    await editMessage({
+
+                        messageId,
+
+                        userId: socket.user._id,
+
+                        encryptedMessage,
+
+                        iv,
+
+                    });
+
+
+                const {
+                    message: updatedMessage,
+
+                    meetingCode,
+
+                } = result;
+
+
+                // ==========================================
+                // Populate Sender
+                // ==========================================
+
+                await updatedMessage.populate({
+
+                    path: "sender",
+
+                    select: "name username profilePicture",
+
+                });
+
+
+                // ==========================================
+                // Broadcast Edited Message
+                // ==========================================
+
+                io.to(
+                    meetingCode
+                ).emit(
+
+                    "message-edited",
+
+                    updatedMessage
+
+                );
+
+
+                // ==========================================
+                // ACK
+                // ==========================================
+
+                if (callback) {
+
+                    callback({
+
+                        success: true,
+
+                        message: "Message edited successfully",
+
+                        data: updatedMessage,
+
+                    });
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Edit Message Error:",
+                    error
+                );
+
+
+                if (callback) {
+
+                    callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        }
+    );
+
+
+    // ==========================================
+    // DELETE MESSAGE FOR ME
+    // ==========================================
+
+    socket.on(
+        "delete-message-for-me",
+        async(
+            data,
+            callback
+        ) => {
+
+            try {
+
+                const {
+
+                    messageId,
+
+                } = data || {};
+
+
+                // ==========================================
+                // Delete For Current User
+                // ==========================================
+
+                await deleteMessageForMe({
+
+                    messageId,
+
+                    userId: socket.user._id,
+
+                });
+
+
+                // ==========================================
+                // ACK
+                // ==========================================
+
+                if (callback) {
+
+                    callback({
+
+                        success: true,
+
+                        messageId,
+
+                    });
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Delete Message For Me Error:",
+                    error
+                );
+
+
+                if (callback) {
+
+                    callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        }
+    );
+
+
+    // ==========================================
+    // DELETE MESSAGE FOR EVERYONE
+    // ==========================================
+
+    socket.on(
+        "delete-message-for-everyone",
+        async(
+            data,
+            callback
+        ) => {
+
+            try {
+
+                const {
+
+                    messageId,
+
+                } = data || {};
+
+
+                // ==========================================
+                // Delete For Everyone
+                // ==========================================
+
+                const result =
+                    await deleteMessageForEveryone({
+
+                        messageId,
+
+                        userId: socket.user._id,
+
+                    });
+
+
+                const {
+                    message: deletedMessage,
+
+                    meetingCode,
+
+                } = result;
+
+
+                // ==========================================
+                // Broadcast Deleted Message
+                // ==========================================
+
+                io.to(
+                    meetingCode
+                ).emit(
+
+                    "message-deleted-for-everyone",
+
+                    {
+
+                        messageId: deletedMessage._id.toString(),
+
+                        deletedAt: deletedMessage.deletedAt,
+
+                    }
+
+                );
+
+
+                // ==========================================
+                // ACK
+                // ==========================================
+
+                if (callback) {
+
+                    callback({
+
+                        success: true,
+
+                        messageId,
+
+                    });
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Delete Message For Everyone Error:",
+                    error
+                );
+
+
+                if (callback) {
+
+                    callback({
+
+                        success: false,
+
+                        message: error.message,
+
+                    });
+
+                }
+
+            }
+
+        }
+    );
+
+
+    // ==========================================
     // USER TYPING
     // ==========================================
 
@@ -189,7 +496,10 @@ const registerChatEvents = (
             socket
                 .to(meetingId)
                 .emit(
-                    "user-typing", {
+
+                    "user-typing",
+
+                    {
 
                         userId: socket.user._id.toString(),
 
@@ -198,6 +508,7 @@ const registerChatEvents = (
                         profilePicture: socket.user.profilePicture,
 
                     }
+
                 );
 
         }
@@ -224,11 +535,15 @@ const registerChatEvents = (
             socket
                 .to(meetingId)
                 .emit(
-                    "user-stop-typing", {
+
+                    "user-stop-typing",
+
+                    {
 
                         userId: socket.user._id.toString(),
 
                     }
+
                 );
 
         }
