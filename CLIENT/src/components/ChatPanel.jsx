@@ -1476,7 +1476,7 @@ const startEditing = (item) => {
                 <div
                     className="
                         absolute
-                        right-0
+                        right-auto
                         top-7
                         w-44
                         bg-gray-900
