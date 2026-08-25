@@ -30,21 +30,25 @@ function App() {
     // Get User Settings
     // =====================================
 
-    useEffect(() => {
+   useEffect(() => {
 
-        const getSettings = async () => {
+    const getSettings = async () => {
 
-            try {
+        try {
 
-                const { data } = await api.get(
-                    "/user/settings"
-                );
+            const { data } = await api.get(
+                "/user/settings"
+            );
 
-                setDarkMode(
-                    data.settings?.darkMode || false
-                );
+            setDarkMode(
+                data.settings?.darkMode || false
+            );
 
-            } catch (error) {
+        } catch (error) {
+
+            // User is not logged in yet.
+            // Do not show an unnecessary console error.
+            if (error.response?.status !== 401) {
 
                 console.error(
                     "App Settings Error:",
@@ -53,11 +57,13 @@ function App() {
 
             }
 
-        };
+        }
 
-        getSettings();
+    };
 
-    }, []);
+    getSettings();
+
+}, []);
 
 
     // =====================================
