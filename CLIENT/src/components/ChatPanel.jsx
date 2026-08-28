@@ -80,7 +80,7 @@ const ChatPanel = ({
     ] = useState(null);
 
     // ==========================================
-    // Reply State
+    // Reply
     // ==========================================
 
     const [
@@ -89,7 +89,7 @@ const ChatPanel = ({
     ] = useState(null);
 
     // ==========================================
-    // Edit State
+    // Edit
     // ==========================================
 
     const [
@@ -119,7 +119,7 @@ const ChatPanel = ({
 
 
     // ==========================================
-    // Check Encryption Key
+    // Encryption
     // ==========================================
 
     const checkEncryptionKey = async () => {
@@ -227,9 +227,7 @@ const ChatPanel = ({
     useEffect(() => {
 
         if (!meetingId) {
-
             return;
-
         }
 
 
@@ -240,13 +238,11 @@ const ChatPanel = ({
 
             try {
 
-                setLoadingHistory(
-                    true
-                );
+                setLoadingHistory(true);
 
 
                 // =================================
-                // Wait For Encryption Key
+                // Get Meeting Key
                 // =================================
 
                 const meetingKey =
@@ -257,9 +253,7 @@ const ChatPanel = ({
 
                 if (!meetingKey) {
 
-                    setLoadingHistory(
-                        false
-                    );
+                    setLoadingHistory(false);
 
                     return;
 
@@ -277,9 +271,7 @@ const ChatPanel = ({
 
 
                 if (cancelled) {
-
                     return;
-
                 }
 
 
@@ -308,11 +300,8 @@ const ChatPanel = ({
 
 
                                     return {
-
                                         ...item,
-
                                         message,
-
                                     };
 
                                 } catch (error) {
@@ -324,12 +313,9 @@ const ChatPanel = ({
 
 
                                     return {
-
                                         ...item,
-
                                         message:
                                             "Unable to decrypt message",
-
                                     };
 
                                 }
@@ -356,9 +342,7 @@ const ChatPanel = ({
 
                 if (!cancelled) {
 
-                    setLoadingHistory(
-                        false
-                    );
+                    setLoadingHistory(false);
 
                 }
 
@@ -419,43 +403,30 @@ const ChatPanel = ({
                         );
 
 
-                    setMessages(
-                        (prev) => {
+                    setMessages((prev) => {
 
-                            // Prevent duplicate
-                            // message insertion
-
-                            const exists =
-                                prev.some(
-                                    (item) =>
-                                        item._id ===
-                                        encryptedMessage._id
-                                );
+                        const exists =
+                            prev.some(
+                                (item) =>
+                                    item._id ===
+                                    encryptedMessage._id
+                            );
 
 
-                            if (exists) {
-
-                                return prev;
-
-                            }
-
-
-                            return [
-
-                                ...prev,
-
-                                {
-
-                                    ...encryptedMessage,
-
-                                    message,
-
-                                },
-
-                            ];
-
+                        if (exists) {
+                            return prev;
                         }
-                    );
+
+
+                        return [
+                            ...prev,
+                            {
+                                ...encryptedMessage,
+                                message,
+                            },
+                        ];
+
+                    });
 
 
                 } catch (error) {
@@ -489,7 +460,7 @@ const ChatPanel = ({
 
 
     // ==========================================
-    // EDIT / DELETE MESSAGE EVENTS
+    // EDIT / DELETE EVENTS
     // ==========================================
 
     useEffect(() => {
@@ -510,9 +481,7 @@ const ChatPanel = ({
 
 
                     if (!meetingKey) {
-
                         return;
-
                     }
 
 
@@ -524,35 +493,24 @@ const ChatPanel = ({
                         );
 
 
-                    setMessages(
-                        (prev) =>
-                            prev.map(
-                                (item) =>
-                                    item._id ===
-                                    updatedMessage._id
-                                        ? {
+                    setMessages((prev) =>
+                        prev.map((item) =>
+                            item._id ===
+                            updatedMessage._id
 
-                                            ...updatedMessage,
+                                ? {
+                                    ...updatedMessage,
+                                    message,
+                                }
 
-                                            message,
-
-                                        }
-                                        : item
-                            )
+                                : item
+                        )
                     );
 
 
-                    setEditingMessageId(
-                        null
-                    );
-
-                    setEditingText(
-                        ""
-                    );
-
-                    setOpenMenuId(
-                        null
-                    );
+                    setEditingMessageId(null);
+                    setEditingText("");
+                    setOpenMenuId(null);
 
 
                 } catch (error) {
@@ -568,69 +526,54 @@ const ChatPanel = ({
 
 
         // ======================================
-        // MESSAGE DELETED FOR EVERYONE
+        // DELETE FOR EVERYONE
         // ======================================
 
         const handleMessageDeletedForEveryone = ({
             messageId,
         }) => {
 
-            setMessages(
-                (prev) =>
-                    prev.map(
-                        (item) =>
-                            item._id ===
-                            messageId
-                                ? {
+            setMessages((prev) =>
+                prev.map((item) =>
 
-                                    ...item,
+                    item._id === messageId
 
-                                    isDeletedForEveryone:
-                                        true,
-
-                                    message:
-                                        "This message was deleted",
-
-                                }
-                                : item
-                    )
-            );
-
-
-            // If current selected reply
-            // was deleted
-
-            setReplyingTo(
-                (prev) => {
-
-                    if (
-                        prev?._id ===
-                        messageId
-                    ) {
-
-                        return {
-
-                            ...prev,
-
-                            isDeletedForEveryone:
-                                true,
-
+                        ? {
+                            ...item,
+                            isDeletedForEveryone: true,
                             message:
                                 "This message was deleted",
+                        }
 
-                        };
+                        : item
+                )
+            );
 
-                    }
 
-                    return prev;
+            // If user was replying
+            // to deleted message
+
+            setReplyingTo((prev) => {
+
+                if (
+                    prev?._id === messageId
+                ) {
+
+                    return {
+                        ...prev,
+                        isDeletedForEveryone: true,
+                        message:
+                            "This message was deleted",
+                    };
 
                 }
-            );
+
+                return prev;
+
+            });
 
 
-            setOpenMenuId(
-                null
-            );
+            setOpenMenuId(null);
 
         };
 
@@ -672,18 +615,14 @@ const ChatPanel = ({
 
         const handleTyping = (user) => {
 
-            setTypingUser(
-                user
-            );
+            setTypingUser(user);
 
         };
 
 
         const handleStopTyping = () => {
 
-            setTypingUser(
-                null
-            );
+            setTypingUser(null);
 
         };
 
@@ -724,9 +663,7 @@ const ChatPanel = ({
     useEffect(() => {
 
         messagesEndRef.current?.scrollIntoView({
-
             behavior: "smooth",
-
         });
 
     }, [messages]);
@@ -743,17 +680,13 @@ const ChatPanel = ({
 
 
         if (!text) {
-
             return;
-
         }
 
 
         try {
 
-            setEditingSending(
-                true
-            );
+            setEditingSending(true);
 
 
             const meetingKey =
@@ -763,13 +696,10 @@ const ChatPanel = ({
 
 
             if (!meetingKey) {
-
                 return;
-
             }
 
 
-            // Encrypt new message
             const encrypted =
                 await encryptMessage(
                     text,
@@ -778,11 +708,8 @@ const ChatPanel = ({
 
 
             socket.emit(
-
                 "edit-message",
-
                 {
-
                     messageId:
                         editingMessageId,
 
@@ -791,14 +718,10 @@ const ChatPanel = ({
 
                     iv:
                         encrypted.iv,
-
                 },
-
                 (response) => {
 
-                    if (
-                        !response?.success
-                    ) {
+                    if (!response?.success) {
 
                         console.error(
                             "Edit Message Failed:",
@@ -808,7 +731,6 @@ const ChatPanel = ({
                     }
 
                 }
-
             );
 
 
@@ -821,9 +743,7 @@ const ChatPanel = ({
 
         } finally {
 
-            setEditingSending(
-                false
-            );
+            setEditingSending(false);
 
         }
 
@@ -831,7 +751,7 @@ const ChatPanel = ({
 
 
     // ==========================================
-    // DELETE MESSAGE FOR ME
+    // DELETE FOR ME
     // ==========================================
 
     const handleDeleteForMe = (
@@ -839,15 +759,10 @@ const ChatPanel = ({
     ) => {
 
         socket.emit(
-
             "delete-message-for-me",
-
             {
-
                 messageId,
-
             },
-
             (response) => {
 
                 if (!response?.success) {
@@ -862,41 +777,32 @@ const ChatPanel = ({
                 }
 
 
-                setMessages(
-                    (prev) =>
-                        prev.filter(
-                            (item) =>
-                                item._id !==
-                                messageId
-                        )
+                setMessages((prev) =>
+                    prev.filter(
+                        (item) =>
+                            item._id !==
+                            messageId
+                    )
                 );
 
 
-                // If deleted message was
-                // currently being replied to
-
-                setReplyingTo(
-                    (prev) =>
-                        prev?._id ===
-                        messageId
-                            ? null
-                            : prev
+                setReplyingTo((prev) =>
+                    prev?._id === messageId
+                        ? null
+                        : prev
                 );
 
 
-                setOpenMenuId(
-                    null
-                );
+                setOpenMenuId(null);
 
             }
-
         );
 
     };
 
 
     // ==========================================
-    // DELETE MESSAGE FOR EVERYONE
+    // DELETE FOR EVERYONE
     // ==========================================
 
     const handleDeleteForEveryone = (
@@ -904,15 +810,10 @@ const ChatPanel = ({
     ) => {
 
         socket.emit(
-
             "delete-message-for-everyone",
-
             {
-
                 messageId,
-
             },
-
             (response) => {
 
                 if (!response?.success) {
@@ -925,7 +826,6 @@ const ChatPanel = ({
                 }
 
             }
-
         );
 
     };
@@ -947,13 +847,9 @@ const ChatPanel = ({
             item.message
         );
 
-        setReplyingTo(
-            null
-        );
+        setReplyingTo(null);
 
-        setOpenMenuId(
-            null
-        );
+        setOpenMenuId(null);
 
     };
 
@@ -969,27 +865,17 @@ const ChatPanel = ({
         if (
             item.isDeletedForEveryone
         ) {
-
             return;
-
         }
 
 
-        setReplyingTo(
-            item
-        );
+        setReplyingTo(item);
 
-        setEditingMessageId(
-            null
-        );
+        setEditingMessageId(null);
 
-        setEditingText(
-            ""
-        );
+        setEditingText("");
 
-        setOpenMenuId(
-            null
-        );
+        setOpenMenuId(null);
 
     };
 
@@ -1010,9 +896,7 @@ const ChatPanel = ({
 
 
         if (!text) {
-
             return;
-
         }
 
 
@@ -1035,9 +919,7 @@ const ChatPanel = ({
 
         try {
 
-            setSending(
-                true
-            );
+            setSending(true);
 
 
             // =================================
@@ -1056,11 +938,8 @@ const ChatPanel = ({
             // =================================
 
             socket.emit(
-
                 "send-message",
-
                 {
-
                     meetingId,
 
                     encryptedMessage:
@@ -1072,9 +951,7 @@ const ChatPanel = ({
                     replyTo:
                         replyingTo?._id ||
                         null,
-
                 },
-
                 (response) => {
 
                     if (
@@ -1089,15 +966,12 @@ const ChatPanel = ({
                     }
 
                 }
-
             );
 
 
             setInput("");
 
-            setReplyingTo(
-                null
-            );
+            setReplyingTo(null);
 
 
             // =================================
@@ -1122,9 +996,7 @@ const ChatPanel = ({
 
         } finally {
 
-            setSending(
-                false
-            );
+            setSending(false);
 
         }
 
@@ -1143,9 +1015,7 @@ const ChatPanel = ({
             e.target.value;
 
 
-        setInput(
-            value
-        );
+        setInput(value);
 
 
         if (!value.trim()) {
@@ -1212,7 +1082,7 @@ const ChatPanel = ({
         >
 
             {/* =================================
-                Header
+                HEADER
             ================================= */}
 
             <div
@@ -1259,7 +1129,6 @@ const ChatPanel = ({
                             font-semibold
                             text-sm
                             sm:text-base
-                            truncate
                         "
                     >
                         Meeting Chat
@@ -1282,7 +1151,7 @@ const ChatPanel = ({
 
 
             {/* =================================
-                Messages
+                MESSAGES
             ================================= */}
 
             <div
@@ -1308,7 +1177,6 @@ const ChatPanel = ({
                             flex
                             items-center
                             justify-center
-                            text-center
                             text-gray-500
                             text-sm
                         "
@@ -1377,436 +1245,474 @@ const ChatPanel = ({
                 ) : (
 
                     messages.map(
-                        (item) => (
+                        (item) => {
 
-                            <div
-                                key={item._id}
-                                className="
-                                    flex
-                                    items-end
-                                    gap-2.5
-                                    sm:gap-3
-                                "
-                            >
+                            const isOwnMessage =
+                                item.sender?._id ===
+                                currentUserId;
 
-                                {/* =================================
-                                    Avatar
-                                ================================= */}
 
-                                <img
-                                    src={
-                                        item.sender
-                                            ?.profilePicture
-                                            ?.url ||
-                                        "/default-avatar.png"
-                                    }
-                                    alt={
-                                        item.sender
-                                            ?.username ||
-                                        "User"
-                                    }
-                                    className="
-                                        shrink-0
-                                        w-8
-                                        h-8
-                                        sm:w-9
-                                        sm:h-9
-                                        rounded-full
-                                        object-cover
-                                        ring-1
-                                        ring-white/10
-                                    "
-                                />
+                            const repliedMessage =
+                                item.replyTo
+                                    ? messages.find(
+                                        (message) =>
+                                            message._id ===
+                                            item.replyTo?._id
+                                    )
+                                    : null;
 
+
+                            return (
 
                                 <div
-                                    className="
-                                        min-w-0
-                                        max-w-[82%]
-                                        sm:max-w-[78%]
-                                    "
+                                    key={item._id}
+                                    className={`
+                                        flex
+                                        items-end
+                                        gap-2
+                                        sm:gap-3
+                                        ${
+                                            isOwnMessage
+                                                ? "justify-end"
+                                                : "justify-start"
+                                        }
+                                    `}
                                 >
 
                                     {/* =================================
-                                        Username
+                                        OTHER USER AVATAR
+                                    ================================= */}
+
+                                    {!isOwnMessage && (
+
+                                        <img
+                                            src={
+                                                item.sender
+                                                    ?.profilePicture
+                                                    ?.url ||
+                                                "/default-avatar.png"
+                                            }
+                                            alt={
+                                                item.sender
+                                                    ?.username ||
+                                                "User"
+                                            }
+                                            className="
+                                                shrink-0
+                                                w-8
+                                                h-8
+                                                sm:w-9
+                                                sm:h-9
+                                                rounded-full
+                                                object-cover
+                                                ring-1
+                                                ring-white/10
+                                            "
+                                        />
+
+                                    )}
+
+
+                                    {/* =================================
+                                        MESSAGE AREA
                                     ================================= */}
 
                                     <div
-                                        className="
-                                            px-1
-                                            mb-1
-                                            text-[10px]
-                                            sm:text-xs
-                                            text-gray-500
-                                            truncate
-                                        "
+                                        className={`
+                                            min-w-0
+                                            ${
+                                                isOwnMessage
+                                                    ? "max-w-[84%] sm:max-w-[78%]"
+                                                    : "max-w-[84%] sm:max-w-[78%]"
+                                            }
+                                        `}
                                     >
 
-                                        {
-                                            item.sender
-                                                ?.username ||
-                                            "User"
-                                        }
-
-                                    </div>
-
-
-                                    <div className="relative">
-
-                                        {/* =================================
-                                            Message Bubble
-                                        ================================= */}
+                                        {/* USERNAME */}
 
                                         <div
-                                            className="
-                                                bg-gray-800/90
-                                                border
-                                                border-white/5
-                                                rounded-2xl
-                                                rounded-bl-md
-                                                px-3
-                                                py-2
-                                                text-sm
-                                                leading-relaxed
-                                                break-words
-                                                whitespace-pre-wrap
-                                                shadow-sm
-                                            "
+                                            className={`
+                                                px-1
+                                                mb-1
+                                                text-[10px]
+                                                sm:text-xs
+                                                text-gray-500
+                                                truncate
+                                                ${
+                                                    isOwnMessage
+                                                        ? "text-right"
+                                                        : "text-left"
+                                                }
+                                            `}
                                         >
 
-                                            {/* =====================================
-                                                REPLIED MESSAGE PREVIEW
-                                            ===================================== */}
-
-                                            {item.replyTo && (
-
-                                                <div
-                                                    className="
-                                                        mb-2
-                                                        px-3
-                                                        py-2
-                                                        rounded-lg
-                                                        bg-black/20
-                                                        border-l-2
-                                                        border-blue-500
-                                                    "
-                                                >
-
-                                                    <div
-                                                        className="
-                                                            text-[10px]
-                                                            text-blue-400
-                                                            font-semibold
-                                                        "
-                                                    >
-
-                                                        {
-                                                            item.replyTo
-                                                                ?.sender
-                                                                ?.username ||
-                                                            "User"
-                                                        }
-
-                                                    </div>
-
-
-                                                    <div
-                                                        className="
-                                                            mt-0.5
-                                                            text-xs
-                                                            text-gray-400
-                                                            line-clamp-2
-                                                        "
-                                                    >
-
-                                                        {
-                                                            item.replyTo
-                                                                ?.isDeletedForEveryone
-                                                                ? "This message was deleted"
-                                                                : (
-                                                                    messages.find(
-                                                                        (msg) =>
-                                                                            msg._id ===
-                                                                            item.replyTo?._id
-                                                                    )?.message ||
-                                                                    item.replyTo?.message ||
-                                                                    "Original message"
-                                                                )
-                                                        }
-
-                                                    </div>
-
-                                                </div>
-
-                                            )}
-
-
-                                            {/* =====================================
-                                                CURRENT MESSAGE
-                                            ===================================== */}
-
-                                            {item.isDeletedForEveryone ? (
-
-                                                <span
-                                                    className="
-                                                        text-gray-500
-                                                        italic
-                                                    "
-                                                >
-                                                    This message was deleted
-                                                </span>
-
-                                            ) : editingMessageId === item._id ? (
-
-                                                <div className="space-y-2">
-
-                                                    <input
-                                                        type="text"
-                                                        value={
-                                                            editingText
-                                                        }
-                                                        onChange={(e) =>
-                                                            setEditingText(
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="
-                                                            w-full
-                                                            bg-gray-700
-                                                            border
-                                                            border-white/10
-                                                            rounded-lg
-                                                            px-2
-                                                            py-1.5
-                                                            text-white
-                                                            outline-none
-                                                        "
-                                                        autoFocus
-                                                    />
-
-
-                                                    <div
-                                                        className="
-                                                            flex
-                                                            gap-2
-                                                        "
-                                                    >
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={
-                                                                handleEditMessage
-                                                            }
-                                                            disabled={
-                                                                editingSending ||
-                                                                !editingText.trim()
-                                                            }
-                                                            className="
-                                                                px-3
-                                                                py-1
-                                                                rounded-lg
-                                                                bg-blue-600
-                                                                text-white
-                                                                text-xs
-                                                                disabled:opacity-50
-                                                            "
-                                                        >
-                                                            Save
-                                                        </button>
-
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-
-                                                                setEditingMessageId(
-                                                                    null
-                                                                );
-
-                                                                setEditingText(
-                                                                    ""
-                                                                );
-
-                                                            }}
-                                                            className="
-                                                                px-3
-                                                                py-1
-                                                                rounded-lg
-                                                                bg-gray-700
-                                                                text-gray-300
-                                                                text-xs
-                                                            "
-                                                        >
-                                                            Cancel
-                                                        </button>
-
-                                                    </div>
-
-                                                </div>
-
-                                            ) : (
-
-                                                <>
-                                                    {item.message}
-
-                                                    {item.isEdited && (
-
-                                                        <span
-                                                            className="
-                                                                ml-2
-                                                                text-[10px]
-                                                                text-gray-500
-                                                            "
-                                                        >
-                                                            edited
-                                                        </span>
-
-                                                    )}
-
-                                                </>
-
-                                            )}
+                                            {
+                                                isOwnMessage
+                                                    ? "You"
+                                                    : (
+                                                        item.sender
+                                                            ?.username ||
+                                                        "User"
+                                                    )
+                                            }
 
                                         </div>
 
 
-                                        {/* =====================================
-                                            Message Actions
-                                        ===================================== */}
+                                        {/* MESSAGE + ACTIONS */}
 
-                                        {!item.isDeletedForEveryone && (
+                                        <div className="relative">
+
+                                            {/* =================================
+                                                MESSAGE BUBBLE
+                                            ================================= */}
 
                                             <div
-                                                className="
-                                                    absolute
-                                                    -right-8
-                                                    top-1
-                                                    flex
-                                                    items-center
-                                                    gap-1
-                                                "
+                                                className={`
+                                                    border
+                                                    px-3
+                                                    py-2.5
+                                                    text-sm
+                                                    leading-relaxed
+                                                    break-words
+                                                    whitespace-pre-wrap
+                                                    shadow-sm
+                                                    ${
+                                                        isOwnMessage
+                                                            ? `
+                                                                bg-blue-600
+                                                                border-blue-500
+                                                                rounded-2xl
+                                                                rounded-br-md
+                                                              `
+                                                            : `
+                                                                bg-gray-800/90
+                                                                border-white/5
+                                                                rounded-2xl
+                                                                rounded-bl-md
+                                                              `
+                                                    }
+                                                `}
                                             >
 
-                                                {/* ================================
-                                                    Reply Button
+                                                {/* =================================
+                                                    REPLY PREVIEW
                                                 ================================= */}
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        startReplying(
-                                                            item
-                                                        )
-                                                    }
-                                                    className="
-                                                        w-6
-                                                        h-6
-                                                        rounded-full
-                                                        flex
-                                                        items-center
-                                                        justify-center
-                                                        text-gray-500
-                                                        hover:text-white
-                                                        hover:bg-white/10
-                                                        text-xs
-                                                    "
-                                                    title="Reply"
-                                                >
-                                                    ↩
-                                                </button>
-
-
-                                                {/* ================================
-                                                    More Button
-                                                ================================= */}
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setOpenMenuId(
-                                                            openMenuId ===
-                                                                item._id
-                                                                ? null
-                                                                : item._id
-                                                        )
-                                                    }
-                                                    className="
-                                                        w-6
-                                                        h-6
-                                                        rounded-full
-                                                        flex
-                                                        items-center
-                                                        justify-center
-                                                        text-gray-500
-                                                        hover:text-white
-                                                        hover:bg-white/10
-                                                    "
-                                                    title="More"
-                                                >
-                                                    <MoreVertical
-                                                        size={15}
-                                                    />
-                                                </button>
-
-
-                                                {/* ================================
-                                                    More Menu
-                                                ================================= */}
-
-                                                {openMenuId ===
-                                                    item._id && (
+                                                {item.replyTo && (
 
                                                     <div
-                                                        className="
-                                                            absolute
-                                                            right-0
-                                                            top-7
-                                                            w-44
-                                                            bg-gray-900
-                                                            border
-                                                            border-gray-700
-                                                            rounded-xl
-                                                            shadow-2xl
-                                                            p-1
-                                                            z-50
-                                                        "
+                                                        className={`
+                                                            mb-2
+                                                            px-3
+                                                            py-2
+                                                            rounded-lg
+                                                            border-l-2
+                                                            ${
+                                                                isOwnMessage
+                                                                    ? "bg-blue-700/60 border-blue-200"
+                                                                    : "bg-black/20 border-blue-500"
+                                                            }
+                                                        `}
                                                     >
 
-                                                        {/* Reply */}
+                                                        <div
+                                                            className={`
+                                                                text-[10px]
+                                                                font-semibold
+                                                                ${
+                                                                    isOwnMessage
+                                                                        ? "text-blue-100"
+                                                                        : "text-blue-400"
+                                                                }
+                                                            `}
+                                                        >
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                startReplying(
-                                                                    item
+                                                            {
+                                                                item.replyTo
+                                                                    ?.sender
+                                                                    ?.username ||
+                                                                repliedMessage
+                                                                    ?.sender
+                                                                    ?.username ||
+                                                                "User"
+                                                            }
+
+                                                        </div>
+
+
+                                                        <div
+                                                            className={`
+                                                                mt-0.5
+                                                                text-xs
+                                                                line-clamp-2
+                                                                ${
+                                                                    isOwnMessage
+                                                                        ? "text-blue-100/80"
+                                                                        : "text-gray-400"
+                                                                }
+                                                            `}
+                                                        >
+
+                                                            {
+                                                                item.replyTo
+                                                                    ?.isDeletedForEveryone ||
+                                                                repliedMessage
+                                                                    ?.isDeletedForEveryone
+
+                                                                    ? "This message was deleted"
+
+                                                                    : (
+                                                                        repliedMessage
+                                                                            ?.message ||
+                                                                        item.replyTo
+                                                                            ?.message ||
+                                                                        "Original message"
+                                                                    )
+                                                            }
+
+                                                        </div>
+
+                                                    </div>
+
+                                                )}
+
+
+                                                {/* =================================
+                                                    DELETED MESSAGE
+                                                ================================= */}
+
+                                                {item.isDeletedForEveryone ? (
+
+                                                    <span
+                                                        className={`
+                                                            italic
+                                                            ${
+                                                                isOwnMessage
+                                                                    ? "text-blue-100/70"
+                                                                    : "text-gray-500"
+                                                            }
+                                                        `}
+                                                    >
+                                                        This message was deleted
+                                                    </span>
+
+                                                ) : editingMessageId ===
+                                                    item._id ? (
+
+                                                    /* =================================
+                                                        EDIT MODE
+                                                    ================================= */
+
+                                                    <div className="space-y-2">
+
+                                                        <input
+                                                            type="text"
+                                                            value={
+                                                                editingText
+                                                            }
+                                                            onChange={(e) =>
+                                                                setEditingText(
+                                                                    e.target.value
                                                                 )
                                                             }
                                                             className="
                                                                 w-full
-                                                                flex
-                                                                items-center
-                                                                gap-2
-                                                                px-3
-                                                                py-2
+                                                                bg-gray-700
+                                                                border
+                                                                border-white/10
                                                                 rounded-lg
-                                                                text-sm
-                                                                text-gray-200
-                                                                hover:bg-white/10
+                                                                px-2
+                                                                py-1.5
+                                                                text-white
+                                                                outline-none
+                                                            "
+                                                            autoFocus
+                                                        />
+
+
+                                                        <div
+                                                            className="
+                                                                flex
+                                                                gap-2
                                                             "
                                                         >
-                                                            ↩ Reply
-                                                        </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={
+                                                                    handleEditMessage
+                                                                }
+                                                                disabled={
+                                                                    editingSending ||
+                                                                    !editingText.trim()
+                                                                }
+                                                                className="
+                                                                    px-3
+                                                                    py-1
+                                                                    rounded-lg
+                                                                    bg-blue-500
+                                                                    text-white
+                                                                    text-xs
+                                                                    disabled:opacity-50
+                                                                "
+                                                            >
+                                                                Save
+                                                            </button>
 
 
-                                                        {/* Edit */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
 
-                                                        {item.sender?._id ===
-                                                            currentUserId && (
+                                                                    setEditingMessageId(
+                                                                        null
+                                                                    );
+
+                                                                    setEditingText(
+                                                                        ""
+                                                                    );
+
+                                                                }}
+                                                                className="
+                                                                    px-3
+                                                                    py-1
+                                                                    rounded-lg
+                                                                    bg-gray-700
+                                                                    text-gray-300
+                                                                    text-xs
+                                                                "
+                                                            >
+                                                                Cancel
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                ) : (
+
+                                                    /* =================================
+                                                        NORMAL MESSAGE
+                                                    ================================= */
+
+                                                    <>
+                                                        <span>
+                                                            {item.message}
+                                                        </span>
+
+
+                                                        {item.isEdited && (
+
+                                                            <span
+                                                                className={`
+                                                                    ml-2
+                                                                    text-[10px]
+                                                                    ${
+                                                                        isOwnMessage
+                                                                            ? "text-blue-100/70"
+                                                                            : "text-gray-500"
+                                                                    }
+                                                                `}
+                                                            >
+                                                                edited
+                                                            </span>
+
+                                                        )}
+
+                                                    </>
+
+                                                )}
+
+                                            </div>
+
+
+                                            {/* =================================
+                                                MESSAGE MENU
+                                            ================================= */}
+
+                                            {!item.isDeletedForEveryone && (
+
+                                                <div
+                                                    className={`
+                                                        absolute
+                                                        ${
+                                                            isOwnMessage
+                                                                ? "-left-8"
+                                                                : "-right-8"
+                                                        }
+                                                        top-1
+                                                    `}
+                                                >
+
+                                                    {/* MORE BUTTON */}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setOpenMenuId(
+                                                                openMenuId ===
+                                                                    item._id
+                                                                    ? null
+                                                                    : item._id
+                                                            )
+                                                        }
+                                                        className="
+                                                            w-7
+                                                            h-7
+                                                            rounded-full
+                                                            flex
+                                                            items-center
+                                                            justify-center
+                                                            text-gray-500
+                                                            hover:text-white
+                                                            hover:bg-white/10
+                                                            active:bg-white/20
+                                                            transition
+                                                        "
+                                                        title="Message options"
+                                                    >
+
+                                                        <MoreVertical
+                                                            size={16}
+                                                        />
+
+                                                    </button>
+
+
+                                                    {/* MENU */}
+
+                                                    {openMenuId ===
+                                                        item._id && (
+
+                                                        <div
+                                                            className={`
+                                                                absolute
+                                                                top-8
+                                                                w-48
+                                                                bg-gray-900
+                                                                border
+                                                                border-gray-700
+                                                                rounded-xl
+                                                                shadow-2xl
+                                                                p-1
+                                                                z-50
+                                                                ${
+                                                                    isOwnMessage
+                                                                        ? "left-0"
+                                                                        : "right-0"
+                                                                }
+                                                            `}
+                                                        >
+
+                                                            {/* =================================
+                                                                REPLY
+                                                            ================================= */}
 
                                                             <button
                                                                 type="button"
                                                                 onClick={() =>
-                                                                    startEditing(
+                                                                    startReplying(
                                                                         item
                                                                     )
                                                                 }
@@ -1816,66 +1722,79 @@ const ChatPanel = ({
                                                                     items-center
                                                                     gap-2
                                                                     px-3
-                                                                    py-2
+                                                                    py-2.5
                                                                     rounded-lg
                                                                     text-sm
                                                                     text-gray-200
                                                                     hover:bg-white/10
+                                                                    active:bg-white/15
+                                                                    transition
                                                                 "
                                                             >
 
-                                                                <Pencil
-                                                                    size={15}
-                                                                />
+                                                                <span
+                                                                    className="
+                                                                        text-base
+                                                                        leading-none
+                                                                    "
+                                                                >
+                                                                    ↩
+                                                                </span>
 
-                                                                Edit
+                                                                Reply
 
                                                             </button>
 
-                                                        )}
+
+                                                            {/* =================================
+                                                                EDIT
+                                                            ================================= */}
+
+                                                            {item.sender?._id ===
+                                                                currentUserId && (
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        startEditing(
+                                                                            item
+                                                                        )
+                                                                    }
+                                                                    className="
+                                                                        w-full
+                                                                        flex
+                                                                        items-center
+                                                                        gap-2
+                                                                        px-3
+                                                                        py-2.5
+                                                                        rounded-lg
+                                                                        text-sm
+                                                                        text-gray-200
+                                                                        hover:bg-white/10
+                                                                        active:bg-white/15
+                                                                        transition
+                                                                    "
+                                                                >
+
+                                                                    <Pencil
+                                                                        size={15}
+                                                                    />
+
+                                                                    Edit
+
+                                                                </button>
+
+                                                            )}
 
 
-                                                        {/* Delete For Me */}
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleDeleteForMe(
-                                                                    item._id
-                                                                )
-                                                            }
-                                                            className="
-                                                                w-full
-                                                                flex
-                                                                items-center
-                                                                gap-2
-                                                                px-3
-                                                                py-2
-                                                                rounded-lg
-                                                                text-sm
-                                                                text-gray-200
-                                                                hover:bg-white/10
-                                                            "
-                                                        >
-
-                                                            <Trash2
-                                                                size={15}
-                                                            />
-
-                                                            Delete for me
-
-                                                        </button>
-
-
-                                                        {/* Delete For Everyone */}
-
-                                                        {item.sender?._id ===
-                                                            currentUserId && (
+                                                            {/* =================================
+                                                                DELETE FOR ME
+                                                            ================================= */}
 
                                                             <button
                                                                 type="button"
                                                                 onClick={() =>
-                                                                    handleDeleteForEveryone(
+                                                                    handleDeleteForMe(
                                                                         item._id
                                                                     )
                                                                 }
@@ -1885,11 +1804,13 @@ const ChatPanel = ({
                                                                     items-center
                                                                     gap-2
                                                                     px-3
-                                                                    py-2
+                                                                    py-2.5
                                                                     rounded-lg
                                                                     text-sm
-                                                                    text-red-400
-                                                                    hover:bg-red-500/10
+                                                                    text-gray-200
+                                                                    hover:bg-white/10
+                                                                    active:bg-white/15
+                                                                    transition
                                                                 "
                                                             >
 
@@ -1897,34 +1818,106 @@ const ChatPanel = ({
                                                                     size={15}
                                                                 />
 
-                                                                Delete for everyone
+                                                                Delete for me
 
                                                             </button>
 
-                                                        )}
 
-                                                    </div>
+                                                            {/* =================================
+                                                                DELETE FOR EVERYONE
+                                                            ================================= */}
 
-                                                )}
+                                                            {item.sender?._id ===
+                                                                currentUserId && (
 
-                                            </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleDeleteForEveryone(
+                                                                            item._id
+                                                                        )
+                                                                    }
+                                                                    className="
+                                                                        w-full
+                                                                        flex
+                                                                        items-center
+                                                                        gap-2
+                                                                        px-3
+                                                                        py-2.5
+                                                                        rounded-lg
+                                                                        text-sm
+                                                                        text-red-400
+                                                                        hover:bg-red-500/10
+                                                                        active:bg-red-500/15
+                                                                        transition
+                                                                    "
+                                                                >
 
-                                        )}
+                                                                    <Trash2
+                                                                        size={15}
+                                                                    />
+
+                                                                    Delete for everyone
+
+                                                                </button>
+
+                                                            )}
+
+                                                        </div>
+
+                                                    )}
+
+                                                </div>
+
+                                            )}
+
+                                        </div>
 
                                     </div>
 
+
+                                    {/* =================================
+                                        OWN USER AVATAR
+                                    ================================= */}
+
+                                    {isOwnMessage && (
+
+                                        <img
+                                            src={
+                                                item.sender
+                                                    ?.profilePicture
+                                                    ?.url ||
+                                                "/default-avatar.png"
+                                            }
+                                            alt="You"
+                                            className="
+                                                shrink-0
+                                                w-8
+                                                h-8
+                                                sm:w-9
+                                                sm:h-9
+                                                rounded-full
+                                                object-cover
+                                                ring-1
+                                                ring-white/10
+                                            "
+                                        />
+
+                                    )}
+
                                 </div>
 
-                            </div>
+                            );
 
-                        )
+                        }
+
                     )
 
                 )}
 
 
                 {/* =================================
-                    Typing
+                    TYPING
                 ================================= */}
 
                 {typingUser && (
@@ -1937,6 +1930,7 @@ const ChatPanel = ({
                             text-[11px]
                             sm:text-xs
                             text-gray-500
+                            px-1
                         "
                     >
 
@@ -2003,7 +1997,7 @@ const ChatPanel = ({
 
 
             {/* =================================
-                Encryption Status
+                ENCRYPTION STATUS
             ================================= */}
 
             {!encryptionReady && (
@@ -2028,13 +2022,11 @@ const ChatPanel = ({
 
 
             {/* =================================
-                Input
+                MESSAGE COMPOSER
             ================================= */}
 
             <form
-                onSubmit={
-                    handleSendMessage
-                }
+                onSubmit={handleSendMessage}
                 className="
                     relative
                     shrink-0
@@ -2044,36 +2036,48 @@ const ChatPanel = ({
                     border-white/10
                     bg-gray-900/90
                     backdrop-blur-md
-                    flex
-                    items-center
-                    gap-2
                 "
             >
 
                 {/* =================================
-                    Replying To Preview
+                    REPLYING TO
                 ================================= */}
 
                 {replyingTo && (
 
                     <div
                         className="
-                            absolute
-                            bottom-full
-                            left-0
-                            right-0
-                            px-3
-                            py-2
-                            bg-gray-900
-                            border-t
-                            border-white/10
+                            mb-2
                             flex
                             items-center
-                            justify-between
+                            gap-3
+                            px-3
+                            py-2.5
+                            rounded-xl
+                            bg-gray-800
+                            border
+                            border-blue-500/30
                         "
                     >
 
-                        <div className="min-w-0">
+                        {/* Blue line */}
+
+                        <div
+                            className="
+                                w-1
+                                self-stretch
+                                bg-blue-500
+                                rounded-full
+                            "
+                        />
+
+
+                        <div
+                            className="
+                                flex-1
+                                min-w-0
+                            "
+                        >
 
                             <div
                                 className="
@@ -2082,27 +2086,27 @@ const ChatPanel = ({
                                     font-semibold
                                 "
                             >
+
                                 Replying to{" "}
-                                {replyingTo.sender
-                                    ?.username ||
+                                {replyingTo.sender?.username ||
                                     "User"}
+
                             </div>
 
 
                             <div
                                 className="
+                                    mt-0.5
                                     text-xs
                                     text-gray-400
                                     truncate
-                                    mt-0.5
                                 "
                             >
-                                {
-                                    replyingTo
-                                        .isDeletedForEveryone
-                                        ? "This message was deleted"
-                                        : replyingTo.message
-                                }
+
+                                {replyingTo.isDeletedForEveryone
+                                    ? "This message was deleted"
+                                    : replyingTo.message}
+
                             </div>
 
                         </div>
@@ -2114,15 +2118,24 @@ const ChatPanel = ({
                                 setReplyingTo(null)
                             }
                             className="
-                                ml-3
                                 shrink-0
+                                w-7
+                                h-7
+                                rounded-full
+                                flex
+                                items-center
+                                justify-center
                                 text-gray-400
                                 hover:text-white
-                                text-sm
+                                hover:bg-white/10
+                                active:bg-white/20
+                                transition
                             "
                             title="Cancel reply"
                         >
+
                             ✕
+
                         </button>
 
                     </div>
@@ -2131,85 +2144,91 @@ const ChatPanel = ({
 
 
                 {/* =================================
-                    Message Input
+                    INPUT ROW
                 ================================= */}
 
-                <input
-                    type="text"
-                    value={input}
-                    onChange={
-                        handleInputChange
-                    }
-                    disabled={
-                        !encryptionReady ||
-                        sending
-                    }
-                    placeholder={
-                        encryptionReady
-                            ? "Type a message..."
-                            : "Securing chat..."
-                    }
+                <div
                     className="
-                        min-w-0
-                        flex-1
-                        h-10
-                        sm:h-11
-                        bg-gray-800
-                        border
-                        border-white/10
-                        text-white
-                        text-sm
-                        rounded-xl
-                        px-3
-                        sm:px-4
-                        outline-none
-                        placeholder:text-gray-500
-                        focus:border-blue-500/60
-                        focus:ring-2
-                        focus:ring-blue-500/10
-                        disabled:opacity-50
-                        transition
-                    "
-                />
-
-
-                {/* =================================
-                    Send Button
-                ================================= */}
-
-                <button
-                    type="submit"
-                    disabled={
-                        !encryptionReady ||
-                        sending ||
-                        !input.trim()
-                    }
-                    className="
-                        shrink-0
-                        w-10
-                        h-10
-                        sm:w-11
-                        sm:h-11
-                        rounded-xl
-                        bg-blue-600
-                        hover:bg-blue-700
-                        active:scale-95
-                        disabled:bg-gray-700
-                        disabled:text-gray-500
-                        disabled:cursor-not-allowed
                         flex
                         items-center
-                        justify-center
-                        transition
+                        gap-2
                     "
-                    title="Send message"
                 >
 
-                    <Send
-                        size={17}
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={
+                            handleInputChange
+                        }
+                        disabled={
+                            !encryptionReady ||
+                            sending
+                        }
+                        placeholder={
+                            encryptionReady
+                                ? "Type a message..."
+                                : "Securing chat..."
+                        }
+                        className="
+                            min-w-0
+                            flex-1
+                            h-10
+                            sm:h-11
+                            bg-gray-800
+                            border
+                            border-white/10
+                            text-white
+                            text-sm
+                            rounded-xl
+                            px-3
+                            sm:px-4
+                            outline-none
+                            placeholder:text-gray-500
+                            focus:border-blue-500/60
+                            focus:ring-2
+                            focus:ring-blue-500/10
+                            disabled:opacity-50
+                            transition
+                        "
                     />
 
-                </button>
+
+                    <button
+                        type="submit"
+                        disabled={
+                            !encryptionReady ||
+                            sending ||
+                            !input.trim()
+                        }
+                        className="
+                            shrink-0
+                            w-10
+                            h-10
+                            sm:w-11
+                            sm:h-11
+                            rounded-xl
+                            bg-blue-600
+                            hover:bg-blue-700
+                            active:scale-95
+                            disabled:bg-gray-700
+                            disabled:text-gray-500
+                            disabled:cursor-not-allowed
+                            flex
+                            items-center
+                            justify-center
+                            transition
+                        "
+                        title="Send message"
+                    >
+
+                        <Send
+                            size={17}
+                        />
+
+                    </button>
+
+                </div>
 
             </form>
 
