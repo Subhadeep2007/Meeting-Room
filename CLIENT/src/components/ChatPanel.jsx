@@ -78,7 +78,14 @@ const [
     openMenuId,
     setOpenMenuId,
 ] = useState(null);
+// ==========================================
+// REPLY MESSAGE
+// ==========================================
 
+const [
+    replyingTo,
+    setReplyingTo
+] = useState(null);
 const [
     editingMessageId,
     setEditingMessageId,
@@ -915,6 +922,8 @@ const startEditing = (item) => {
 
                     iv:
                         encrypted.iv,
+                         replyTo:
+        replyingTo?._id || null,
 
                 },
 
@@ -1336,6 +1345,58 @@ const startEditing = (item) => {
         "
     >
 
+
+    {/* =====================================
+        Replied Message Preview
+    ===================================== */}
+
+    {item.replyTo && (
+
+        <div className="
+            mb-2
+            px-3
+            py-2
+            rounded-lg
+            bg-black/20
+            border-l-2
+            border-blue-500
+        ">
+
+            <div className="
+                text-[10px]
+                text-blue-400
+                font-semibold
+            ">
+
+                {item.replyTo.sender?.username ||
+                    "User"}
+
+            </div>
+
+            <div className="
+                mt-0.5
+                text-xs
+                text-gray-400
+                line-clamp-2
+            ">
+
+                {item.replyTo.isDeletedForEveryone
+                    ? "This message was deleted"
+                    : (
+                        messages.find(
+                            (msg) =>
+                                msg._id ===
+                                item.replyTo._id
+                        )?.message ||
+                        "Original message"
+                    )
+                }
+
+            </div>
+
+        </div>
+
+    )}
         {item.isDeletedForEveryone ? (
 
             <span className="text-gray-500 italic">
@@ -1445,7 +1506,30 @@ const startEditing = (item) => {
     {!item.isDeletedForEveryone && (
 
         <div className="absolute -right-8 top-1">
+<button
+    type="button"
+    onClick={() => {
 
+        setReplyingTo(item);
+
+        setOpenMenuId(null);
+
+    }}
+    className="
+        w-full
+        flex
+        items-center
+        gap-2
+        px-3
+        py-2
+        rounded-lg
+        text-sm
+        text-gray-200
+        hover:bg-white/10
+    "
+>
+    ↩️ Reply
+</button>
             <button
                 type="button"
                 onClick={() =>

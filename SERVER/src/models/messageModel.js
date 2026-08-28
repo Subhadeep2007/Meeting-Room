@@ -76,7 +76,19 @@ const messageSchema = new mongoose.Schema({
             default: "text",
 
         },
+        // ==========================================
+        // REPLY TO MESSAGE
+        // ==========================================
 
+        replyTo: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "Message",
+
+            default: null,
+
+        },
         // ==========================================
         // EDIT MESSAGE
         // ==========================================

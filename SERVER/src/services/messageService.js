@@ -12,6 +12,7 @@ export const createMessage = async({
     sender,
     encryptedMessage,
     iv,
+    replyTo = null
 }) => {
 
     // ==========================================
@@ -105,7 +106,45 @@ export const createMessage = async({
             "You are not a participant of this meeting"
         );
     }
+    // ==========================================
+    // Validate Reply Message
+    // ==========================================
 
+    if (replyTo) {
+
+        if (!mongoose.Types.ObjectId.isValid(
+                replyTo
+            )) {
+
+            throw new Error(
+                "Invalid reply message ID"
+            );
+
+        }
+
+        const repliedMessage =
+            await Message.findById(replyTo);
+
+        if (!repliedMessage) {
+
+            throw new Error(
+                "Reply message not found"
+            );
+
+        }
+
+        if (
+            repliedMessage.meeting.toString() !==
+            meetingId.toString()
+        ) {
+
+            throw new Error(
+                "Reply message belongs to another meeting"
+            );
+
+        }
+
+    }
     // ==========================================
     // Save Encrypted Message
     // ==========================================
@@ -122,6 +161,7 @@ export const createMessage = async({
             iv,
 
             messageType: "text",
+            replyTo,
 
         });
 
@@ -129,13 +169,22 @@ export const createMessage = async({
     // Populate Sender
     // ==========================================
 
-    await newMessage.populate({
+    await newMessage.populate([
 
-        path: "sender",
+        {
+            path: "sender",
+            select: "name username profilePicture",
+        },
 
-        select: "name username profilePicture",
+        {
+            path: "replyTo",
+            populate: {
+                path: "sender",
+                select: "name username profilePicture",
+            },
+        },
 
-    });
+    ]);
 
     // ==========================================
     // Return
@@ -419,14 +468,20 @@ export const getMessageHistory = async({
     // ==========================================
 
     const messages =
-        await Message.find(
-            query
-        )
+        await Message.find(query)
 
     .populate(
         "sender",
         "name username profilePicture"
     )
+
+    .populate({
+        path: "replyTo",
+        populate: {
+            path: "sender",
+            select: "name username profilePicture",
+        },
+    })
 
     .sort({
         _id: -1,

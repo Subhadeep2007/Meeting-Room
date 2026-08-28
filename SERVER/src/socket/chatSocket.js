@@ -35,7 +35,7 @@ const registerChatEvents = (
                     encryptedMessage,
 
                     iv,
-
+                    replyTo = null,
                 } = data || {};
 
 
@@ -101,6 +101,7 @@ const registerChatEvents = (
                         encryptedMessage,
 
                         iv,
+                        replyTo,
 
                     });
 
