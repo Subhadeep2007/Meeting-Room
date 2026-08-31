@@ -100,27 +100,60 @@ const ParticipantCard = ({
                     "
                 >
 
-                    <img
-                        src={
-                            participant.profilePicture?.url ||
-                            "/default-avatar.png"
-                        }
-                        alt={participant.username}
-                        className="
-                            w-9
-                            h-9
+                    {participant.profilePicture?.url ? (
 
-                            sm:w-10
-                            sm:h-10
+        <img
+            src={participant.profilePicture.url}
+            alt={
+                participant.username ||
+                participant.name ||
+                "User"
+            }
+            className="
+                w-9
+                h-9
+                sm:w-10
+                sm:h-10
+                rounded-full
+                object-cover
+                ring-1
+                ring-white/10
+            "
+        />
 
-                            rounded-full
+    ) : (
 
-                            object-cover
+        <div
+            className="
+                w-9
+                h-9
+                sm:w-10
+                sm:h-10
+                rounded-full
+                bg-blue-600
+                text-white
+                flex
+                items-center
+                justify-center
+                font-semibold
+                text-sm
+                uppercase
+                ring-1
+                ring-white/10
+            "
+        >
+            {
+                (
+                    participant.username ||
+                    participant.name ||
+                    "U"
+                )
+                    .charAt(0)
+                    .toUpperCase()
+            }
+        </div>
 
-                            ring-1
-                            ring-white/10
-                        "
-                    />
+    )}
 
 
                     {/* Speaking Indicator */}
