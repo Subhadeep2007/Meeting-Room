@@ -1280,38 +1280,69 @@ const ChatPanel = ({
                                 >
 
                                     {/* =================================
-                                        OTHER USER AVATAR
-                                    ================================= */}
+    OTHER USER AVATAR
+================================= */}
 
-                                    {!isOwnMessage && (
+{!isOwnMessage && (
 
-                                        <img
-                                            src={
-                                                item.sender
-                                                    ?.profilePicture
-                                                    ?.url ||
-                                                "/default-avatar.png"
-                                            }
-                                            alt={
-                                                item.sender
-                                                    ?.username ||
-                                                "User"
-                                            }
-                                            className="
-                                                shrink-0
-                                                w-8
-                                                h-8
-                                                sm:w-9
-                                                sm:h-9
-                                                rounded-full
-                                                object-cover
-                                                ring-1
-                                                ring-white/10
-                                            "
-                                        />
+    item.sender?.profilePicture?.url ? (
 
-                                    )}
+        <img
+            src={item.sender.profilePicture.url}
+            alt={
+                item.sender?.username ||
+                item.sender?.name ||
+                "User"
+            }
+            className="
+                shrink-0
+                w-8
+                h-8
+                sm:w-9
+                sm:h-9
+                rounded-full
+                object-cover
+                ring-1
+                ring-white/10
+            "
+        />
 
+    ) : (
+
+        <div
+            className="
+                shrink-0
+                w-8
+                h-8
+                sm:w-9
+                sm:h-9
+                rounded-full
+                bg-blue-600
+                text-white
+                flex
+                items-center
+                justify-center
+                font-semibold
+                text-sm
+                uppercase
+                ring-1
+                ring-white/10
+            "
+        >
+            {
+                (
+                    item.sender?.username ||
+                    item.sender?.name ||
+                    "U"
+                )
+                    .charAt(0)
+                    .toUpperCase()
+            }
+        </div>
+
+    )
+
+)}
 
                                     {/* =================================
                                         MESSAGE AREA
@@ -1882,28 +1913,62 @@ const ChatPanel = ({
 
                                     {isOwnMessage && (
 
-                                        <img
-                                            src={
-                                                item.sender
-                                                    ?.profilePicture
-                                                    ?.url ||
-                                                "/default-avatar.png"
-                                            }
-                                            alt="You"
-                                            className="
-                                                shrink-0
-                                                w-8
-                                                h-8
-                                                sm:w-9
-                                                sm:h-9
-                                                rounded-full
-                                                object-cover
-                                                ring-1
-                                                ring-white/10
-                                            "
-                                        />
+    item.sender?.profilePicture?.url ? (
 
-                                    )}
+        <img
+            src={
+                item.sender.profilePicture.url
+            }
+            alt="You"
+            className="
+                shrink-0
+                w-8
+                h-8
+                sm:w-9
+                sm:h-9
+                rounded-full
+                object-cover
+                ring-1
+                ring-white/10
+            "
+        />
+
+    ) : (
+
+        <div
+            className="
+                shrink-0
+                w-8
+                h-8
+                sm:w-9
+                sm:h-9
+                rounded-full
+                bg-blue-600
+                text-white
+                flex
+                items-center
+                justify-center
+                font-semibold
+                text-sm
+                uppercase
+                ring-1
+                ring-white/10
+            "
+        >
+            {
+                (
+                    item.sender?.username ||
+                    item.sender?.name ||
+                    "U"
+                )
+                    .charAt(0)
+                    .toUpperCase()
+            }
+        </div>
+
+    )
+
+)}
 
                                 </div>
 
