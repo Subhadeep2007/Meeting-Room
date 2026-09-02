@@ -20,7 +20,10 @@ import userRoutes from "./routes/userRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
-
+import {
+    apiRateLimiter,
+    authRateLimiter
+} from "./middleware/rateLimit.middleware.js";
 // ==============================
 // App
 // ==============================
@@ -83,7 +86,18 @@ app.use(
 );
 
 app.use(cookieParser());
+// ==============================
+// Rate Limiting
+// ==============================
 
+app.use(
+    "/api",
+    apiRateLimiter
+);
+app.use(
+    "/api/auth",
+    authRateLimiter
+);
 // ==============================
 // Routes
 // ==============================
