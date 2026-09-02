@@ -38,12 +38,25 @@ const Login = () => {
 
         } catch (error) {
 
-            errorToast(
-                error.response?.data?.message ||
-                "Login Failed"
-            );
+    if (
+        error.response?.status === 403 &&
+        error.response?.data?.emailVerified === false
+    ) {
 
-        } finally {
+        const encodedEmail =
+            encodeURIComponent(email.trim());
+
+        navigate(`/verify-email?email=${encodedEmail}`);
+
+        return;
+    }
+
+    errorToast(
+        error.response?.data?.message ||
+        "Login Failed"
+    );
+
+}finally {
 
             setLoading(false);
 
