@@ -43,10 +43,11 @@ const Login = () => {
         error.response?.data?.emailVerified === false
     ) {
 
-        const encodedEmail =
-            encodeURIComponent(email.trim());
-
-        navigate(`/verify-email?email=${encodedEmail}`);
+        navigate("/verify-email", {
+            state: {
+                email: email.trim(),
+            },
+        });
 
         return;
     }
